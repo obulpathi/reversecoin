@@ -1,0 +1,4 @@
+Vaultcoin
+=========
+
+A Secure Cryptocurrency
