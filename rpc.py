@@ -221,6 +221,7 @@ class RPCExec(object):
 
         target = uint256_from_compact(block.nBits)
         res['target'] = "%064x" % (target,)
+        res['target'] = "00000000000000000000000000000000000000000000000000000000ffff0000" # FIXME
 
         data = block.serialize()
         data = data[:80]

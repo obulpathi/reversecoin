@@ -168,9 +168,13 @@ class Wallet(object):
     	
     # if wallet does not exist, create it
     def initialize(self):
-        if not os.path.isfile(self.walletfile) or True:
+        if not os.path.isfile(self.walletfile):
             walletdb = self.open(writable = True)
-            print "Initilizing wallet: >>>>>>>>>>>>>>> FIX ME: I should be initialized only once"
+            # if wallet is not initialized, return
+            if 'accounts' in walletdb:
+                walletdb.close()
+                print "Wallet is already initialized!"
+                return None
             subaccount = self.getnewsubaccount()
             walletdb['account'] = dumps({subaccount['address']: subaccount})
             walletdb['accounts'] = dumps(['account'])
@@ -184,6 +188,7 @@ class Wallet(object):
         walletdb = self.open()
         # if wallet is not initialized, return
         if 'accounts' not in walletdb:
+            walletdb.close()
             print "Wallet not initialized ... quitting!"
             return None
         # if wallet is initialized
@@ -194,6 +199,12 @@ class Wallet(object):
         # if account is in wallet
         account = loads(walletdb['account']) # FIXME: account = loads(walletdb[accountname])
         walletdb.close()
+        print account
+        for subaccount in account.itervalues():
+            subaccount['public_key'] = subaccount['public_key'].encode('hex')
+            subaccount['private_key'] = subaccount['private_key'].encode('hex')
+            subaccount['balance'] = self.chaindb.getbalance(subaccount['address'])
+            subaccount['received'] = self.chaindb.listreceivedbyaddress(subaccount['address']).values()
         return account
 
     # getaccounts
@@ -365,14 +376,14 @@ class Wallet(object):
         tx.calc_sha256()
         txhash = str(tx.sha256)
         # sign the transaction
-        for pubkey, prikey, txin in zip(public_keys, private_keys, tx.vin):
+        for public_key, private_key, txin in zip(public_keys, private_keys, tx.vin):
             key = CKey()
-            key.set_pubkey(pubkey)
-            key.set_privkey(prikey)
+            key.set_pubkey(public_key)
+            key.set_privkey(private_key)
             signature = key.sign(txhash)
             # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
             scriptSig = chr(len(signature)) + signature + chr(len(public_key)) + public_key
             print "Adding signature: ", binascii.hexlify(scriptSig)
             txin.scriptSig = scriptSig
-            print "Validity >>>>>>>>>>>>>>>>>: ", tx.is_valid()
+            print "Tx Validity: ", tx.is_valid()
         return tx
