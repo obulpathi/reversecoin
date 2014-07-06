@@ -69,6 +69,39 @@ def public_key_hex_to_address(public_key_hex):
     address = encode(binary_address)
     return address
 
+def public_key_to_vault_address(public_key):
+    public_key_hex = public_key.encode('hex')
+    public_key_bytearray = bytearray.fromhex(public_key_hex)
+    # Perform SHA-256 and RIPEMD-160 hashing on public key
+    hash160_address = myhash160(public_key_bytearray)
+    # add version byte: 0x08 for vault address
+    extended_address = '\x08' + hash160_address
+    # generate double SHA-256 hash of extended address
+    hash_address = myhash(extended_address)
+    # Take the first 4 bytes of the second SHA-256 hash. This is the address checksum
+    checksum = hash_address[:4]
+    # Add the 4 checksum bytes from point 7 at the end of extended RIPEMD-160 hash from point 4. This is the 25-byte binary Bitcoin Address.
+    binary_address = extended_address + checksum
+    print binary_address
+    address = encode(binary_address)
+    return address
+
+def public_key_hex_to_vault_address(public_key_hex):
+    public_key_bytearray = bytearray.fromhex(public_key_hex)
+    # Perform SHA-256 and RIPEMD-160 hashing on public key
+    hash160_address = myhash160(public_key_bytearray)
+    # add version byte: 0x08 for Vault Address
+    extended_address = '\x08' + hash160_address
+    # generate double SHA-256 hash of extended address
+    hash_address = myhash(extended_address)
+    # Take the first 4 bytes of the second SHA-256 hash. This is the address checksum
+    checksum = hash_address[:4]
+    # Add the 4 checksum bytes from point 7 at the end of extended RIPEMD-160 hash from point 4. This is the 25-byte binary Bitcoin Address.
+    binary_address = extended_address + checksum
+    print binary_address
+    address = encode(binary_address)
+    return address
+
 def address_to_public_key_hash(address):
     binary_address = decode(address)
     # remove the 4 checksum bytes
