@@ -144,6 +144,9 @@ OP_NOP8 = 0xb7
 OP_NOP9 = 0xb8
 OP_NOP10 = 0xb9
 
+# vault OPCODE
+OP_VAULT = 0xc4
+
 # template matching params
 OP_SMALLINTEGER = 0xfa
 OP_PUBKEYS = 0xfb
@@ -271,6 +274,8 @@ VALID_OPCODES = {
     OP_NOP9,
     OP_NOP10,
 
+    OP_VAULT,
+    
     OP_SMALLINTEGER,
     OP_PUBKEYS,
     OP_PUBKEYHASH,
@@ -389,6 +394,7 @@ OPCODE_NAMES = {
     OP_NOP8 : 'OP_NOP8',
     OP_NOP9 : 'OP_NOP9',
     OP_NOP10 : 'OP_NOP10',
+    OP_VAULT : 'OP_VAULT',
     OP_SMALLINTEGER : 'OP_SMALLINTEGER',
     OP_PUBKEYS : 'OP_PUBKEYS',
     OP_PUBKEYHASH : 'OP_PUBKEYHASH',

@@ -110,6 +110,15 @@ def address_to_public_key_hash(address):
     hash160_address = extended_address[1:]
     return hash160_address
 
+def address_to_public_key_hash_hex(address):
+    binary_address = decode(address)
+    # remove the 4 checksum bytes
+    extended_address = binary_address[:-4]
+    # remove version byte: 0x00 for Main Network
+    hash160_address = extended_address[1:]
+    public_key_hash_hex = str(binascii.hexlify(hash160_address))
+    return public_key_hash_hex
+
 def public_key_hex_to_pay_to_script_hash(public_key_hex):
     script = "41" + public_key_hex + "AC"
     return binascii.unhexlify(script)
@@ -128,6 +137,57 @@ def address_to_pay_to_pubkey_hash(address):
     print script
     # script = str(hex(OP_DUP)[2:]) + str(hex(OP_HASH160)[2:]) + "14" + str(binascii.hexlify(pubkey_hash)) + str(hex(OP_EQUALVERIFY)[2:]) + str(hex(OP_CHECKSIG)[2:])
     return binascii.unhexlify(script)
+
+def public_keys_hex_to_vault_script(public_key_hex, master_public_key_hex, timeout, fees = 0):
+    if timeout > 100:
+        timeout = 100
+    if fees > 10000:
+        fees = 10000
+    vault_script = public_key_hex + myhash(master_public_key_hex) + hex(timeout)[2:4] + hex(fees)[2:6]
+    return vault_script
+
+def public_keys_to_vault_script(public_key, master_public_key, timeout, fees = 0):
+    if timeout > 100:
+        timeout = 100
+    if fees > 10000:
+        fees = 10000
+    vault_script = public_key.encode('hex') + myhash(master_public_key.encode('hex')) + hex(timeout)[2:4] + hex(fees)[2:6]
+    return vault_script
+
+def addresses_to_vault_script(address, master_address, timeout, fees = 0):
+    if timeout > 100:
+        timeout = 100
+    if fees > 10000:
+        fees = 10000
+    pubkey_hash_hex = address_to_public_key_hash_hex(address)
+    master_pubkey_hash_hex = address_to_public_key_hash_hex(address)
+    vault_script_hex = pubkey_hash_hex + master_pubkey_hash_hex + hex(timeout)[2:4] + hex(fees)[2:6]
+    vault_script = binascii.unhexlify(vault_script_hex)
+    return vault_script
+
+def addresses_to_pay_to_vault_script(address, master_address, timeout):
+    timeout = 100
+    fees = 10000
+    if timeout > 100:
+        timeout = 100
+    if fees > 10000:
+        fees = 10000
+    pubkey_hash_hex = address_to_public_key_hash_hex(address)
+    master_pubkey_hash_hex = address_to_public_key_hash_hex(master_address)
+    vault_script_hex = pubkey_hash_hex + master_pubkey_hash_hex + hex(timeout)[2:4] + hex(fees)[2:6]
+    """
+    print("pubkey_hash_hex: %s" % pubkey_hash_hex)
+    print("master_pubkey_hash_hex: %s" % master_pubkey_hash_hex)
+    print("timeout %s" % hex(timeout)[2:4])
+    print("fees %s" % hex(fees)[2:6])
+    print("vault_script_hex: %s" % vault_script_hex)
+    """
+    vault_script_hex_ba = bytearray.fromhex(vault_script_hex)
+    vault_script_hex_hash = myhash160(vault_script_hex_ba)
+    # script: "14" ("Push 20 bytes onto stack") + binascii.hexlify(vault_script_hex_hash) + OP_EQUAL + OP_VAULT)
+    pay_to_vault_script_hex = "14" + binascii.hexlify(vault_script_hex_hash) + "87" + "C4"
+    pay_to_vault_script = binascii.unhexlify(pay_to_vault_script_hex)
+    return pay_to_vault_script
 
 def sriptSig_to_pubkey(script):
     len_signed_data = ord(script[0])
