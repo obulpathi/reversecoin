@@ -215,6 +215,28 @@ class BitcoinConnection(object):
         else:
             return self.proxy.sendtoaddress(bitcoinaddress, amount, comment, comment_to)
 
+    def sendtovault(self, toaddress, tomaster_address, timeout, amount, comment=None, comment_to=None):
+        """
+        Sends *amount* from the server's available balance to *bitcoinaddress*.
+
+        Arguments:
+
+        - *toaddress* -- Bitcoin address to send to.
+        - *tomaster_address* -- Bitcoin master address to send to.
+        - *timeout* -- Timeout for vault (Positive integeer, less than or equal to 100).
+        - *amount* -- Amount to send (float, rounded to the nearest 0.00000001).
+        - *minconf* -- Minimum number of confirmations required for transferred balance.
+        - *comment* -- Comment for transaction.
+        - *comment_to* -- Comment for to-address.
+
+        """
+        if comment is None:
+            return self.proxy.sendtovault(toaddress, tomaster_address, timeout, amount)
+        elif comment_to is None:
+            return self.proxy.sendtovault(toaddress, tomaster_address, timeout, amount, comment)
+        else:
+            return self.proxy.sendtovault(toaddress, tomaster_address, timeout, amount, comment, comment_to)
+
     def getreceivedbyaddress(self, bitcoinaddress, minconf=1):
         """
         Returns the total amount received by a bitcoin address in transactions with at least a

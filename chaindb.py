@@ -177,6 +177,10 @@ class ChainDb(object):
         tx = self.wallet.sendtoaddress(toaddress, amount)
         self.mempool.add(tx)
 
+    def sendtovault(self, toaddress, tomaster_address, timeout, amount):
+        tx = self.wallet.sendtovault(toaddress, tomaster_address, timeout, amount)
+        self.mempool.add(tx)
+
     def listreceivedbyaddress(self, address):
         txouts = {}
         end_height = self.getheight()

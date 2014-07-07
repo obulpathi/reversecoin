@@ -33,6 +33,7 @@ VALID_RPCS = {
     "getwork",
     "listreceivedbyaddress",
     "sendtoaddress",
+    "sendtovault",
     "submitblock",
     "help",
     "stop",
@@ -276,8 +277,10 @@ class RPCExec(object):
     def sendtoaddress(self, params):
         return (self.chaindb.sendtoaddress(params[0], params[1]), None)
 
+    def sendtovault(self, params):
+        return (self.chaindb.sendtovault(params[0], params[1], params[2], params[3]), None)
+
     def submitblock(self, params):
-        print("submit block called >>>>>>>>>>>>>>>>")
         err = { "code" : -1, "message" : "invalid params" }
         if (len(params) != 1 or
             (not isinstance(params[0], str) and

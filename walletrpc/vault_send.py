@@ -7,16 +7,10 @@ rpcuser="user"
 rpcpass="passwd"
 
 print sys.argv
-pubkey = sys.argv[1]
-mpubkey = sys.argv[2]
+toaddress = sys.argv[1]
+tomaster_address = sys.argv[2]
 timeout = int(sys.argv[3])
 amount = int(sys.argv[4])
 
-def vault_script(pubkey, mpubkey, timeout, amount):
-	OPCODE_VAULT = "4"
-	return OPCODE_VAULT + hash(pubkey + mpubkey + timeout + amount)
-
-toaddress = vault_script(pubkey, mpubkey, timeout, amount)
-print "Transferring: ", amount, " to: ", toaddress
-#connection = bitcoinrpc.connect_to_remote(rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
-#connection.sendtoaddress(toaddress, amount)
+connection = bitcoinrpc.connect_to_remote(rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
+connection.sendtovault(toaddress, tomaster_address, timeout, amount)
