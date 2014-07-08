@@ -476,3 +476,92 @@ class Wallet(object):
             txin.scriptSig = scriptSig
             print "Tx Validity: ", tx.is_valid()
         return tx
+
+    # withdraw from vault
+    def withdraw_from_vault(self, fromaddress, toaddress, amount):        
+        # select the input addresses
+        funds = 0
+        subaccounts = []
+        accounts = self.getaccounts()
+        for account in accounts:
+            for address, subaccount in account.iteritems():
+                if subaccount['balance'] == 0:
+                    continue
+                else:
+                    subaccounts.append(subaccount)
+                    # print "subaccounts: ", subaccounts
+                    funds = funds + subaccount['balance']
+                    if funds >= amount + utils.calculate_fees(None):
+                        break
+        
+        # print "subaccounts 2: ", subaccounts
+        # incase of insufficient funds, return
+        if funds < amount + utils.calculate_fees(None):
+            print "In sufficient funds, exiting, return"
+            return
+            
+        # create transaction
+        tx = CTransaction()
+        
+        # to the receiver
+        txout = CTxOut()
+        txout.nValue = amount
+        #txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(toaddress)
+        txout.scriptPubKey = utils.addresses_to_pay_to_vault_script(toaddress, tomaster_address, timeout)
+        tx.vout.append(txout)
+        
+        # from the sender
+        nValueIn = 0
+        nValueOut = amount
+        public_keys = []
+        private_keys = []
+        # secrets = []
+        # print "subaccounts 4: ", subaccounts
+        for subaccount in subaccounts:
+            # print "subaccount: ", subaccount
+            # get received by from address
+            previous_txouts = subaccount['received']
+            # print "Previous txouts", previous_txouts
+            for received in previous_txouts:
+                txin = CTxIn()
+                txin.prevout = COutPoint()
+                txin.prevout.hash = received['txhash']
+                txin.prevout.n = received['n']
+                txin.scriptSig = binascii.unhexlify(received['scriptPubKey'])
+                tx.vin.append(txin)
+                nValueIn = nValueIn + received['value']
+                public_keys.append(subaccount['public_key']) 
+                private_keys.append(subaccount['private_key'])
+                # secrets.append(subaccount['secret'])
+                if nValueIn >= amount + utils.calculate_fees(tx):
+                    break
+            if nValueIn >= amount + utils.calculate_fees(tx):
+                break
+
+        # calculate the total excess amount
+        excessAmount = nValueIn - nValueOut
+        # calculate the fees
+        fees = utils.calculate_fees(tx)
+        # create change transaction, if there is any change left
+        if excessAmount > fees:
+            change_txout = CTxOut()
+            change_txout.nValue = excessAmount - fees
+            changeaddress = subaccounts[0]['address']
+            change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
+            tx.vout.append(change_txout)
+        
+        # calculate txhash
+        tx.calc_sha256()
+        txhash = str(tx.sha256)
+        # sign the transaction
+        for public_key, private_key, txin in zip(public_keys, private_keys, tx.vin):
+            key = CKey()
+            key.set_pubkey(public_key)
+            key.set_privkey(private_key)
+            signature = key.sign(txhash)
+            # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
+            scriptSig = chr(len(signature)) + signature + chr(len(public_key)) + public_key
+            print "Adding signature: ", binascii.hexlify(scriptSig)
+            txin.scriptSig = scriptSig
+            print "Tx Validity: ", tx.is_valid()
+        return tx
