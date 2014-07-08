@@ -298,6 +298,27 @@ class Wallet(object):
             subaccount['private_key'] = 5678
         return account
 
+    # vault functions
+    # create a new vault
+    def newvault(self, vault_name, address, master_address, amount, fees):
+        # open wallet
+        walletdb = self.open(writable = True)
+        vault = {'name' : vault_name, 'address': address, 'master_address': master_address, 'amount': amount, 'fees': fees}
+        walletdb['vault:%s' % vault_name] = dumps(vault)
+        walletdb.sync()
+        walletdb.close()
+    
+    # return a vault
+    def getvaule(self, vault_name):
+        walletdb = self.open()
+        vault = loads(walletdb['vault:%s' % vault_name])
+        walletdb.close()
+        return vault
+
+    # delete a vault
+    def deletevault(self, vault_name):
+        pass
+
     # send to an address
     def sendtoaddress(self, toaddress, amount):        
         # select the input addresses
