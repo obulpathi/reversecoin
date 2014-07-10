@@ -20,7 +20,7 @@ import utils
 
 """
 walletdb: wallet data structure
-    accounts: accounts
+    accounts: list of accounts
         account: the default account
             subaccount: 
                 address: address
@@ -30,6 +30,13 @@ walletdb: wallet data structure
                 balance: 0.0
                 height: 0
                 received : []
+    vaults: list of vaults
+        vault:
+            name: name of the vault
+            address: address of primary key
+            master_address: address of master key
+            amount: amount held by this vault
+            fees: max fees associated with this vault
 
 Note:
     For EC keys, don't use secret based key generation.
@@ -178,13 +185,13 @@ class Wallet(object):
             subaccount = self.getnewsubaccount()
             walletdb['account'] = dumps({subaccount['address']: subaccount})
             walletdb['accounts'] = dumps(['account'])
+            walletdb['vaults'] = dumps([])
             walletdb.sync()
             walletdb.close()
 
     # return an account
     def getaccount(self, accountname = None):
-        if not accountname:
-            accountname = "account"
+        accountname = "account"
         walletdb = self.open()
         # if wallet is not initialized, return
         if 'accounts' not in walletdb:
@@ -193,11 +200,12 @@ class Wallet(object):
             return None
         # if wallet is initialized
         accountnames = loads(walletdb['accounts'])
+        vaults = loads(walletdb['vaults'])
         if accountname not in accountnames:
             print "Error: Account not found"
             return
         # if account is in wallet
-        account = loads(walletdb['account']) # FIXME: account = loads(walletdb[accountname])
+        account = loads(walletdb[accountname]) 
         walletdb.close()
         print account
         for subaccount in account.itervalues():
@@ -205,6 +213,22 @@ class Wallet(object):
             subaccount['private_key'] = subaccount['private_key'].encode('hex')
             subaccount['balance'] = self.chaindb.getbalance(subaccount['address'])
             subaccount['received'] = self.chaindb.listreceivedbyaddress(subaccount['address']).values()
+        # return vaults
+        print("vaults\n\n\n\n\n")
+        for vault in vaults:
+            print(vaults)
+        print("vaults\n\n\n\n\n")
+        for vault in vaults:
+            subaccount = {}
+            #subaccount = {address: vault}
+            subaccount['address'] = 'vault'
+            subaccount['public_key'] = 'vault pubkey'
+            subaccount['private_key'] = 'vault privkey'
+            subaccount['height'] = 0
+            subaccount['balance'] = self.chaindb.getsavings(vault)
+            subaccount['received'] = self.chaindb.listreceivedbyvault(vault).values()
+            #account[vault] = subaccount
+            account['vault'] = subaccount
         return account
 
     # getaccounts
@@ -217,6 +241,10 @@ class Wallet(object):
             return None
         # wallet is initialized
         accountnames = loads(walletdb['accounts'])
+        # FIXME
+        vaults = []
+        if 'vaults' in walletdb:
+            vaults = loads(walletdb['vaults'])
         for accountname in accountnames:
             account = loads(walletdb[accountname])
             accounts.append(account)
@@ -225,6 +253,14 @@ class Wallet(object):
             for address, subaccount in account.iteritems():
                 subaccount['balance'] = self.chaindb.getbalance(subaccount['address'])
                 subaccount['received'] = self.chaindb.listreceivedbyaddress(subaccount['address']).values()
+        for vault in vaults:
+            subaccount = {address: vault}
+            subaccount['pubkey'] = 'pubkey'
+            subaccount['privkey'] = 'privkey'
+            subaccount['height'] = 0
+            subaccount['balance'] = self.chaindb.getbalance(vault)
+            subaccount['received'] = self.chaindb.listreceivedbyaddress(subaccount['address']).values()
+            accounts.append(account)
         return accounts
                             
     # helper functions
@@ -300,18 +336,26 @@ class Wallet(object):
 
     # vault functions
     # create a new vault
-    def newvault(self, vault_name, address, master_address, amount, fees):
+    def newvault(self, vault_name, address, master_address, amount, fees = 100):
         # open wallet
         walletdb = self.open(writable = True)
         vault = {'name' : vault_name, 'address': address, 'master_address': master_address, 'amount': amount, 'fees': fees}
-        walletdb['vault:%s' % vault_name] = dumps(vault)
+        walletdb[vault_name] = dumps(vault)
+        # FIXME
+        vaults = []
+        if 'vaults' in walletdb:
+            vaults = loads(walletdb['vaults'])
+        else:
+            walletdb['vaults'] = dumps([])
+        vaults.append(vault_name)
+        walletdb['vaults'] = dumps(vaults)
         walletdb.sync()
         walletdb.close()
     
     # return a vault
     def getvaule(self, vault_name):
         walletdb = self.open()
-        vault = loads(walletdb['vault:%s' % vault_name])
+        vault = loads(walletdb[vault_name])
         walletdb.close()
         return vault
 
@@ -431,16 +475,23 @@ class Wallet(object):
         if funds < amount + utils.calculate_fees(None):
             print "In sufficient funds, exiting, return"
             return
-            
+
         # create transaction
         tx = CTransaction()
         
         # to the receiver
         txout = CTxOut()
         txout.nValue = amount
+        vault_address = utils.addresses_to_vault_address(toaddress, tomaster_address, timeout)
+        print('############################################')
+        print("\n\nVault address: " + vault_address + "\n\n")
         #txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(toaddress)
-        txout.scriptPubKey = utils.addresses_to_pay_to_vault_script(toaddress, tomaster_address, timeout)
+        #txout.scriptPubKey = utils.addresses_to_pay_to_vault_script(toaddress, tomaster_address, timeout)
+        txout.scriptPubKey = utils.vault_addresses_to_pay_to_vault_script(vault_address)
         tx.vout.append(txout)
+
+        # create vault
+        self.newvault(txout.scriptPubKey, toaddress, tomaster_address, amount)
         
         # from the sender
         nValueIn = 0

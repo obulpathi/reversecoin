@@ -137,6 +137,13 @@ class ChainDb(object):
 
         return True
 
+    def getsavings(self, vault):
+        savings = 0.0
+        txouts = self.listreceivedbyvault(vault)
+        for txout in txouts.itervalues():
+            savings = savings + txout['value']
+        return savings
+        
     def getbalance(self, address):
         balance = 0.0
         txouts = self.listreceivedbyaddress(address)
@@ -218,6 +225,46 @@ class ChainDb(object):
                         txouts[tx.sha256] = {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
                                              'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
         return txouts
+
+
+    def listreceivedbyvault(self, vault):
+        txouts = {}
+        end_height = self.getheight()
+        #public_key_hash_hex = binascii.hexlify(utils.address_to_public_key_hash(address))
+        
+        for height in xrange(end_height):
+            data = self.db.Get('height:' + str(height))
+            heightidx = HeightIdx()
+            heightidx.deserialize(data)
+            blkhash = heightidx.blocks[0]
+            block = self.getblock(blkhash)
+            
+            for tx in block.vtx:
+                # if this transaction refers to this address in input, remove the previous transaction
+                for txin in tx.vin:
+                    # FIXME: IF IT IS OF TYPE SCRIPT VAULT
+                    if not txin.scriptSig:
+                        continue
+                    # FIXME >>>>>>>>>>>>>>>>>>>>>
+                    # script_vault = binascii.hexlify(utils.scriptSig_to_vault(txin.scriptSig))
+                    # print 'script_key_hash_hex: ', script_key_hash_hex
+                    # print 'public_key_hash_hex: ', public_key_hash_hex
+                    """ 
+                    if script_key_hash_hex == public_key_hash_hex:
+                        del txouts[txin.prevout.hash]
+                    """
+                # if this transaction refers to this address in output, add this transaction
+                for n, txout in enumerate(tx.vout):
+                    script_vault = txout.scriptPubKey
+                    # print 'script_key_hash_hex: ', script_key_hash_hex
+                    # print 'public_key_hash_hex: ', public_key_hash_hex
+                    if script_vault == vault:
+                        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+                        tx.calc_sha256()
+                        txouts[tx.sha256] = {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
+                                             'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
+        return txouts
+     
 
     def gettxidx(self, txhash):
         ser_txhash = ser_uint256(txhash)
