@@ -221,7 +221,7 @@ class Wallet(object):
         for vault in vaults:
             subaccount = {}
             #subaccount = {address: vault}
-            subaccount['address'] = 'vault'
+            subaccount['address'] = vault
             subaccount['public_key'] = 'vault pubkey'
             subaccount['private_key'] = 'vault privkey'
             subaccount['height'] = 0
@@ -251,12 +251,15 @@ class Wallet(object):
                 subaccount['balance'] = self.chaindb.getbalance(subaccount['address'])
                 subaccount['received'] = self.chaindb.listreceivedbyaddress(subaccount['address']).values()
         for vault in vaults:
-            subaccount = {address: vault}
+            print "subaccount >>>>>>>>>>>>>>: "
+            print subaccount
+            subaccount = {}
+            subaccount = {'address': vault}
             subaccount['pubkey'] = 'pubkey'
             subaccount['privkey'] = 'privkey'
             subaccount['height'] = 0
-            subaccount['balance'] = self.chaindb.getbalance(vault)
-            subaccount['received'] = self.chaindb.listreceivedbyaddress(subaccount['address']).values()
+            subaccount['balance'] = self.chaindb.getsavings(vault)
+            subaccount['received'] = self.chaindb.listreceivedbyvault(vault).values()
             accounts.append(account)
         return accounts
                             
@@ -338,12 +341,7 @@ class Wallet(object):
         walletdb = self.open(writable = True)
         vault = {'name' : vault_name, 'address': address, 'master_address': master_address, 'amount': amount, 'fees': fees}
         walletdb[vault_name] = dumps(vault)
-        # FIXME
-        vaults = []
-        if 'vaults' in walletdb:
-            vaults = loads(walletdb['vaults'])
-        else:
-            walletdb['vaults'] = dumps([])
+        vaults = loads(walletdb['vaults'])
         vaults.append(vault_name)
         walletdb['vaults'] = dumps(vaults)
         walletdb.sync()
@@ -484,11 +482,11 @@ class Wallet(object):
         print("\n\nVault address: " + vault_address + "\n\n")
         #txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(toaddress)
         #txout.scriptPubKey = utils.addresses_to_pay_to_vault_script(toaddress, tomaster_address, timeout)
-        txout.scriptPubKey = utils.vault_addresses_to_pay_to_vault_script(vault_address)
+        txout.scriptPubKey = utils.vault_address_to_pay_to_vault_script(vault_address)
         tx.vout.append(txout)
 
         # create vault
-        self.newvault(txout.scriptPubKey, toaddress, tomaster_address, amount)
+        self.newvault(vault_address, toaddress, tomaster_address, amount)
         
         # from the sender
         nValueIn = 0
@@ -544,6 +542,7 @@ class Wallet(object):
             print "Adding signature: ", binascii.hexlify(scriptSig)
             txin.scriptSig = scriptSig
             print "Tx Validity: ", tx.is_valid()
+        print "returning tx"
         return tx
 
     # withdraw from vault

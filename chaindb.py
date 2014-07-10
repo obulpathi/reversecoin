@@ -227,7 +227,8 @@ class ChainDb(object):
         return txouts
 
 
-    def listreceivedbyvault(self, vault):
+    def listreceivedbyvault(self, vault_address):
+        scriptPubKey = utils.vault_address_to_pay_to_vault_script(vault_address)
         txouts = {}
         end_height = self.getheight()
         #public_key_hash_hex = binascii.hexlify(utils.address_to_public_key_hash(address))
@@ -255,10 +256,9 @@ class ChainDb(object):
                     """
                 # if this transaction refers to this address in output, add this transaction
                 for n, txout in enumerate(tx.vout):
-                    script_vault = txout.scriptPubKey
                     # print 'script_key_hash_hex: ', script_key_hash_hex
                     # print 'public_key_hash_hex: ', public_key_hash_hex
-                    if script_vault == vault:
+                    if scriptPubKey == txout.scriptPubKey:
                         print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
                         tx.calc_sha256()
                         txouts[tx.sha256] = {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
