@@ -241,10 +241,7 @@ class Wallet(object):
             return None
         # wallet is initialized
         accountnames = loads(walletdb['accounts'])
-        # FIXME
-        vaults = []
-        if 'vaults' in walletdb:
-            vaults = loads(walletdb['vaults'])
+        vaults = loads(walletdb['vaults'])
         for accountname in accountnames:
             account = loads(walletdb[accountname])
             accounts.append(account)

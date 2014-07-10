@@ -81,17 +81,17 @@ def addresses_to_vault_address(address, master_address, timeout):
     master_pubkey_hash_hex = address_to_public_key_hash_hex(master_address)
     vault_script_hex = pubkey_hash_hex + master_pubkey_hash_hex + hex(timeout)[2:4] + hex(fees)[2:6]
     vault_script_hex_ba = bytearray.fromhex(vault_script_hex)
-    vault_script_hex_hash160_address = myhash160(vault_script_hex_ba)
+    hash160_address = myhash160(vault_script_hex_ba)
     # add version byte: 0x08 for vault address
-    extended_vault_address = '\x08' + hash160_address
+    extended_address = '\x08' + hash160_address
     # generate double SHA-256 hash of extended address
-    hash_extended_vault_address = myhash(extended_vault_address)
+    hash_address = myhash(extended_address)
     # Take the first 4 bytes of the second SHA-256 hash. This is the address checksum
-    checksum = hash_extended_vault_address[:4]
+    checksum = hash_address[:4]
     # Add the 4 checksum bytes from point 7 at the end of extended RIPEMD-160 hash from point 4.
     # This is the 25-byte binary Bitcoin Address.
-    vault_binary_address = hash_extended_vault_address + checksum
-    vault_address = encode(vault_binary_address)
+    binary_address = extended_address + checksum
+    vault_address = encode(binary_address)
     return vault_address
     
     
