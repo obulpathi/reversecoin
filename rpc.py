@@ -36,6 +36,7 @@ VALID_RPCS = {
     "sendtovault",
     "submitblock",
     "withdrawfromvault",
+    "fastwithdrawfromvault",
     "help",
     "stop",
 }
@@ -283,6 +284,9 @@ class RPCExec(object):
 
     def withdrawfromvault(self, params):
         return (self.chaindb.withdrawfromvault(params[0], params[1], params[2]), None)
+
+    def fastwithdrawfromvault(self, params):
+        return (self.chaindb.fastwithdrawfromvault(params[0], params[1], params[2]), None)
 
     def submitblock(self, params):
         err = { "code" : -1, "message" : "invalid params" }

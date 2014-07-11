@@ -337,9 +337,20 @@ class Wallet(object):
     # vault functions
     # create a new vault
     def newvault(self, vault_name, address, master_address, amount, fees = 100):
+        account = self.getaccount()
+        for subaccount in account:
+            if subaccount == address:
+                public_key = account[subaccount]['public_key']
+                private_key = account[subaccount]['private_key']
+            if subaccount == master_address:
+                master_public_key = account[subaccount]['public_key']
+                master_private_key = account[subaccount]['private_key']
         # open wallet
         walletdb = self.open(writable = True)
-        vault = {'name' : vault_name, 'address': address, 'master_address': master_address, 'amount': amount, 'fees': fees}
+        vault = {'name' : vault_name, 
+                 'address': address, 'public_key': public_key, 'private_key': private_key, 
+                 'master_address': master_address, 'master_public_key': master_public_key, 'master_private_key': master_private_key, 
+                 'amount': amount, 'fees': fees}
         walletdb[vault_name] = dumps(vault)
         vaults = loads(walletdb['vaults'])
         vaults.append(vault_name)
@@ -348,9 +359,10 @@ class Wallet(object):
         walletdb.close()
     
     # return a vault
-    def getvaule(self, vault_name):
+    def getvault(self, vaultname):
+        print type(vaultname), vaultname
         walletdb = self.open()
-        vault = loads(walletdb[vault_name])
+        vault = loads(walletdb[str(vaultname)])
         walletdb.close()
         return vault
 
@@ -632,4 +644,71 @@ class Wallet(object):
             print "Adding signature: ", binascii.hexlify(scriptSig)
             txin.scriptSig = scriptSig
             print "Tx Validity: ", tx.is_valid()
+        return tx
+
+
+    # fast withdraw from vault
+    def fastwithdrawfromvault(self, fromvaultaddress, toaddress, amount):        
+        # select the input addresses
+        funds = 0
+        vault = self.getvault(fromvaultaddress)
+        print vault
+        """
+        {'amount': 25, 'address': u'17kDFLhy9fanFPvtDNyyhFq5zW1FGw1Edq', 'master_address': u'1P7tUbqkm9Vw8W9BDuwni7mq7aob7QG7dK', 'name': '4K6YECfns5G1asSVBJEhm1rteLxpPVAE6c', 'fees': 100}
+        """
+        if vault['amount'] + utils.calculate_fees(None) < amount:
+            print "In sufficient funds in vault, exiting, return"
+            return
+
+           
+        # create transaction
+        tx = CTransaction()
+        
+        # to the receiver
+        txout = CTxOut()
+        txout.nValue = amount
+        txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(toaddress)
+        tx.vout.append(txout)
+        
+        # from the sender
+        nValueIn = 0
+        nValueOut = amount
+
+        txin = CTxIn()
+        txin.prevout = COutPoint()
+        received = self.chaindb.listreceivedbyvault(fromvaultaddress)
+        # assuming vaults are not reused
+        received = received.values()[0]
+        txin.prevout.hash = received['txhash']
+        txin.prevout.n = received['n']
+        txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ... 
+        tx.vin.append(txin)
+
+        # calculate the total excess amount
+        excessAmount = nValueIn - nValueOut
+        # calculate the fees
+        fees = utils.calculate_fees(tx)
+        # create change transaction, if there is any change left
+        if excessAmount > fees:
+            change_txout = CTxOut()
+            change_txout.nValue = excessAmount - fees
+            changeaddress = subaccounts[0]['address']
+            change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
+            tx.vout.append(change_txout)
+        
+        # calculate txhash
+        tx.calc_sha256()
+        txhash = str(tx.sha256)
+        # sign the transaction
+        key = CKey()
+        key.set_pubkey(vault['master_public_key'])
+        key.set_privkey(vault['master_private_key'])
+        signature = key.sign(txhash)
+        # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
+        scriptSig = chr(len(signature)) + signature + chr(len(vault['master_public_key'])) + vault['master_public_key']
+        print "Adding signature: ", binascii.hexlify(scriptSig)
+        txin.scriptSig = scriptSig
+        print "####################################################################"
+        print "Tx Validity: ", tx.is_valid()
+
         return tx

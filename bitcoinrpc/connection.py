@@ -237,7 +237,7 @@ class BitcoinConnection(object):
         else:
             return self.proxy.sendtovault(toaddress, tomaster_address, timeout, amount, comment, comment_to)
 
-    def fast_withdraw_from_vault(fromaddress, toaddress, amount, comment=None, comment_to=None):
+    def fastwithdrawfromvault(self, fromaddress, toaddress, amount, comment=None, comment_to=None):
         """
         Withdraws *amount* from the vault *fromaddress* to the specified *toaddress*.
 
@@ -252,11 +252,11 @@ class BitcoinConnection(object):
 
         """
         if comment is None:
-            return self.proxy.fast_withdraw_from_vault(fromaddress, toaddress, amount)
+            return self.proxy.fastwithdrawfromvault(fromaddress, toaddress, amount)
         elif comment_to is None:
-            return self.proxy.fast_withdraw_from_vault(fromaddress, toaddress, amount, comment)
+            return self.proxy.fastwithdrawfromvault(fromaddress, toaddress, amount, comment)
         else:
-            return self.proxy.fast_withdraw_from_vault(fromaddress, toaddress, amount. comment, comment_to)
+            return self.proxy.fastwithdrawfromvault(fromaddress, toaddress, amount. comment, comment_to)
 
     def getreceivedbyaddress(self, bitcoinaddress, minconf=1):
         """

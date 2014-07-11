@@ -192,6 +192,10 @@ class ChainDb(object):
         tx = self.wallet.withdrawfromvault(fromaddress, toaddress, amount)
         self.mempool.add(tx)
 
+    def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
+        tx = self.wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
+        self.mempool.add(tx)
+
     def listreceivedbyaddress(self, address):
         txouts = {}
         end_height = self.getheight()

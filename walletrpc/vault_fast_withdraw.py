@@ -12,4 +12,4 @@ toaddress = sys.argv[2]
 amount = int(sys.argv[3])
 
 connection = bitcoinrpc.connect_to_remote(rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
-connection.fast_withdraw_from_vault(fromaddress, toaddress, amount)
+connection.fastwithdrawfromvault(fromaddress, toaddress, amount)
