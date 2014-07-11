@@ -22,11 +22,11 @@ import utils
 walletdb: wallet data structure
     accounts: list of accounts
         account: the default account
-            subaccount: 
+            subaccount:
                 address: address
                 public_key: public_key
                 private_key: private_key
-                # secret: secret: 
+                # secret: secret:
                 balance: 0.0
                 height: 0
                 received : []
@@ -47,7 +47,7 @@ ssl = ctypes.cdll.LoadLibrary (ctypes.util.find_library ('ssl') or 'libeay32')
 ssl.EC_KEY_new_by_curve_name.restype = ctypes.c_void_p
 
 def check_result (val, func, args):
-    if val == 0: raise ValueError 
+    if val == 0: raise ValueError
     else: return ctypes.c_void_p (val)
 
 
@@ -120,7 +120,7 @@ def rhash(s):
     h1.update(hashlib.sha256(s).digest())
     return h1.digest()
 
-"""    
+"""
 def get_addr(k, version=0):
     pubkey = k.get_pubkey()
     privkey = k.get_privkey()
@@ -132,7 +132,7 @@ def get_addr(k, version=0):
 def pubkey_to_address(pubkey, version=0):
     hash160 = rhash(pubkey)
     return base58_check_encode(hash160, version)
-        
+
 def gen_eckey(passphrase=None, secret=None, pkey=None, compressed=False, rounds=1, version=0):
     k = CKey()
     if passphrase:
@@ -146,7 +146,7 @@ def gen_eckey(passphrase=None, secret=None, pkey=None, compressed=False, rounds=
     k.generate(secret)
     k.set_compressed(compressed)
     return k
-    
+
 # Wallet class
 class Wallet(object):
     def __init__(self, walletfile = "~/.bitcoinpy/wallet.dat"):
@@ -155,7 +155,7 @@ class Wallet(object):
         self.db_env = DBEnv(0)
         self.db_env.open(self.walletdir, (DB_CREATE|DB_INIT_LOCK|DB_INIT_LOG|DB_INIT_MPOOL|DB_INIT_TXN|DB_THREAD|DB_RECOVER))
         self.initialize()
-        
+
     # open wallet database
     def open(self, writable=False):
 	    db = DB(self.db_env)
@@ -172,7 +172,7 @@ class Wallet(object):
 		    logging.error("Couldn't open wallet.dat/main. Try quitting Bitcoin and running this again.")
 		    sys.exit(1)
 	    return db
-    	
+
     # if wallet does not exist, create it
     def initialize(self):
         if not os.path.isfile(self.walletfile):
@@ -205,7 +205,7 @@ class Wallet(object):
             print "Error: Account not found"
             return
         # if account is in wallet
-        account = loads(walletdb[accountname]) 
+        account = loads(walletdb[accountname])
         walletdb.close()
         print account
         for subaccount in account.itervalues():
@@ -262,7 +262,7 @@ class Wallet(object):
             subaccount['received'] = self.chaindb.listreceivedbyvault(vault).values()
             accounts.append(account)
         return accounts
-                            
+
     # helper functions
     def getnewsubaccount(self):
         key = CKey()
@@ -293,7 +293,7 @@ class Wallet(object):
             account[subaccount['address']] = subaccount
         else:
             print "account: ", accountname, " not in accounts"
-            print "creating new account" 
+            print "creating new account"
             account = {subaccount['address']: subaccount}
             # add the new account name to account names
             walletdb['accounts'] = dumps(accountnames.append(accountname))
@@ -302,7 +302,7 @@ class Wallet(object):
         walletdb.close()
         print subaccount
         return subaccount['public_key'], subaccount['address']
-    
+
     # return balance of an account
     def getbalance(self, accountname):
         if not accountname:
@@ -340,16 +340,17 @@ class Wallet(object):
         account = self.getaccount()
         for subaccount in account:
             if subaccount == address:
-                public_key = account[subaccount]['public_key']
-                private_key = account[subaccount]['private_key']
+                # fix the unhexlifying part ... this sucks .. store in raw format in DB
+                public_key = binascii.unhexlify(account[subaccount]['public_key'])
+                private_key = binascii.unhexlify(account[subaccount]['private_key'])
             if subaccount == master_address:
-                master_public_key = account[subaccount]['public_key']
-                master_private_key = account[subaccount]['private_key']
+                master_public_key = binascii.unhexlify(account[subaccount]['public_key'])
+                master_private_key = binascii.unhexlify(account[subaccount]['private_key'])
         # open wallet
         walletdb = self.open(writable = True)
-        vault = {'name' : vault_name, 
-                 'address': address, 'public_key': public_key, 'private_key': private_key, 
-                 'master_address': master_address, 'master_public_key': master_public_key, 'master_private_key': master_private_key, 
+        vault = {'name' : vault_name,
+                 'address': address, 'public_key': public_key, 'private_key': private_key,
+                 'master_address': master_address, 'master_public_key': master_public_key, 'master_private_key': master_private_key,
                  'amount': amount, 'fees': fees}
         walletdb[vault_name] = dumps(vault)
         vaults = loads(walletdb['vaults'])
@@ -357,7 +358,7 @@ class Wallet(object):
         walletdb['vaults'] = dumps(vaults)
         walletdb.sync()
         walletdb.close()
-    
+
     # return a vault
     def getvault(self, vaultname):
         print type(vaultname), vaultname
@@ -371,7 +372,7 @@ class Wallet(object):
         pass
 
     # send to an address
-    def sendtoaddress(self, toaddress, amount):        
+    def sendtoaddress(self, toaddress, amount):
         # select the input addresses
         funds = 0
         subaccounts = []
@@ -387,23 +388,23 @@ class Wallet(object):
                     funds = funds + subaccount['balance']
                     if funds >= amount + utils.calculate_fees(None):
                         break
-        
+
         # print "subaccounts 2: ", subaccounts
         # incase of insufficient funds, return
         if funds < amount + utils.calculate_fees(None):
             print "In sufficient funds, exiting, return"
             return
-            
+
         # create transaction
         tx = CTransaction()
-        
+
         # print "subaccounts 3: ", subaccounts
         # to the receiver
         txout = CTxOut()
         txout.nValue = amount
         txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(toaddress)
         tx.vout.append(txout)
-        
+
         # from the sender
         nValueIn = 0
         nValueOut = amount
@@ -424,7 +425,7 @@ class Wallet(object):
                 txin.scriptSig = binascii.unhexlify(received['scriptPubKey'])
                 tx.vin.append(txin)
                 nValueIn = nValueIn + received['value']
-                public_keys.append(subaccount['public_key']) 
+                public_keys.append(subaccount['public_key'])
                 private_keys.append(subaccount['private_key'])
                 # secrets.append(subaccount['secret'])
                 if nValueIn >= amount + utils.calculate_fees(tx):
@@ -443,25 +444,29 @@ class Wallet(object):
             changeaddress = subaccounts[0]['address']
             change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
             tx.vout.append(change_txout)
-        
+
         # calculate txhash
         tx.calc_sha256()
         txhash = str(tx.sha256)
         # sign the transaction
         for public_key, private_key, txin in zip(public_keys, private_keys, tx.vin):
+            print "Public key: ", type(public_key), public_key
+            print "Private key: ", type(private_key), private_key
             key = CKey()
             key.set_pubkey(public_key)
             key.set_privkey(private_key)
             signature = key.sign(txhash)
+            print "Public key: ", key.get_pubkey()
+            print "Private key: ", key.get_privkey()
             # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
             scriptSig = chr(len(signature)) + signature + chr(len(public_key)) + public_key
             print "Adding signature: ", binascii.hexlify(scriptSig)
             txin.scriptSig = scriptSig
             print "Tx Validity: ", tx.is_valid()
         return tx
-    
+
     # send to a vault
-    def sendtovault(self, toaddress, tomaster_address, timeout, amount):        
+    def sendtovault(self, toaddress, tomaster_address, timeout, amount):
         # select the input addresses
         funds = 0
         subaccounts = []
@@ -476,7 +481,7 @@ class Wallet(object):
                     funds = funds + subaccount['balance']
                     if funds >= amount + utils.calculate_fees(None):
                         break
-        
+
         # print "subaccounts 2: ", subaccounts
         # incase of insufficient funds, return
         if funds < amount + utils.calculate_fees(None):
@@ -485,7 +490,7 @@ class Wallet(object):
 
         # create transaction
         tx = CTransaction()
-        
+
         # to the receiver
         txout = CTxOut()
         txout.nValue = amount
@@ -499,7 +504,7 @@ class Wallet(object):
 
         # create vault
         self.newvault(vault_address, toaddress, tomaster_address, amount)
-        
+
         # from the sender
         nValueIn = 0
         nValueOut = amount
@@ -520,7 +525,7 @@ class Wallet(object):
                 txin.scriptSig = binascii.unhexlify(received['scriptPubKey'])
                 tx.vin.append(txin)
                 nValueIn = nValueIn + received['value']
-                public_keys.append(subaccount['public_key']) 
+                public_keys.append(subaccount['public_key'])
                 private_keys.append(subaccount['private_key'])
                 # secrets.append(subaccount['secret'])
                 if nValueIn >= amount + utils.calculate_fees(tx):
@@ -539,7 +544,7 @@ class Wallet(object):
             changeaddress = subaccounts[0]['address']
             change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
             tx.vout.append(change_txout)
-        
+
         # calculate txhash
         tx.calc_sha256()
         txhash = str(tx.sha256)
@@ -557,98 +562,9 @@ class Wallet(object):
         print "returning tx"
         return tx
 
+
     # withdraw from vault
-    def withdraw_from_vault(self, fromaddress, toaddress, amount):        
-        # select the input addresses
-        funds = 0
-        subaccounts = []
-        accounts = self.getaccounts()
-        for account in accounts:
-            for address, subaccount in account.iteritems():
-                if subaccount['balance'] == 0:
-                    continue
-                else:
-                    subaccounts.append(subaccount)
-                    # print "subaccounts: ", subaccounts
-                    funds = funds + subaccount['balance']
-                    if funds >= amount + utils.calculate_fees(None):
-                        break
-        
-        # print "subaccounts 2: ", subaccounts
-        # incase of insufficient funds, return
-        if funds < amount + utils.calculate_fees(None):
-            print "In sufficient funds, exiting, return"
-            return
-            
-        # create transaction
-        tx = CTransaction()
-        
-        # to the receiver
-        txout = CTxOut()
-        txout.nValue = amount
-        #txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(toaddress)
-        txout.scriptPubKey = utils.addresses_to_pay_to_vault_script(toaddress, tomaster_address, timeout)
-        tx.vout.append(txout)
-        
-        # from the sender
-        nValueIn = 0
-        nValueOut = amount
-        public_keys = []
-        private_keys = []
-        # secrets = []
-        # print "subaccounts 4: ", subaccounts
-        for subaccount in subaccounts:
-            # print "subaccount: ", subaccount
-            # get received by from address
-            previous_txouts = subaccount['received']
-            # print "Previous txouts", previous_txouts
-            for received in previous_txouts:
-                txin = CTxIn()
-                txin.prevout = COutPoint()
-                txin.prevout.hash = received['txhash']
-                txin.prevout.n = received['n']
-                txin.scriptSig = binascii.unhexlify(received['scriptPubKey'])
-                tx.vin.append(txin)
-                nValueIn = nValueIn + received['value']
-                public_keys.append(subaccount['public_key']) 
-                private_keys.append(subaccount['private_key'])
-                # secrets.append(subaccount['secret'])
-                if nValueIn >= amount + utils.calculate_fees(tx):
-                    break
-            if nValueIn >= amount + utils.calculate_fees(tx):
-                break
-
-        # calculate the total excess amount
-        excessAmount = nValueIn - nValueOut
-        # calculate the fees
-        fees = utils.calculate_fees(tx)
-        # create change transaction, if there is any change left
-        if excessAmount > fees:
-            change_txout = CTxOut()
-            change_txout.nValue = excessAmount - fees
-            changeaddress = subaccounts[0]['address']
-            change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
-            tx.vout.append(change_txout)
-        
-        # calculate txhash
-        tx.calc_sha256()
-        txhash = str(tx.sha256)
-        # sign the transaction
-        for public_key, private_key, txin in zip(public_keys, private_keys, tx.vin):
-            key = CKey()
-            key.set_pubkey(public_key)
-            key.set_privkey(private_key)
-            signature = key.sign(txhash)
-            # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
-            scriptSig = chr(len(signature)) + signature + chr(len(public_key)) + public_key
-            print "Adding signature: ", binascii.hexlify(scriptSig)
-            txin.scriptSig = scriptSig
-            print "Tx Validity: ", tx.is_valid()
-        return tx
-
-
-    # fast withdraw from vault
-    def fastwithdrawfromvault(self, fromvaultaddress, toaddress, amount):        
+    def withdrawfromvault(self, fromvaultaddress, toaddress, amount):
         # select the input addresses
         funds = 0
         vault = self.getvault(fromvaultaddress)
@@ -660,16 +576,15 @@ class Wallet(object):
             print "In sufficient funds in vault, exiting, return"
             return
 
-           
         # create transaction
         tx = CTransaction()
-        
+
         # to the receiver
         txout = CTxOut()
         txout.nValue = amount
         txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(toaddress)
         tx.vout.append(txout)
-        
+
         # from the sender
         nValueIn = 0
         nValueOut = amount
@@ -681,7 +596,7 @@ class Wallet(object):
         received = received.values()[0]
         txin.prevout.hash = received['txhash']
         txin.prevout.n = received['n']
-        txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ... 
+        txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ...
         tx.vin.append(txin)
 
         # calculate the total excess amount
@@ -695,15 +610,114 @@ class Wallet(object):
             changeaddress = subaccounts[0]['address']
             change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
             tx.vout.append(change_txout)
-        
+
         # calculate txhash
         tx.calc_sha256()
         txhash = str(tx.sha256)
         # sign the transaction
+        #    key = CKey()
+        #    key.set_pubkey(public_key)
+        #    key.set_privkey(private_key)
+        #   signature = key.sign(txhash)
+        public_key = vault['public_key']
+        private_key = vault['private_key']
+        print "Public key: ", type(public_key), public_key
+        print "Private key: ", type(private_key), private_key
         key = CKey()
-        key.set_pubkey(vault['master_public_key'])
-        key.set_privkey(vault['master_private_key'])
+        key.set_pubkey(public_key)
+        key.set_privkey(private_key)
+        print vault['public_key'] == key.get_pubkey()
+        print vault['private_key'] == key.get_privkey()
+        print public_key == key.get_pubkey()
+        print private_key == key.get_privkey()
+        print "vault: public_key: ", vault['public_key']
+        print "key: public key:          ", key.get_pubkey()
+        print "vault: private_key: ", vault['private_key']
+        print "key: private key:          ", key.get_privkey()
         signature = key.sign(txhash)
+        # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
+        scriptSig = chr(len(signature)) + signature + chr(len(vault['public_key'])) + vault['public_key']
+        print "Adding signature: ", binascii.hexlify(scriptSig)
+        txin.scriptSig = scriptSig
+        print "####################################################################"
+        print "Tx Validity: ", tx.is_valid()
+
+        return tx
+
+
+    # fast withdraw from vault
+    def fastwithdrawfromvault(self, fromvaultaddress, toaddress, amount):
+        # select the input addresses
+        funds = 0
+        vault = self.getvault(fromvaultaddress)
+        print vault
+        """
+        {'amount': 25, 'address': u'17kDFLhy9fanFPvtDNyyhFq5zW1FGw1Edq', 'master_address': u'1P7tUbqkm9Vw8W9BDuwni7mq7aob7QG7dK', 'name': '4K6YECfns5G1asSVBJEhm1rteLxpPVAE6c', 'fees': 100}
+        """
+        if vault['amount'] + utils.calculate_fees(None) < amount:
+            print "In sufficient funds in vault, exiting, return"
+            return
+
+
+        # create transaction
+        tx = CTransaction()
+
+        # to the receiver
+        txout = CTxOut()
+        txout.nValue = amount
+        txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(toaddress)
+        tx.vout.append(txout)
+
+        # from the sender
+        nValueIn = 0
+        nValueOut = amount
+
+        txin = CTxIn()
+        txin.prevout = COutPoint()
+        received = self.chaindb.listreceivedbyvault(fromvaultaddress)
+        # assuming vaults are not reused
+        received = received.values()[0]
+        txin.prevout.hash = received['txhash']
+        txin.prevout.n = received['n']
+        txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ...
+        tx.vin.append(txin)
+
+        # calculate the total excess amount
+        excessAmount = nValueIn - nValueOut
+        # calculate the fees
+        fees = utils.calculate_fees(tx)
+        # create change transaction, if there is any change left
+        if excessAmount > fees:
+            change_txout = CTxOut()
+            change_txout.nValue = excessAmount - fees
+            changeaddress = subaccounts[0]['address']
+            change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
+            tx.vout.append(change_txout)
+
+        # calculate txhash
+        tx.calc_sha256()
+        txhash = str(tx.sha256)
+        # sign the transaction
+        #    key = CKey()
+        #    key.set_pubkey(public_key)
+        #    key.set_privkey(private_key)
+        #   signature = key.sign(txhash)
+        public_key = vault['master_public_key']
+        private_key = vault['master_private_key']
+        print type(public_key)
+        print type(private_key)
+        mkey = CKey()
+        mkey.set_pubkey(public_key)
+        mkey.set_privkey(private_key)
+        print vault['master_public_key'] == mkey.get_pubkey()
+        print vault['master_private_key'] == mkey.get_privkey()
+        print public_key == mkey.get_pubkey()
+        print private_key == mkey.get_privkey()
+        print "vault: master_public_key: ", vault['master_public_key']
+        print "key: public key:          ", mkey.get_pubkey()
+        print "vault: master_private_key: ", vault['master_private_key']
+        print "key: private key:          ", mkey.get_privkey()
+        signature = mkey.sign(txhash)
         # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
         scriptSig = chr(len(signature)) + signature + chr(len(vault['master_public_key'])) + vault['master_public_key']
         print "Adding signature: ", binascii.hexlify(scriptSig)
