@@ -371,6 +371,23 @@ class Wallet(object):
     def deletevault(self, vault_name):
         pass
 
+    # possible script signatures for a vault
+    def scriptSigs(self, vaultaddress):
+        vault = self.getvault(vaultaddress)
+        master_public_key = vault['master_public_key']
+        master_private_key = vault['master_private_key']
+        # scriptSig = chr(len(public_key)) + public_key
+        masterScriptSig = chr(len(vault['master_public_key'])) + vault['master_public_key']
+        print "########### Adding signature: ", binascii.hexlify(masterScriptSig)
+        """
+        public_key = vault['public_key']
+        private_key = vault['private_key'])
+        # scriptSig = chr(len(public_key)) + public_key
+        masterScriptSig = chr(len(vault['master_public_key'])) + vault['master_public_key']
+        print "Adding signature: ", binascii.hexlify(scriptSig)
+        """
+        return [masterScriptSig]
+
     # send to an address
     def sendtoaddress(self, toaddress, amount):
         # select the input addresses
@@ -704,25 +721,18 @@ class Wallet(object):
         #   signature = key.sign(txhash)
         public_key = vault['master_public_key']
         private_key = vault['master_private_key']
-        print type(public_key)
-        print type(private_key)
         mkey = CKey()
         mkey.set_pubkey(public_key)
         mkey.set_privkey(private_key)
-        print vault['master_public_key'] == mkey.get_pubkey()
-        print vault['master_private_key'] == mkey.get_privkey()
-        print public_key == mkey.get_pubkey()
-        print private_key == mkey.get_privkey()
-        print "vault: master_public_key: ", vault['master_public_key']
-        print "key: public key:          ", mkey.get_pubkey()
-        print "vault: master_private_key: ", vault['master_private_key']
-        print "key: private key:          ", mkey.get_privkey()
         signature = mkey.sign(txhash)
         # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
         scriptSig = chr(len(signature)) + signature + chr(len(vault['master_public_key'])) + vault['master_public_key']
         print "Adding signature: ", binascii.hexlify(scriptSig)
         txin.scriptSig = scriptSig
         print "####################################################################"
+        print "Signature: ", binascii.hexlify(chr(len(signature)) + signature)
+        print "Key length: ", binascii.hexlify(chr(len(vault['master_public_key'])))
+        print "Keys: ", binascii.hexlify(vault['master_public_key'])
         print "Tx Validity: ", tx.is_valid()
 
         return tx

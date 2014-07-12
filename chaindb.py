@@ -143,7 +143,7 @@ class ChainDb(object):
         for txout in txouts.itervalues():
             savings = savings + txout['value']
         return savings
-        
+
     def getbalance(self, address):
         balance = 0.0
         txouts = self.listreceivedbyaddress(address)
@@ -163,7 +163,7 @@ class ChainDb(object):
             blkhash = heightidx.blocks[0]
             block = self.getblock(blkhash)
             # print "block: ", block
-            
+
             for tx in block.vtx:
                 for txout in tx.vout:
                     script_key_hash = utils.output_script_to_public_key_hash(txout.scriptPubKey)
@@ -179,7 +179,7 @@ class ChainDb(object):
         balabce = balance + received - sent
     if height < chain_height:
     """
-   
+
     def sendtoaddress(self, toaddress, amount):
         tx = self.wallet.sendtoaddress(toaddress, amount)
         self.mempool.add(tx)
@@ -194,20 +194,21 @@ class ChainDb(object):
 
     def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
-        self.mempool.add(tx)
+        print "fast withdraw from vault",
+        print self.mempool.add(tx)
 
     def listreceivedbyaddress(self, address):
         txouts = {}
         end_height = self.getheight()
         public_key_hash_hex = binascii.hexlify(utils.address_to_public_key_hash(address))
-        
+
         for height in xrange(end_height):
             data = self.db.Get('height:' + str(height))
             heightidx = HeightIdx()
             heightidx.deserialize(data)
             blkhash = heightidx.blocks[0]
             block = self.getblock(blkhash)
-            
+
             for tx in block.vtx:
                 # if this transaction refers to this address in input, remove the previous transaction
                 for txin in tx.vin:
@@ -215,7 +216,7 @@ class ChainDb(object):
                         continue
                     script_key_hash_hex = binascii.hexlify(utils.scriptSig_to_public_key_hash(txin.scriptSig))
                     # print 'script_key_hash_hex: ', script_key_hash_hex
-                    # print 'public_key_hash_hex: ', public_key_hash_hex 
+                    # print 'public_key_hash_hex: ', public_key_hash_hex
                     if script_key_hash_hex == public_key_hash_hex:
                         del txouts[txin.prevout.hash]
                 # if this transaction refers to this address in output, add this transaction
@@ -233,31 +234,40 @@ class ChainDb(object):
 
     def listreceivedbyvault(self, vault_address):
         scriptPubKey = utils.vault_address_to_pay_to_vault_script(vault_address)
+        scriptSigs = self.wallet.scriptSigs(vault_address)
         txouts = {}
         end_height = self.getheight()
         #public_key_hash_hex = binascii.hexlify(utils.address_to_public_key_hash(address))
-        
+
         for height in xrange(end_height):
             data = self.db.Get('height:' + str(height))
             heightidx = HeightIdx()
             heightidx.deserialize(data)
             blkhash = heightidx.blocks[0]
             block = self.getblock(blkhash)
-            
+
             for tx in block.vtx:
                 # if this transaction refers to this address in input, remove the previous transaction
                 for txin in tx.vin:
-                    # FIXME: IF IT IS OF TYPE SCRIPT VAULT
                     if not txin.scriptSig:
                         continue
+                    print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<>>>>"
+                    print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<>>>>"
+                    print "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
+                    #print "scriptSigs", binascii.hexlify(scriptSigs)
+                    if txin.scriptSig[:-4] == binascii.unhexlify("38033ad7"):
+                        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<>>>>"
+                        print "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
+                        print "scriptSigs", binascii.hexlify(scriptSigs)
+                    for scriptSig in scriptSigs:
+                        if txin.scriptSig in scriptSig:
+                            del txouts[txin.prevout.hash]
                     # FIXME >>>>>>>>>>>>>>>>>>>>>
                     # script_vault = binascii.hexlify(utils.scriptSig_to_vault(txin.scriptSig))
                     # print 'script_key_hash_hex: ', script_key_hash_hex
                     # print 'public_key_hash_hex: ', public_key_hash_hex
-                    """ 
-                    if script_key_hash_hex == public_key_hash_hex:
-                        del txouts[txin.prevout.hash]
-                    """
+                    # if script_key_hash_hex == public_key_hash_hex:
+                    #    del txouts[txin.prevout.hash]
                 # if this transaction refers to this address in output, add this transaction
                 for n, txout in enumerate(tx.vout):
                     # print 'script_key_hash_hex: ', script_key_hash_hex
@@ -268,7 +278,7 @@ class ChainDb(object):
                         txouts[tx.sha256] = {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
                                              'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
         return txouts
-     
+
 
     def gettxidx(self, txhash):
         ser_txhash = ser_uint256(txhash)
@@ -305,7 +315,7 @@ class ChainDb(object):
         if checkorphans and blkhash in self.orphans:
             return True
         ser_hash = ser_uint256(blkhash)
-        try: 
+        try:
             self.db.Get('blocks:'+ser_hash)
             return True
         except KeyError:
@@ -495,7 +505,7 @@ class ChainDb(object):
                 return False
         except KeyError:
             pass
-            
+
         # check TX connectivity
         outpts = self.spent_outpts(block)
         if outpts is None:
@@ -593,7 +603,7 @@ class ChainDb(object):
             return None
 
         return meta
-    
+
     def getblockheight(self, blkhash):
         meta = self.getblockmeta(blkhash)
         if meta is None:
@@ -916,3 +926,25 @@ class ChainDb(object):
         block.hashMerkleRoot = block.calc_merkle()
 
         return block
+
+    def dumpblockchain(self, start_height = 0, end_height = -1):
+        end_height = self.getheight()
+        for height in xrange(start_height, end_height):
+            data = self.db.Get('height:' + str(height))
+            heightidx = HeightIdx()
+            heightidx.deserialize(data)
+            blkhash = heightidx.blocks[0]
+            block = self.getblock(blkhash)
+
+            print "\n"
+            print "Block number and hash"
+            # print block
+            for tx in block.vtx:
+                for txin in tx.vin:
+                    if not txin.scriptSig:
+                        continue
+                    print "Some tx in # "
+                for n, txout in enumerate(tx.vout):
+                    address = utils.output_script_to_address(txout.scriptPubKey)
+                    print str(n) + ": Sent " + str(txout.nValue) + " to: " + address
+        return None

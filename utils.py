@@ -91,10 +91,11 @@ def addresses_to_vault_address(address, master_address, timeout):
     # Add the 4 checksum bytes from point 7 at the end of extended RIPEMD-160 hash from point 4.
     # This is the 25-byte binary Bitcoin Address.
     binary_address = extended_address + checksum
+    # encode in base-58 format
     vault_address = encode(binary_address)
     return str(vault_address)
-    
-    
+
+
 def public_key_to_vault_address(public_key):
     public_key_hex = public_key.encode('hex')
     public_key_bytearray = bytearray.fromhex(public_key_hex)
@@ -155,7 +156,7 @@ def public_key_hex_to_pay_to_script_hash(public_key_hex):
 def public_key_hex_to_pay_to_pubkey(public_key_hex):
     script = "41" + public_key_hex + "AC"
     return binascii.unhexlify(script)
-        
+
 def public_key_to_pay_to_pubkey(public_key):
     script = "41" + binascii.hexlify(public_key) + "AC"
     return binascii.unhexlify(script)
@@ -222,7 +223,7 @@ def addresses_to_pay_to_vault_script(address, master_address, timeout):
 
 def vault_address_to_pay_to_vault_script(vault_address):
     vault_hash = address_to_vault_hash(vault_address)
-    # script: "14" ("Push 20 bytes onto stack") + binascii.hexlify(vault_script_hex_hash) + OP_EQUAL + OP_VAULT)
+    # hex: "14" (Push 20 bytes) + vault_script_hash + "87" (OP_EQUAL) + "C4" (OP_VAULT)
     pay_to_vault_script_hex = "14" + binascii.hexlify(vault_hash) + "87" + "C4"
     pay_to_vault_script = binascii.unhexlify(pay_to_vault_script_hex)
     return pay_to_vault_script
@@ -252,9 +253,11 @@ def sriptSig_to_pubkey(script):
     len_signed_data = ord(script[0])
     len_pubkey_data = ord(script[len_signed_data:len_signed_data+1])
     return script[-len_pubkey_data:]
-    
+
+# this is returning hex hash ... fix this
 def output_script_to_public_key_hash(script):
     # better matching .. but for now . .. this should work
+    # print "Script: ", binascii.hexlify(script)
     if not script:
         return
     # is the script is a standard generation address
@@ -263,10 +266,36 @@ def output_script_to_public_key_hash(script):
     # is the script is a standard transaction address
     elif binascii.hexlify(script[:3]) == "76a914":
         return binascii.hexlify(script[3:-2])
+    elif script[:1] == binascii.unhexlify("14"):
+        # hex: "14" (Push 20 bytes) + vault_script_hash + "87" (OP_EQUAL) + "C4" (OP_VAULT)
+        return binascii.hexlify(script[1:-2])
     else:
-        pass
-        #print "Error scritpt: ", binascii.hexlify(script)
+        raise Exception("Error unknown scritpt: ", binascii.hexlify(script))
     return None
+
+def output_script_to_address(script):
+    version = '0x00'
+    if script[:1] == binascii.unhexlify("41"):
+        version = binascii.unhexlify('00')
+    elif script[:1] == binascii.unhexlify("76"):
+        version = binascii.unhexlify('00')
+    elif script[:1] == binascii.unhexlify("14"):
+        version = binascii.unhexlify('08')
+    else:
+        raise Exception("Error unknown scritpt: ", binascii.hexlify(script))
+    # fix this into a single complete module
+    hash160_address = binascii.unhexlify(output_script_to_public_key_hash(script))
+    # add version byte: 0x00 for Main Network
+    extended_address = version + hash160_address
+    # generate double SHA-256 hash of extended address
+    hash_address = myhash(extended_address)
+    # Take the first 4 bytes of the second SHA-256 hash. This is the address checksum
+    checksum = hash_address[:4]
+    # Add the 4 checksum bytes from point 7 at the end of extended RIPEMD-160 hash from point 4. This is the 25-byte binary Bitcoin Address
+    binary_address = extended_address + checksum
+    # encode in base 58 format
+    address = encode(binary_address)
+    return address
 
 def scriptSig_to_public_key_hash(script):
     if not script:
@@ -276,7 +305,7 @@ def scriptSig_to_public_key_hash(script):
     script = script[1 + signature_length:]
     # remove pubkey length and return
     return script [1:]
-    
+
 """
 # Output script to address representation
 def script_to_address(script,vbyte=0):
@@ -303,14 +332,14 @@ def mk_scripthash_script(addr):
 def address_to_script(addr):
     if addr[0] == '3': return mk_scripthash_script(addr)
     else: return mk_pubkey_script(addr)
-    
+
 def address_to_output_script(address):
     pass
 
 # FIX ME: fees is not fixed, but for now its isset to 1
 def calculate_fees(tx):
     return 1
-    
+
 if __name__ == "__main__":
     address1 = "16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM"
     address2 = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"

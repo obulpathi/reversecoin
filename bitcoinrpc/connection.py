@@ -683,6 +683,17 @@ class BitcoinConnection(object):
         """
         return self.proxy.dumpprivkey(address)
 
+    def dumpblockchain(self, start_height = 0, end_height = -1):
+        """
+        Dumps the blockchain.
+
+        Arguments:
+
+        - *start_height* -- Starting block height.
+        - *end_height* -- Ending block height.
+        """
+        return self.proxy.dumpblockchain(start_height, end_height)
+
     def signmessage(self, address, message):
         """
         Sign messages, returns the signature

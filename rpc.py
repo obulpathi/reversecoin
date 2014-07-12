@@ -19,6 +19,7 @@ import bitcoin.coredefs
 from bitcoin.serialize import uint256_from_compact
 
 VALID_RPCS = {
+    "dumpblockchain",
     "getaccount",
     "getbalance",
     "getblockcount",
@@ -79,7 +80,7 @@ def blockToJSON(block, blkmeta, cur_height):
     for tx in block.vtx:
         tx.calc_sha256()
         txs.append("%064x" % (tx.sha256,))
-    
+
     res['tx'] = txs
 
     return res
@@ -113,8 +114,10 @@ class RPCExec(object):
         s += "stop - stop node\n"
         return (s, None)
 
+    def dumpblockchain(self, params):
+        return (self.chaindb.dumpblockchain(params[0], params[1]), None)
+
     def getaccount(self, params):
-        print "RPC : Get account"
         return (self.wallet.getaccount(params[0]), None)
 
     def getbalance(self, params):

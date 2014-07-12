@@ -15,12 +15,14 @@ class MemPool(object):
 		tx.calc_sha256()
 		hash = tx.sha256
 		hashstr = uint256_to_shortstr(hash)
+		print "adding tx to mempool ################## "
 		if hash in self.pool:
 			self.log.write("MemPool.add(%s): already known" % (hashstr,))
 			return False
 		if not tx.is_valid():
 			self.log.write("MemPool.add(%s): invalid TX" % (hashstr, ))
 			return False
+		print "added tx to mempool ####################################### "
 		self.pool[hash] = tx
 		self.log.write("MemPool.add(%s), poolsz %d" % (hashstr, len(self.pool)))
 		return True
