@@ -21,6 +21,7 @@ from bitcoin.serialize import uint256_from_compact
 VALID_RPCS = {
     "dumpblockchain",
     "getaccount",
+    "getvault",
     "getbalance",
     "getblockcount",
     "getblock",
@@ -119,6 +120,9 @@ class RPCExec(object):
 
     def getaccount(self, params):
         return (self.wallet.getaccount(params[0]), None)
+
+    def getvault(self, params):
+        return (self.wallet.getvault(), None)
 
     def getbalance(self, params):
         return (self.wallet.getbalance(params[0]), None)
@@ -236,7 +240,7 @@ class RPCExec(object):
         data = bufreverse(data)
         res['data'] = data.encode('hex')
 
-        print "Getwork returning: ", res
+        #print "Getwork returning: ", res
         return (res, None)
 
     def getwork_submit(self, hexstr):
@@ -339,7 +343,6 @@ class RPCExec(object):
             if isinstance(rpcreq, dict):
                 start_response('200 OK', [('Content-Type', 'application/json')])
                 resp = self.handle_rpc(rpcreq)
-                print(resp)
                 respstr = json.dumps(resp) + "\n"
                 yield respstr
 

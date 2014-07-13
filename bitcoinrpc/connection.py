@@ -185,6 +185,16 @@ class BitcoinConnection(object):
         """
         return self.proxy.getaccount(bitcoinaddress)
 
+    def getvault(self):
+        """
+        Returns the vault associated with the given address.
+
+        Arguments:
+
+        - *bitcoinaddress* -- Bitcoin address to get account for.
+        """
+        return self.proxy.getvault()
+
     def getaddressesbyaccount(self, account):
         """
         Returns the list of addresses for the given account.

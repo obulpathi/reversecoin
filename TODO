@@ -1,12 +1,16 @@
 TODO:
 * remove hardcoding of fees and timeout for vault
-* 
+* are we assuming that there is only one vault and its not reusable?
+* What if there are more than one one transactions to vault
+* auto generation of addresses for vault send command
+* fix other miscelleneous things
+* pay to script hash ... its very easy to do now ...
+
 See BUGS for other info.
 
 TODO:
 * Add documentaiton
 * Mark the bugs with #FIXME tag
-* Setup a bounty for them: 0.1 BTC for each and announce in next meeting and hackathon
 * Validate transactions
 * RPC support for various commands
 * Leightweight

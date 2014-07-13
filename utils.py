@@ -109,7 +109,7 @@ def public_key_to_vault_address(public_key):
     checksum = hash_address[:4]
     # Add the 4 checksum bytes from point 7 at the end of extended RIPEMD-160 hash from point 4. This is the 25-byte binary Bitcoin Address.
     binary_address = extended_address + checksum
-    print binary_address
+    #print binary_address
     address = encode(binary_address)
     return address
 
@@ -125,7 +125,7 @@ def public_key_hex_to_vault_address(public_key_hex):
     checksum = hash_address[:4]
     # Add the 4 checksum bytes from point 7 at the end of extended RIPEMD-160 hash from point 4. This is the 25-byte binary Bitcoin Address.
     binary_address = extended_address + checksum
-    print binary_address
+    #print binary_address
     address = encode(binary_address)
     return address
 
@@ -164,7 +164,7 @@ def public_key_to_pay_to_pubkey(public_key):
 def address_to_pay_to_pubkey_hash(address):
     pubkey_hash = address_to_public_key_hash(address)
     script = "76A914" + str(binascii.hexlify(pubkey_hash)) + "88AC"
-    print script
+    #print script
     # script = str(hex(OP_DUP)[2:]) + str(hex(OP_HASH160)[2:]) + "14" + str(binascii.hexlify(pubkey_hash)) + str(hex(OP_EQUALVERIFY)[2:]) + str(hex(OP_CHECKSIG)[2:])
     return binascii.unhexlify(script)
 
@@ -352,4 +352,4 @@ if __name__ == "__main__":
     # print "address to public key hash: ", binascii.hexlify(address_to_public_key_hash(address1))
     # print "public key hash: ", binascii.hexlify(myhash160(bytearray.fromhex(public_key_hex1)))
     address = '1AqTMY7kmHZxBuLUR5wJjPFUvqGs23sesr'
-    print binascii.hexlify(address_to_pay_to_pubkey_hash(address))
+    #print binascii.hexlify(address_to_pay_to_pubkey_hash(address))

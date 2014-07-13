@@ -206,18 +206,16 @@ class Wallet(object):
             return
         # if account is in wallet
         account = loads(walletdb[accountname])
+        #vault = loads(walletdb[vaults[0]])
         walletdb.close()
-        print account
+        # print account
         for subaccount in account.itervalues():
             subaccount['public_key'] = subaccount['public_key'].encode('hex')
             subaccount['private_key'] = subaccount['private_key'].encode('hex')
             subaccount['balance'] = self.chaindb.getbalance(subaccount['address'])
             subaccount['received'] = self.chaindb.listreceivedbyaddress(subaccount['address']).values()
         # return vaults
-        print("vaults\n\n\n\n\n")
-        for vault in vaults:
-            print(vaults)
-        print("vaults\n\n\n\n\n")
+        # print "Vault: ", vault
         for vault in vaults:
             subaccount = {}
             #subaccount = {address: vault}
@@ -251,8 +249,6 @@ class Wallet(object):
                 subaccount['balance'] = self.chaindb.getbalance(subaccount['address'])
                 subaccount['received'] = self.chaindb.listreceivedbyaddress(subaccount['address']).values()
         for vault in vaults:
-            print "subaccount >>>>>>>>>>>>>>: "
-            print subaccount
             subaccount = {}
             subaccount = {'address': vault}
             subaccount['pubkey'] = 'pubkey'
@@ -360,11 +356,19 @@ class Wallet(object):
         walletdb.close()
 
     # return a vault
-    def getvault(self, vaultname):
-        print type(vaultname), vaultname
+    def getvault(self, vaultname = None):
+        #print type(vaultname), vaultname
         walletdb = self.open()
+        if not vaultname:
+            vaultname = loads(walletdb['vaults'])[0]
         vault = loads(walletdb[str(vaultname)])
         walletdb.close()
+        """
+        vault['private_key'] = 'private_key'
+        vault['master_private_key'] = 'master_private_key'
+        vault['public_key'] = 'public_key'
+        vault['master_public_key'] = 'master_public_key'
+        """
         return vault
 
     # delete a vault
@@ -378,8 +382,8 @@ class Wallet(object):
         master_private_key = vault['master_private_key']
         # scriptSig = chr(len(public_key)) + public_key
         masterScriptSig = chr(len(vault['master_public_key'])) + vault['master_public_key']
-        print "########### Adding signature: ", binascii.hexlify(masterScriptSig)
         """
+        print "########### Adding signature: ", binascii.hexlify(masterScriptSig)
         public_key = vault['public_key']
         private_key = vault['private_key'])
         # scriptSig = chr(len(public_key)) + public_key
@@ -467,19 +471,19 @@ class Wallet(object):
         txhash = str(tx.sha256)
         # sign the transaction
         for public_key, private_key, txin in zip(public_keys, private_keys, tx.vin):
-            print "Public key: ", type(public_key), public_key
-            print "Private key: ", type(private_key), private_key
+            #print "Public key: ", type(public_key), public_key
+            #print "Private key: ", type(private_key), private_key
             key = CKey()
             key.set_pubkey(public_key)
             key.set_privkey(private_key)
             signature = key.sign(txhash)
-            print "Public key: ", key.get_pubkey()
-            print "Private key: ", key.get_privkey()
+            #print "Public key: ", key.get_pubkey()
+            #print "Private key: ", key.get_privkey()
             # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
             scriptSig = chr(len(signature)) + signature + chr(len(public_key)) + public_key
-            print "Adding signature: ", binascii.hexlify(scriptSig)
+            #print "Adding signature: ", binascii.hexlify(scriptSig)
             txin.scriptSig = scriptSig
-            print "Tx Validity: ", tx.is_valid()
+            #print "Tx Validity: ", tx.is_valid()
         return tx
 
     # send to a vault
@@ -512,8 +516,8 @@ class Wallet(object):
         txout = CTxOut()
         txout.nValue = amount
         vault_address = utils.addresses_to_vault_address(toaddress, tomaster_address, timeout)
-        print('############################################')
-        print("\n\nVault address: " + vault_address + "\n\n")
+        #print('############################################')
+        #print("\n\nVault address: " + vault_address + "\n\n")
         #txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(toaddress)
         #txout.scriptPubKey = utils.addresses_to_pay_to_vault_script(toaddress, tomaster_address, timeout)
         txout.scriptPubKey = utils.vault_address_to_pay_to_vault_script(vault_address)
@@ -573,10 +577,10 @@ class Wallet(object):
             signature = key.sign(txhash)
             # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
             scriptSig = chr(len(signature)) + signature + chr(len(public_key)) + public_key
-            print "Adding signature: ", binascii.hexlify(scriptSig)
+            #print "Adding signature: ", binascii.hexlify(scriptSig)
             txin.scriptSig = scriptSig
-            print "Tx Validity: ", tx.is_valid()
-        print "returning tx"
+            #print "Tx Validity: ", tx.is_valid()
+        #print "returning tx"
         return tx
 
 
@@ -585,7 +589,7 @@ class Wallet(object):
         # select the input addresses
         funds = 0
         vault = self.getvault(fromvaultaddress)
-        print vault
+        #print vault
         """
         {'amount': 25, 'address': u'17kDFLhy9fanFPvtDNyyhFq5zW1FGw1Edq', 'master_address': u'1P7tUbqkm9Vw8W9BDuwni7mq7aob7QG7dK', 'name': '4K6YECfns5G1asSVBJEhm1rteLxpPVAE6c', 'fees': 100}
         """
@@ -638,11 +642,12 @@ class Wallet(object):
         #   signature = key.sign(txhash)
         public_key = vault['public_key']
         private_key = vault['private_key']
-        print "Public key: ", type(public_key), public_key
-        print "Private key: ", type(private_key), private_key
+        #print "Public key: ", type(public_key), public_key
+        #print "Private key: ", type(private_key), private_key
         key = CKey()
         key.set_pubkey(public_key)
         key.set_privkey(private_key)
+        """
         print vault['public_key'] == key.get_pubkey()
         print vault['private_key'] == key.get_privkey()
         print public_key == key.get_pubkey()
@@ -651,13 +656,14 @@ class Wallet(object):
         print "key: public key:          ", key.get_pubkey()
         print "vault: private_key: ", vault['private_key']
         print "key: private key:          ", key.get_privkey()
+        """
         signature = key.sign(txhash)
         # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
         scriptSig = chr(len(signature)) + signature + chr(len(vault['public_key'])) + vault['public_key']
-        print "Adding signature: ", binascii.hexlify(scriptSig)
+        #print "Adding signature: ", binascii.hexlify(scriptSig)
         txin.scriptSig = scriptSig
-        print "####################################################################"
-        print "Tx Validity: ", tx.is_valid()
+        #print "####################################################################"
+        #print "Tx Validity: ", tx.is_valid()
 
         return tx
 
@@ -667,14 +673,10 @@ class Wallet(object):
         # select the input addresses
         funds = 0
         vault = self.getvault(fromvaultaddress)
-        print vault
-        """
-        {'amount': 25, 'address': u'17kDFLhy9fanFPvtDNyyhFq5zW1FGw1Edq', 'master_address': u'1P7tUbqkm9Vw8W9BDuwni7mq7aob7QG7dK', 'name': '4K6YECfns5G1asSVBJEhm1rteLxpPVAE6c', 'fees': 100}
-        """
+        #print vault
         if vault['amount'] + utils.calculate_fees(None) < amount:
             print "In sufficient funds in vault, exiting, return"
             return
-
 
         # create transaction
         tx = CTransaction()
@@ -699,6 +701,8 @@ class Wallet(object):
         txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ...
         tx.vin.append(txin)
 
+        # calculate nValueIn
+        nValueIn = received['value']
         # calculate the total excess amount
         excessAmount = nValueIn - nValueOut
         # calculate the fees
@@ -707,18 +711,16 @@ class Wallet(object):
         if excessAmount > fees:
             change_txout = CTxOut()
             change_txout.nValue = excessAmount - fees
-            changeaddress = subaccounts[0]['address']
+            account = self.getaccount()
+            #print account
+            changeaddress = account.values()[0]['address']
+            #print "Change address: ", changeaddress
             change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
             tx.vout.append(change_txout)
 
         # calculate txhash
         tx.calc_sha256()
         txhash = str(tx.sha256)
-        # sign the transaction
-        #    key = CKey()
-        #    key.set_pubkey(public_key)
-        #    key.set_privkey(private_key)
-        #   signature = key.sign(txhash)
         public_key = vault['master_public_key']
         private_key = vault['master_private_key']
         mkey = CKey()
@@ -727,12 +729,14 @@ class Wallet(object):
         signature = mkey.sign(txhash)
         # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
         scriptSig = chr(len(signature)) + signature + chr(len(vault['master_public_key'])) + vault['master_public_key']
-        print "Adding signature: ", binascii.hexlify(scriptSig)
+        #print "Adding signature: ", binascii.hexlify(scriptSig)
         txin.scriptSig = scriptSig
+        """
         print "####################################################################"
         print "Signature: ", binascii.hexlify(chr(len(signature)) + signature)
         print "Key length: ", binascii.hexlify(chr(len(vault['master_public_key'])))
         print "Keys: ", binascii.hexlify(vault['master_public_key'])
         print "Tx Validity: ", tx.is_valid()
+        """
 
         return tx

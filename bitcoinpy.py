@@ -108,7 +108,7 @@ if __name__ == '__main__':
     # load blocks.dat into db, if db is newly created
     if new_install:
         chaindb.loadfile(datadir + '/blocks.dat')
-    
+
     if 'loadblock' in settings:
         chaindb.loadfile(settings['loadblock'])
 

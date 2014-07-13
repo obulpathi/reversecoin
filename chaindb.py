@@ -121,7 +121,9 @@ class ChainDb(object):
             self.log.write("Database magic number mismatch. Data corruption or incorrect network?")
             raise RuntimeError
 
+
     def puttxidx(self, txhash, txidx, batch=None):
+        print "Put txidx: ", txhash
         ser_txhash = ser_uint256(txhash)
 
         try:
@@ -136,6 +138,41 @@ class ChainDb(object):
                            hex(txidx.spentmask))
 
         return True
+
+
+    def gettxidx(self, txhash):
+        print "Get txidx: ", txhash
+        ser_txhash = ser_uint256(txhash)
+        try:
+            ser_value = self.db.Get('tx:'+ser_txhash)
+        except KeyError:
+            print 'DB KEY Error: ', txhash
+            return None
+
+        pos = string.find(ser_value, ' ')
+
+        txidx = TxIdx()
+        txidx.blkhash = long(ser_value[:pos], 16)
+        txidx.spentmask = long(ser_value[pos+1:], 16)
+
+        return txidx
+
+
+    def gettx(self, txhash):
+        txidx = self.gettxidx(txhash)
+        if txidx is None:
+            print 'tdidx is None'
+            return None
+
+        block = self.getblock(txidx.blkhash)
+        for tx in block.vtx:
+            tx.calc_sha256()
+            if tx.sha256 == txhash:
+                return tx
+
+        self.log.write("ERROR: Missing TX %064x in block %064x" % (txhash, txidx.blkhash))
+        return None
+
 
     def getsavings(self, vault):
         savings = 0.0
@@ -186,6 +223,8 @@ class ChainDb(object):
 
     def sendtovault(self, toaddress, tomaster_address, timeout, amount):
         tx = self.wallet.sendtovault(toaddress, tomaster_address, timeout, amount)
+        tx.calc_sha256()
+        print "Adding to vault: ", tx.sha256
         self.mempool.add(tx)
 
     def withdrawfromvault(self, fromaddress, toaddress, amount):
@@ -249,15 +288,16 @@ class ChainDb(object):
             for tx in block.vtx:
                 # if this transaction refers to this address in input, remove the previous transaction
                 for txin in tx.vin:
+                    # if its a coinbase transaction, skip
                     if not txin.scriptSig:
                         continue
-                    print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<>>>>"
-                    print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<>>>>"
-                    print "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
+                    #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<>>>>"
+                    #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<>>>>"
+                    #print "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
                     #print "scriptSigs", binascii.hexlify(scriptSigs)
                     if txin.scriptSig[:-4] == binascii.unhexlify("38033ad7"):
-                        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<>>>>"
-                        print "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
+                        #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<>>>>"
+                        #print "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
                         print "scriptSigs", binascii.hexlify(scriptSigs)
                     for scriptSig in scriptSigs:
                         if txin.scriptSig in scriptSig:
@@ -273,41 +313,11 @@ class ChainDb(object):
                     # print 'script_key_hash_hex: ', script_key_hash_hex
                     # print 'public_key_hash_hex: ', public_key_hash_hex
                     if scriptPubKey == txout.scriptPubKey:
-                        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+                        #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
                         tx.calc_sha256()
                         txouts[tx.sha256] = {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
                                              'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
         return txouts
-
-
-    def gettxidx(self, txhash):
-        ser_txhash = ser_uint256(txhash)
-        try:
-            ser_value = self.db.Get('tx:'+ser_txhash)
-        except KeyError:
-            return None
-
-        pos = string.find(ser_value, ' ')
-
-        txidx = TxIdx()
-        txidx.blkhash = long(ser_value[:pos], 16)
-        txidx.spentmask = long(ser_value[pos+1:], 16)
-
-        return txidx
-
-    def gettx(self, txhash):
-        txidx = self.gettxidx(txhash)
-        if txidx is None:
-            return None
-
-        block = self.getblock(txidx.blkhash)
-        for tx in block.vtx:
-            tx.calc_sha256()
-            if tx.sha256 == txhash:
-                return tx
-
-        self.log.write("ERROR: Missing TX %064x in block %064x" % (txhash, txidx.blkhash))
-        return None
 
     def haveblock(self, blkhash, checkorphans):
         if self.blk_cache.exists(blkhash):
@@ -820,10 +830,12 @@ class ChainDb(object):
             self.putblock(block)
 
     def newblock_txs(self):
+        #print "New block transactions >>>>>>>>>>>>>>>>>>>>"
         txlist = []
         for tx in self.mempool.pool.itervalues():
             # query finalized, non-coinbase mempool tx's
             if tx.is_coinbase() or not tx.is_final():
+                #print "Coinbase or FINAL ... not adding"
                 continue
             # iterate through inputs, calculate total input value
             valid = True
@@ -834,6 +846,8 @@ class ChainDb(object):
                 in_tx = self.gettx(tin.prevout.hash)
                 if (in_tx is None or
                     tin.prevout.n >= len(in_tx.vout)):
+                    print "in_tx is None: ", in_tx is None
+                    print 'tin.prevout.n >= len(in_tx.vout)', tin.prevout.n >= len(in_tx.vout)
                     valid = False
                 else:
                     v = in_tx.vout[tin.prevout.n].nValue
@@ -841,6 +855,7 @@ class ChainDb(object):
                     dPriority += Decimal(v * 1)
 
             if not valid:
+                print "Transaction not valid ###################"
                 continue
             # iterate through outputs, calculate total output value
             for txout in tx.vout:
@@ -849,6 +864,7 @@ class ChainDb(object):
             # calculate fees paid, if any
             tx.nFeesPaid = nValueIn - nValueOut
             if tx.nFeesPaid < 0:
+                print "Fees < 0 skipping transaction >>>>>>>>>>>>>.."
                 continue
 
             # calculate fee-per-KB and priority
@@ -887,6 +903,9 @@ class ChainDb(object):
                 txlist.append(tx)
                 txlist_bytes += tx.ser_size
                 free_bytes -= tx.ser_size
+        print 'Returning the transaction list >>>>>>>'
+        print 'Length: ', len(txlist)
+        print 'List: ', txlist
         return txlist
 
     def newblock(self):
@@ -937,7 +956,7 @@ class ChainDb(object):
             block = self.getblock(blkhash)
 
             print "\n"
-            print "Block number and hash"
+            print "Block: ", height
             # print block
             for tx in block.vtx:
                 for txin in tx.vin:
