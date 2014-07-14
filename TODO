@@ -1,4 +1,6 @@
 TODO:
+* remove FIXMEs
+* fix the txhash and block hash for vaultfastwithdrawl in chaindb and wallet
 * remove hardcoding of fees and timeout for vault
 * are we assuming that there is only one vault and its not reusable?
 * What if there are more than one one transactions to vault

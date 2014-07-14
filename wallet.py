@@ -173,6 +173,22 @@ class Wallet(object):
 		    sys.exit(1)
 	    return db
 
+    def get(self, key):
+        key = str(key)
+        walletdb = self.open()
+        if not key in walletdb:
+            print "********************************"
+            print "Walletdb: key error"
+        value = loads(walletdb[key])
+        walletdb.close()
+        return value
+
+    def set(self, key, value):
+        walletdb = self.open(writable = True)
+        walletdb[key] = dumps(value)
+        walletdb.sync()
+        walletdb.close()
+
     # if wallet does not exist, create it
     def initialize(self):
         if not os.path.isfile(self.walletfile):
@@ -266,9 +282,11 @@ class Wallet(object):
         private_key = key.get_privkey()
         public_key = key.get_pubkey()
         address = pubkey_to_address(public_key)
+        """
         print "Address: ", address
         print "Private key: ", type(private_key), private_key
         print "Public key: ", type(public_key), public_key
+        """
         return {"address": address, "public_key": public_key, "private_key": private_key, "balance": 0.0, 'height' : 0, 'received' : []}
 
     # create and return a new address
@@ -373,6 +391,10 @@ class Wallet(object):
 
     # delete a vault
     def deletevault(self, vault_name):
+        pass
+
+    # add vault received
+    def receivevault(self, vault, txhash):
         pass
 
     # possible script signatures for a vault
@@ -503,7 +525,6 @@ class Wallet(object):
                     if funds >= amount + utils.calculate_fees(None):
                         break
 
-        # print "subaccounts 2: ", subaccounts
         # incase of insufficient funds, return
         if funds < amount + utils.calculate_fees(None):
             print "In sufficient funds, exiting, return"
@@ -569,6 +590,7 @@ class Wallet(object):
         # calculate txhash
         tx.calc_sha256()
         txhash = str(tx.sha256)
+        print "###### Sending to vault", txhash
         # sign the transaction
         for public_key, private_key, txin in zip(public_keys, private_keys, tx.vin):
             key = CKey()
@@ -581,6 +603,16 @@ class Wallet(object):
             txin.scriptSig = scriptSig
             #print "Tx Validity: ", tx.is_valid()
         #print "returning tx"
+        # push data to vault
+        """
+        "txhash": {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
+                             'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
+
+        self.set(vault_address, {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
+                             'scriptPubKey': binascii.hexlify(txout.scriptPubKey)})
+        """
+        self.set("vault:" + vault_address, {'txhash': tx.sha256})
+
         return tx
 
 
@@ -696,7 +728,11 @@ class Wallet(object):
         received = self.chaindb.listreceivedbyvault(fromvaultaddress)
         # assuming vaults are not reused
         received = received.values()[0]
+        # FIXME
         txin.prevout.hash = received['txhash']
+        tmp_var = self.get("vault:" + fromvaultaddress)
+        print "(&&&&&&&)", tmp_var
+        txin.prevout.hash = tmp_var['txhash']
         txin.prevout.n = received['n']
         txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ...
         tx.vin.append(txin)

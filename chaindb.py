@@ -142,6 +142,9 @@ class ChainDb(object):
 
     def gettxidx(self, txhash):
         print "Get txidx: ", txhash
+        # FIXME
+        # txhash = 37134457849310544379321847815222979621050716835863032481174257422146321182194
+        #txhash = 12824763890879036705026737530911428117291262166163414962171072969605310215475
         ser_txhash = ser_uint256(txhash)
         try:
             ser_value = self.db.Get('tx:'+ser_txhash)
@@ -169,6 +172,10 @@ class ChainDb(object):
             tx.calc_sha256()
             if tx.sha256 == txhash:
                 return tx
+            else:
+                # FIXME: temporary hack to get the code working
+                self.log.write("ERROR: Missing TX %064x in block %064x" % (txhash, txidx.blkhash))
+                return tx
 
         self.log.write("ERROR: Missing TX %064x in block %064x" % (txhash, txidx.blkhash))
         return None
@@ -187,35 +194,6 @@ class ChainDb(object):
         for txout in txouts.itervalues():
             balance = balance + txout['value']
         return balance
-        """
-        end_height = self.getheight()
-        print "\n\naddress: ", address
-        # print "end_height: ", end_height
-        for height in xrange(end_height):
-            # print "height: ", height
-            data = self.db.Get('height:' + str(height))
-            # print "data at height: ", height, data
-            heightidx = HeightIdx()
-            heightidx.deserialize(data)
-            blkhash = heightidx.blocks[0]
-            block = self.getblock(blkhash)
-            # print "block: ", block
-
-            for tx in block.vtx:
-                for txout in tx.vout:
-                    script_key_hash = utils.output_script_to_public_key_hash(txout.scriptPubKey)
-                    public_key_hash = binascii.hexlify(utils.address_to_public_key_hash(address))
-                    if script_key_hash == public_key_hash:
-                        balance = balance + txout.nValue
-        return balance """
-    """ Merge into getbalance
-    # scan the blocks for transactions to this address
-    chain_height = 10
-    for index in range(height, chain_height):
-        received, sent = scan_block(index, address)
-        balabce = balance + received - sent
-    if height < chain_height:
-    """
 
     def sendtoaddress(self, toaddress, amount):
         tx = self.wallet.sendtoaddress(toaddress, amount)
@@ -291,12 +269,9 @@ class ChainDb(object):
                     # if its a coinbase transaction, skip
                     if not txin.scriptSig:
                         continue
-                    #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<>>>>"
-                    #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<>>>>"
                     #print "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
                     #print "scriptSigs", binascii.hexlify(scriptSigs)
                     if txin.scriptSig[:-4] == binascii.unhexlify("38033ad7"):
-                        #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<>>>>"
                         #print "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
                         print "scriptSigs", binascii.hexlify(scriptSigs)
                     for scriptSig in scriptSigs:
@@ -310,10 +285,8 @@ class ChainDb(object):
                     #    del txouts[txin.prevout.hash]
                 # if this transaction refers to this address in output, add this transaction
                 for n, txout in enumerate(tx.vout):
-                    # print 'script_key_hash_hex: ', script_key_hash_hex
-                    # print 'public_key_hash_hex: ', public_key_hash_hex
                     if scriptPubKey == txout.scriptPubKey:
-                        #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+                        print "Vault input txhash: ", height, n, tx.sha256, tx
                         tx.calc_sha256()
                         txouts[tx.sha256] = {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
                                              'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
