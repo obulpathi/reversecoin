@@ -204,6 +204,12 @@ class Wallet(object):
             walletdb['vaults'] = dumps([])
             walletdb.sync()
             walletdb.close()
+        # create sqlitedb
+        connection = sqlite3.connect('vault.db')
+        cursor = connection.cursor()
+        cursor.execute('''CREATE TABLE vaults (txhash varchar(50), date text)''')
+        connection.commit()
+        connection.close()
 
     # return an account
     def getaccount(self, accountname = None):
@@ -622,9 +628,6 @@ class Wallet(object):
         funds = 0
         vault = self.getvault(fromvaultaddress)
         #print vault
-        """
-        {'amount': 25, 'address': u'17kDFLhy9fanFPvtDNyyhFq5zW1FGw1Edq', 'master_address': u'1P7tUbqkm9Vw8W9BDuwni7mq7aob7QG7dK', 'name': '4K6YECfns5G1asSVBJEhm1rteLxpPVAE6c', 'fees': 100}
-        """
         if vault['amount'] + utils.calculate_fees(None) < amount:
             print "In sufficient funds in vault, exiting, return"
             return
@@ -648,6 +651,9 @@ class Wallet(object):
         # assuming vaults are not reused
         received = received.values()[0]
         txin.prevout.hash = received['txhash']
+        # FIXME
+        tmp_var = self.get("vault:" + fromvaultaddress)
+        txin.prevout.hash = tmp_var['txhash']
         txin.prevout.n = received['n']
         txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ...
         tx.vin.append(txin)

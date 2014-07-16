@@ -1,3 +1,4 @@
 gevent
 python-leveldb
+python-sqlite
 bitcoin-python

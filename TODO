@@ -27,6 +27,11 @@ BUGS
 * Wallet compatiability: 0.1 BTC
 * Support for stratum miner: 0.1 BTC
 
+LATER
+-----
+* Wallet Transistion from bsddb to SQLite
+* Single database for Wallet and Vault transactions
+
 P2P commands:
 	alert
 

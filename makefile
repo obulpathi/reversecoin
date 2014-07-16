@@ -12,6 +12,7 @@ clean:
 
 new:
 	rm -rf ~/.bitcoinpy/*
+	rm walletrpc/vault.db
 	mkdir -p ~/.bitcoinpy/leveldb
 	cp genesis.dat ~/.bitcoinpy/blocks.dat
 	python bitcoinpy.py config.cfg

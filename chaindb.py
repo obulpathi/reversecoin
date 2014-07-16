@@ -6,6 +6,7 @@
 import string
 import cStringIO
 import leveldb
+import sqlite3
 import io
 import os
 import time
@@ -206,13 +207,25 @@ class ChainDb(object):
         self.mempool.add(tx)
 
     def withdrawfromvault(self, fromaddress, toaddress, amount):
-        tx = self.wallet.withdrawfromvault(fromaddress, toaddress, amount)
+        tx, timeout = self.wallet.withdrawfromvault(fromaddress, toaddress, amount)
         self.mempool.add(tx)
+        # add it to sqlite
+        # store in sqlitedb
+        connection = sqlite3.connect('vault.db')
+        cursor = connection.cursor()
+        cursor.execute("INSERT INTO vaults VALUES(" + str(tx.sha256) + "," + datetime() + timeout))
+        connection.commit()
+        connection.close() # don't close and reopen connection every now and then OK
+                           # maintain an open session
 
     def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
         print "fast withdraw from vault",
         print self.mempool.add(tx)
+
+    def overridevaulttx(self, fromvault, toaddress, amount):
+        tx = self.wallet.overridevaulttx(self, fromvault, toaddress, amount)
+        self.mempool.add(tx)
 
     def listreceivedbyaddress(self, address):
         txouts = {}
@@ -251,11 +264,13 @@ class ChainDb(object):
 
     def listreceivedbyvault(self, vault_address):
         scriptPubKey = utils.vault_address_to_pay_to_vault_script(vault_address)
-        scriptSigs = self.wallet.scriptSigs(vault_address)
+        scriptSig = utils.vault_address_to_pay_to_vault_script(vault_address)
+        #scriptSigs = self.wallet.scriptSigs(vault_address)
         txouts = {}
         end_height = self.getheight()
         #public_key_hash_hex = binascii.hexlify(utils.address_to_public_key_hash(address))
 
+        print "scriptSig: ", binascii.hexlify(scriptSig)
         for height in xrange(end_height):
             data = self.db.Get('height:' + str(height))
             heightidx = HeightIdx()
@@ -271,12 +286,17 @@ class ChainDb(object):
                         continue
                     #print "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
                     #print "scriptSigs", binascii.hexlify(scriptSigs)
-                    if txin.scriptSig[:-4] == binascii.unhexlify("38033ad7"):
+                    if txin.scriptSig == scriptSig:
                         #print "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
                         print "scriptSigs", binascii.hexlify(scriptSigs)
+                        del txouts[txin.prevout.hash]
+                    else:
+                        print "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
+                    """
                     for scriptSig in scriptSigs:
                         if txin.scriptSig in scriptSig:
                             del txouts[txin.prevout.hash]
+                    """
                     # FIXME >>>>>>>>>>>>>>>>>>>>>
                     # script_vault = binascii.hexlify(utils.scriptSig_to_vault(txin.scriptSig))
                     # print 'script_key_hash_hex: ', script_key_hash_hex
@@ -803,8 +823,8 @@ class ChainDb(object):
             self.putblock(block)
 
     def newblock_txs(self):
-        #print "New block transactions >>>>>>>>>>>>>>>>>>>>"
         txlist = []
+        # get the current transactions
         for tx in self.mempool.pool.itervalues():
             # query finalized, non-coinbase mempool tx's
             if tx.is_coinbase() or not tx.is_final():
@@ -852,6 +872,19 @@ class ChainDb(object):
             tx.dPriority = dPriority
 
             txlist.append(tx)
+
+        # get the vault transactions
+        # don't close and reopen connection every now and then OK ...
+        # maintain a class variable with open connection
+        connection = sqlite3.connect('vault.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM vaults WHERE date < datetime())
+        for txhash, date in cursor:
+            tx = self.leveldb.gettxhash() # get transaction from leveldb or just refer to it :)
+            tx.final = True
+            tx.previous = previous_hash
+            txlist.append(tx)
+        connection.close()
 
         # sort list by fee-per-kb, then priority
         sorted_txlist = sorted(txlist, cmp=tx_blk_cmp, reverse=True)
