@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sqlite3
 from bsddb.db import *
 from pickle import dumps, loads
 
@@ -189,6 +190,7 @@ class Wallet(object):
         walletdb.sync()
         walletdb.close()
 
+
     # if wallet does not exist, create it
     def initialize(self):
         if not os.path.isfile(self.walletfile):
@@ -207,9 +209,11 @@ class Wallet(object):
         # create sqlitedb
         connection = sqlite3.connect('vault.db')
         cursor = connection.cursor()
-        cursor.execute('''CREATE TABLE vaults (txhash varchar(50), date text)''')
+        # FIXME: should be executed only once
+        # cursor.execute('''CREATE TABLE vaults (txhash varchar(50), date text)''')
         connection.commit()
         connection.close()
+
 
     # return an account
     def getaccount(self, accountname = None):
@@ -251,6 +255,7 @@ class Wallet(object):
             account['vault'] = subaccount
         return account
 
+
     # getaccounts
     def getaccounts(self):
         accounts = []
@@ -280,6 +285,7 @@ class Wallet(object):
             subaccount['received'] = self.chaindb.listreceivedbyvault(vault).values()
             accounts.append(account)
         return accounts
+
 
     # helper functions
     def getnewsubaccount(self):
@@ -322,6 +328,7 @@ class Wallet(object):
         walletdb.close()
         print subaccount
         return subaccount['public_key'], subaccount['address']
+
 
     # return balance of an account
     def getbalance(self, accountname):
@@ -420,6 +427,7 @@ class Wallet(object):
         """
         return [masterScriptSig]
 
+
     # send to an address
     def sendtoaddress(self, toaddress, amount):
         # select the input addresses
@@ -513,6 +521,7 @@ class Wallet(object):
             txin.scriptSig = scriptSig
             #print "Tx Validity: ", tx.is_valid()
         return tx
+
 
     # send to a vault
     def sendtovault(self, toaddress, tomaster_address, timeout, amount):

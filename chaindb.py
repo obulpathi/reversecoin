@@ -15,6 +15,7 @@ import binascii
 import shutil
 from decimal import Decimal
 from cache import Cache
+import pdb
 
 from common import *
 from bitcoin.serialize import *
@@ -83,6 +84,7 @@ class HeightIdx(object):
 
 class ChainDb(object):
     def __init__(self, settings, datadir, log, mempool, wallet, netmagic, readonly=False, fast_dbm=False):
+        #pdb.set_trace()
         self.settings = settings
         self.log = log
         self.mempool = mempool
@@ -213,7 +215,8 @@ class ChainDb(object):
         # store in sqlitedb
         connection = sqlite3.connect('vault.db')
         cursor = connection.cursor()
-        cursor.execute("INSERT INTO vaults VALUES(" + str(tx.sha256) + "," + datetime() + timeout))
+        # FIXME
+        #cursor.execute("INSERT INTO vaults VALUES(" + str(tx.sha256) + "," + datetime() + timeout))
         connection.commit()
         connection.close() # don't close and reopen connection every now and then OK
                            # maintain an open session
@@ -878,7 +881,7 @@ class ChainDb(object):
         # maintain a class variable with open connection
         connection = sqlite3.connect('vault.db')
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM vaults WHERE date < datetime())
+        # cursor.execute("SELECT * FROM vaults WHERE date < datetime())
         for txhash, date in cursor:
             tx = self.leveldb.gettxhash() # get transaction from leveldb or just refer to it :)
             tx.final = True

@@ -15,6 +15,7 @@ import socket
 import binascii
 import time
 import sys
+import pdb
 import re
 import random
 import cStringIO
@@ -34,6 +35,7 @@ from bitcoin.coredefs import NETWORKS
 settings = {}
 
 if __name__ == '__main__':
+    # pdb.set_trace()
     if len(sys.argv) != 2:
         print("Usage: bitcoinpy.py CONFIG-FILE")
         sys.exit(1)
