@@ -9,8 +9,10 @@ TODO
 * Fix tx hash and block hash for vault_fastwithdraw in chaindb and wallet
 * Validate transactions
 * Transaction and Block Propagation
-* Grammar and spell check
+* Redo code layout
+* Add test cases
 * Support for pay to script hash
+* Grammar and spell check
 * Wallet compatibility
 * Support for stratum miner
 * Support for all RPC function calls
