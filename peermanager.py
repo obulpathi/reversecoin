@@ -20,7 +20,7 @@ class PeerManager(object):
         self.connections = []
 
     def add(self, host, port):
-        self.log.write("PeerManager: connecting to %s:%d" % (host, port))
+        self.log.debug("PeerManager: connecting to %s:%d" % (host, port))
         self.tried[host] = True
         connection = Connection(self.node, None, host, port)
         self.connections.append(connection)
@@ -33,7 +33,7 @@ class PeerManager(object):
                 continue
             self.addrs[addr.ip] = addr
 
-        self.log.write("PeerManager: Received %d new addresses (%d addrs, %d tried)" % (len(addrs), len(self.addrs), len(self.tried)))
+        self.log.debug("PeerManager: Received %d new addresses (%d addrs, %d tried)" % (len(addrs), len(self.addrs), len(self.tried)))
 
     def random_addrs(self):
         ips = self.addrs.keys()

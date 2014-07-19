@@ -4,6 +4,8 @@ TODO
 * Mark the bugs with #FIXME tag
 * Installation and documentation for installation
 * Initialization and documentation for initialization
+* Setup Logging
+* Setup Debugging
 * Fix tx hash and block hash for vault_fastwithdraw in chaindb and wallet
 * Validate transactions
 * Transaction and Block Propagation

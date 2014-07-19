@@ -23,7 +23,6 @@ import rpc
 
 import chaindb
 import mempool
-import log
 
 from common import *
 from bitcoin.core import *
@@ -47,7 +46,7 @@ class Node(Greenlet): # its not a greenlet .. its just a module
 
     # we don't need this function ... this module just needs to respond to outside function call
     def _run(self):
-        self.log.write(self.dstaddr + " connected")
+        self.log.debug(self.dstaddr + " connected")
         while True:
             try:
                 t = self.sock.recv(8192)
@@ -60,11 +59,11 @@ class Node(Greenlet): # its not a greenlet .. its just a module
 
     def send_getblocks(self, connection, timecheck=True):
         if not connection.getblocks_ok:
-            print "getblock_ok is false .. not fetching any blocks"
+            log.debug("getblock_ok is false .. not fetching any blocks")
             return
         now = time.time()
         if timecheck and (now - connection.last_getblocks) < 5:
-            print "time chack failed .. not getting blocks"
+            log.debug("time chack failed .. not getting blocks")
             return
         connection.last_getblocks = now
         our_height = self.chaindb.getheight()
@@ -86,11 +85,11 @@ class Node(Greenlet): # its not a greenlet .. its just a module
         if connection.last_sent + 30 * 60 < time.time():
             connection.send_message(msg_ping(self.ver_send))
         if verbose_recvmsg(message):
-            self.log.write("recv %s" % repr(message))
+            self.log.debug("recv %s" % repr(message))
         if message.command == "version":
             self.ver_send = min(PROTO_VERSION, message.nVersion)
             if self.ver_send < MIN_PROTO_VERSION:
-                self.log.write("Obsolete version %d, closing" % (self.ver_send,))
+                self.log.debug("Obsolete version %d, closing" % (self.ver_send,))
                 self.handle_close()
                 return
             if (self.ver_send >= NOBLKS_VERSION_START and self.ver_send <= NOBLKS_VERSION_END):
@@ -127,9 +126,9 @@ class Node(Greenlet): # its not a greenlet .. its just a module
                 self.send_message(want)
         elif message.command == "tx":
             if self.chaindb.tx_is_orphan(message.tx):
-                self.log.write("MemPool: Ignoring orphan TX %064x" % (message.tx.sha256,))
+                self.log.debug("MemPool: Ignoring orphan TX %064x" % (message.tx.sha256,))
             elif not self.chaindb.tx_signed(message.tx, None, True):
-                self.log.write("MemPool: Ignoring failed-sig TX %064x" % (message.tx.sha256,))
+                self.log.debug("MemPool: Ignoring failed-sig TX %064x" % (message.tx.sha256,))
             else:
                 self.mempool.add(message.tx)
         elif message.command == "block":

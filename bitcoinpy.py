@@ -21,10 +21,10 @@ import random
 import cStringIO
 import copy
 import shutil
+import logging
 
 import rpc
 from walletdb import Wallet
-from log import Log
 from node import Node
 from mempool import MemPool
 from chaindb import ChainDb
@@ -35,9 +35,16 @@ from bitcoin.coredefs import NETWORKS
 settings = {}
 
 if __name__ == '__main__':
+    # setup debugger
     # pdb.set_trace()
+
+    # setup logging
+    #logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
     if len(sys.argv) != 2:
-        print("Usage: bitcoinpy.py CONFIG-FILE")
+        logger.error("Usage: bitcoinpy.py CONFIG-FILE")
         sys.exit(1)
 
     f = open(sys.argv[1])
@@ -59,24 +66,23 @@ if __name__ == '__main__':
     if 'chain' not in settings:
         settings['chain'] = 'mainnet'
     chain = settings['chain']
+    # FIXME: CLEANUP
     if 'log' not in settings or (settings['log'] == '-'):
         settings['log'] = None
 
     if ('rpcuser' not in settings or
         'rpcpass' not in settings):
-        print("You must set the following in config: rpcuser, rpcpass")
+        logger.error("You must set the following in config: rpcuser, rpcpass")
         sys.exit(1)
 
     settings['port'] = int(settings['port'])
     settings['rpcport'] = int(settings['rpcport'])
     settings['db'] = os.path.expanduser(settings['db'])
 
-    log = Log(settings['log'])
 
-    log.write("\n\n\n\n")
 
     if chain not in NETWORKS:
-        log.write("invalid network")
+        logger.error("invalid network")
         sys.exit(1)
 
     netmagic = NETWORKS[chain]
@@ -90,7 +96,6 @@ if __name__ == '__main__':
         os.mkdir(datadir + '/leveldb')
         # create blocks.dat file
         shutil.copy('genesis.dat', os.path.join(datadir + '/blocks.dat'))
-        print os.path.join(datadir + '/blocks.dat')
         # create lock file for db
         with open(datadir + '/__db.001', 'a'):
             pass
@@ -100,10 +105,11 @@ if __name__ == '__main__':
     if new_install:
         # initialize wallet
         wallet.initialize()
-    mempool = MemPool(log)
-    chaindb = ChainDb(settings, settings['db'], log, mempool, wallet, netmagic, False, False)
-    node = Node(None, log, mempool, chaindb, netmagic)
-    peermgr = PeerManager(node, log, mempool, chaindb, netmagic)
+    # FIXME: fix the logging ... don't pass the logger ...
+    mempool = MemPool()
+    chaindb = ChainDb(settings, settings['db'], logger, mempool, wallet, netmagic, False, False)
+    node = Node(None, logger, mempool, chaindb, netmagic)
+    peermgr = PeerManager(node, logger, mempool, chaindb, netmagic)
     node.peermgr = peermgr
     wallet.chaindb = chaindb
 
@@ -117,12 +123,12 @@ if __name__ == '__main__':
     threads = []
 
     def new_connection_handler(socket, address):
-        print "New incoming connection >>>>>>>>>>>"
+        logger.info("New incoming connection")
         connection = Connection(node, socket, address)
         connection.start()
 
     # start HTTP server for JSON-RPC
-    rpcexec = rpc.RPCExec(peermgr, mempool, chaindb, wallet, log, settings['rpcuser'], settings['rpcpass'])
+    rpcexec = rpc.RPCExec(peermgr, mempool, chaindb, wallet, logger, settings['rpcuser'], settings['rpcpass'])
     rpcserver = gevent.pywsgi.WSGIServer(('', settings['rpcport']), rpcexec.handle_request)
     rpc_server_thread = gevent.Greenlet(rpcserver.serve_forever)
     threads.append(rpc_server_thread)
@@ -149,9 +155,9 @@ if __name__ == '__main__':
         finally:
             for t in threads: t.kill()
             gevent.joinall(threads)
-            log.write('Flushing database...')
+            logger.info('Flushing database')
             del chaindb.db
             chaindb.blk_write.close()
-            log.write('OK')
+            logger.info('Finished flushing database')
 
     start()

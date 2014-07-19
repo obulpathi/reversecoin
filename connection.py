@@ -10,7 +10,6 @@ import socket
 import time
 import sys
 import hashlib
-import log
 import cStringIO
 
 from common import *
@@ -38,17 +37,17 @@ class Connection(Greenlet):
 
         if self.socket:
             self.direction = "INCOMING"
-            print("in coming connection")
+            log.debug("in coming connection")
         else:
             self.socket = gevent.socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.direction = "OUTGOING"
-            print("outgoing connection!")
-            print("connecting")
+            log.debug("outgoing connection!")
+            log.debug("connecting")
             try:
                 self.socket.connect((self.dstaddr, self.dstport))
             except Exception, err:
-                print "Exception: ", Exception, err
-                print "Unable to establish connection"
+                log.debug("Exception: ", Exception, err)
+                log.debug("Unable to establish connection")
                 self.handle_close()
             self.sendVersionMessage()
 
@@ -64,7 +63,7 @@ class Connection(Greenlet):
         self.send_message(vt)
 
     def _run(self):
-        print  self.dstaddr, " connected"
+        log.debug(self.dstaddr, " connected")
         # wait for message and respond using hooks in node
         while True:
             try:
@@ -77,7 +76,7 @@ class Connection(Greenlet):
             self.got_data()
 
     def handle_close(self):
-        print self.dstaddr, " close"
+        log.debug(self.dstaddr, " close")
         self.recvbuf = ""
         try:
             self.sock.shutdown(socket.SHUT_RDWR)
@@ -112,15 +111,15 @@ class Connection(Greenlet):
                 t.deserialize(f)
                 self.node.got_message(self, t)
             else:
-                print("UNKNOWN COMMAND %s %s" % (command, repr(msg)))
+                log.debug("UNKNOWN COMMAND %s %s" % (command, repr(msg)))
 
     def send_message(self, message):
         if verbose_sendmsg(message):
-            print("send %s" % repr(message))
+            log.debug("send %s" % repr(message))
         tmsg = message_to_str(self.node.netmagic, message)
         try:
             self.socket.sendall(tmsg)
             self.last_sent = time.time()
         except Exception, err:
-            print "Exception: ", Exception, err
+            log.debug("Exception: ", Exception, err)
             self.handle_close()
