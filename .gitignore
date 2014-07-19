@@ -1,4 +1,8 @@
 others/
 *.pyc
 *.swp
+*.bak
 tags
+.idea/*
+.pdbrc
+vault.db
