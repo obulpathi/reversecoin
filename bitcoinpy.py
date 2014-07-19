@@ -23,7 +23,7 @@ import copy
 import shutil
 
 import rpc
-from wallet import Wallet
+from walletdb import Wallet
 from log import Log
 from node import Node
 from mempool import MemPool
