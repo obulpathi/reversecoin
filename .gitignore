@@ -3,6 +3,6 @@ others/
 *.swp
 *.bak
 tags
-.idea/*
+.idea/
 .pdbrc
 vault.db
