@@ -50,7 +50,7 @@ from bitcoin.base58 import CBitcoinAddress
 
 USER_AGENT = "AuthServiceProxy/0.1"
 
-HTTP_TIMEOUT = 30
+HTTP_TIMEOUT = 180
 
 
 class JSONRPCException(Exception):

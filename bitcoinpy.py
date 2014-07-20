@@ -35,8 +35,6 @@ from bitcoin.coredefs import NETWORKS
 settings = {}
 
 if __name__ == '__main__':
-    # setup debugger
-    # pdb.set_trace()
 
     # setup logging
     #logging.basicConfig(level=logging.DEBUG)
@@ -145,6 +143,9 @@ if __name__ == '__main__':
             peer = peermgr.add(peerip, int(peerport))
             threads.append(peer)
             time.sleep(2)
+
+    # setup debugger
+    pdb.set_trace()
 
     # program main loop
     def start(timeout=None):

@@ -15,7 +15,6 @@ import binascii
 import shutil
 from decimal import Decimal
 from cache import Cache
-import pdb
 
 from common import *
 from bitcoin.serialize import *
@@ -84,7 +83,6 @@ class HeightIdx(object):
 
 class ChainDb(object):
     def __init__(self, settings, datadir, log, mempool, wallet, netmagic, readonly=False, fast_dbm=False):
-        #pdb.set_trace()
         self.settings = settings
         self.log = log
         self.mempool = mempool
