@@ -581,7 +581,7 @@ class Wallet(object):
         # calculate txhash
         tx.calc_sha256()
         txhash = str(tx.sha256)
-        self.log.debug("Sending to vault %064x" % txhash)
+        self.log.debug("Sending to vault %064x" % tx.sha256)
         # sign the transaction
         for public_key, private_key, txin in zip(public_keys, private_keys, tx.vin):
             key = CKey()
@@ -590,7 +590,7 @@ class Wallet(object):
             signature = key.sign(txhash)
             # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
             scriptSig = chr(len(signature)) + signature + chr(len(public_key)) + public_key
-            self.log.debug("Adding signature: %064x" % scriptSig)
+            self.log.debug("Adding signature: %s" % scriptSig)
             txin.scriptSig = scriptSig
             self.log.debug("Tx Validity: %064x" % tx.is_valid())
         # push data to vault
@@ -667,14 +667,14 @@ class Wallet(object):
         key = CKey()
         key.set_pubkey(public_key)
         key.set_privkey(private_key)
-        self.log.debug("vault: public_key: %064x " % vault['public_key'])
-        self.log.debug("key:   public key: %064x " % key.get_pubkey())
-        self.log.debug("vault: private_key: %064x" % vault['private_key'])
-        self.log.debug("key:  private key:  %064x" % key.get_privkey())
+        self.log.debug("vault: public_key: %s " % vault['public_key'])
+        self.log.debug("key:   public key: %s " % key.get_pubkey())
+        self.log.debug("vault: private_key: %s" % vault['private_key'])
+        self.log.debug("key:  private key:  %s" % key.get_privkey())
         signature = key.sign(txhash)
         # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
         scriptSig = chr(len(signature)) + signature + chr(len(vault['public_key'])) + vault['public_key']
-        self.log.debug("Adding signature: %064x" % scriptSig)
+        self.log.debug("Adding signature: %s" % scriptSig)
         txin.scriptSig = scriptSig
         self.log.debug("Tx Validity: %r" % tx.is_valid())
 

@@ -15,7 +15,6 @@ import socket
 import binascii
 import time
 import sys
-import pdb
 import re
 import random
 import cStringIO
@@ -143,9 +142,6 @@ if __name__ == '__main__':
             peer = peermgr.add(peerip, int(peerport))
             threads.append(peer)
             time.sleep(2)
-
-    # setup debugger
-    pdb.set_trace()
 
     # program main loop
     def start(timeout=None):

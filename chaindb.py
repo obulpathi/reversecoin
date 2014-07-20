@@ -143,9 +143,6 @@ class ChainDb(object):
 
     def gettxidx(self, txhash):
         self.log.debug("Get txidx: %064x" % txhash)
-        # FIXME
-        # txhash = 37134457849310544379321847815222979621050716835863032481174257422146321182194
-        #txhash = 12824763890879036705026737530911428117291262166163414962171072969605310215475
         ser_txhash = ser_uint256(txhash)
         try:
             ser_value = self.db.Get('tx:'+ser_txhash)
@@ -207,7 +204,8 @@ class ChainDb(object):
         self.mempool.add(tx)
 
     def withdrawfromvault(self, fromaddress, toaddress, amount):
-        tx, timeout = self.wallet.withdrawfromvault(fromaddress, toaddress, amount)
+        tx = self.wallet.withdrawfromvault(fromaddress, toaddress, amount)
+        # FIXME: get timeout
         self.mempool.add(tx)
         # add it to sqlite
         # store in sqlitedb
@@ -266,7 +264,7 @@ class ChainDb(object):
         end_height = self.getheight()
         #public_key_hash_hex = binascii.hexlify(utils.address_to_public_key_hash(address))
 
-        self.log.debug("scriptSig: %064x" % scriptSig)
+        self.log.debug("scriptSig: %s" % scriptSig)
         for height in xrange(end_height):
             data = self.db.Get('height:' + str(height))
             heightidx = HeightIdx()
@@ -284,7 +282,7 @@ class ChainDb(object):
                         self.log.debug("scriptSigs %064x" % scriptSigs)
                         del txouts[txin.prevout.hash]
                     else:
-                        self.log.debug("txin.scriptSig: %064x" % txin.scriptSig)
+                        self.log.debug("txin.scriptSig: %s" % txin.scriptSig)
                     """
                     for scriptSig in scriptSigs:
                         if txin.scriptSig in scriptSig:
@@ -297,8 +295,9 @@ class ChainDb(object):
                 # if this transaction refers to this address in output, add this transaction
                 for n, txout in enumerate(tx.vout):
                     if scriptPubKey == txout.scriptPubKey:
-                        self.log.debug("Vault input txhash: %d\t%d\t%064x\t%s%064x" \
-                                       % height, n, tx.sha256, tx, tx.calc_sha256())
+                        tx.calc_sha256()
+                        self.log.debug("Vault input txhash: %d %d %064x %s" \
+                                       % (height, n, tx.sha256, tx))
                         txouts[tx.sha256] = {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
                                              'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
         return txouts

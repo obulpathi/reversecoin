@@ -1,6 +1,9 @@
 all:
 	python bitcoinpy.py config.cfg
 
+debug:
+	python -m pdb bitcoinpy.py config.cfg
+
 test:
 	python test.py
 
