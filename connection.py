@@ -42,11 +42,10 @@ class Connection(Greenlet):
             self.socket = gevent.socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.direction = "OUTGOING"
             log.debug("outgoing connection!")
-            log.debug("connecting")
             try:
                 self.socket.connect((self.dstaddr, self.dstport))
             except Exception, err:
-                log.debug("Exception: ", Exception, err)
+                log.debug("Exception: %r\t%s", Exception, err)
                 log.debug("Unable to establish connection")
                 self.handle_close()
             self.sendVersionMessage()
@@ -63,7 +62,7 @@ class Connection(Greenlet):
         self.send_message(vt)
 
     def _run(self):
-        log.debug(self.dstaddr, " connected")
+        log.debug("Connected: %s" % self.dstaddr)
         # wait for message and respond using hooks in node
         while True:
             try:
@@ -76,7 +75,7 @@ class Connection(Greenlet):
             self.got_data()
 
     def handle_close(self):
-        log.debug(self.dstaddr, " close")
+        log.debug("Closing %s" % self.dstaddr)
         self.recvbuf = ""
         try:
             self.sock.shutdown(socket.SHUT_RDWR)
@@ -121,5 +120,5 @@ class Connection(Greenlet):
             self.socket.sendall(tmsg)
             self.last_sent = time.time()
         except Exception, err:
-            log.debug("Exception: ", Exception, err)
+            log.debug("Exception: %r %s" % Exception, err)
             self.handle_close()

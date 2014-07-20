@@ -109,7 +109,6 @@ def public_key_to_vault_address(public_key):
     checksum = hash_address[:4]
     # Add the 4 checksum bytes from point 7 at the end of extended RIPEMD-160 hash from point 4. This is the 25-byte binary Bitcoin Address.
     binary_address = extended_address + checksum
-    #log.debug(binary_address)
     address = encode(binary_address)
     return address
 
@@ -125,7 +124,6 @@ def public_key_hex_to_vault_address(public_key_hex):
     checksum = hash_address[:4]
     # Add the 4 checksum bytes from point 7 at the end of extended RIPEMD-160 hash from point 4. This is the 25-byte binary Bitcoin Address.
     binary_address = extended_address + checksum
-    #log.debug(binary_address)
     address = encode(binary_address)
     return address
 
@@ -164,7 +162,6 @@ def public_key_to_pay_to_pubkey(public_key):
 def address_to_pay_to_pubkey_hash(address):
     pubkey_hash = address_to_public_key_hash(address)
     script = "76A914" + str(binascii.hexlify(pubkey_hash)) + "88AC"
-    #log.debug(script)
     # script = str(hex(OP_DUP)[2:]) + str(hex(OP_HASH160)[2:]) + "14" + str(binascii.hexlify(pubkey_hash)) + str(hex(OP_EQUALVERIFY)[2:]) + str(hex(OP_CHECKSIG)[2:])
     return binascii.unhexlify(script)
 
@@ -208,11 +205,6 @@ def addresses_to_pay_to_vault_script(address, master_address, timeout):
     pubkey_hash_hex = address_to_public_key_hash_hex(address)
     master_pubkey_hash_hex = address_to_public_key_hash_hex(master_address)
     vault_script_hex = pubkey_hash_hex + master_pubkey_hash_hex + hex(timeout)[2:4] + hex(fees)[2:6]
-    log.debug("pubkey_hash_hex: %s" % pubkey_hash_hex)
-    log.debug("master_pubkey_hash_hex: %s" % master_pubkey_hash_hex)
-    log.debug("timeout %s" % hex(timeout)[2:4])
-    log.debug("fees %s" % hex(fees)[2:6])
-    log.debug("vault_script_hex: %s" % vault_script_hex)
     vault_script_hex_ba = bytearray.fromhex(vault_script_hex)
     vault_script_hex_hash = myhash160(vault_script_hex_ba)
     # script: "14" ("Push 20 bytes onto stack") + binascii.hexlify(vault_script_hex_hash) + OP_EQUAL + OP_VAULT)
@@ -257,7 +249,6 @@ def sriptSig_to_pubkey(script):
 # this is returning hex hash ... fix this
 def output_script_to_public_key_hash(script):
     # better matching .. but for now . .. this should work
-    # log.debug("Script: ", binascii.hexlify(script))
     if not script:
         return
     # is the script is a standard generation address
@@ -345,11 +336,11 @@ if __name__ == "__main__":
     address2 = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
     public_key_hex1 = "0450863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A04887E5B23522CD470243453A299FA9E77237716103ABC11A1DF38855ED6F2EE187E9C582BA6"
     public_key_hex2 = "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"
-    # log.debug("address: ", address1)
-    # log.debug("public key_hex: ", public_key_hex1)
-    #log.debug("public_keys_hex: ", public_key_hex1, public_key_hex2)
-    # log.debug("public key to address: ", public_key_hex_to_address(public_key_hex1))
-    # log.debug( "address to public key hash: ", binascii.hexlify(address_to_public_key_hash(address1)))
-    # log.debug("public key hash: ", binascii.hexlify(myhash160(bytearray.fromhex(public_key_hex1))))
+    # print("address: ", address1)
+    # print("public key_hex: ", public_key_hex1)
+    #print("public_keys_hex: ", public_key_hex1, public_key_hex2)
+    # print("public key to address: ", public_key_hex_to_address(public_key_hex1))
+    # print( "address to public key hash: ", binascii.hexlify(address_to_public_key_hash(address1)))
+    # print("public key hash: ", binascii.hexlify(myhash160(bytearray.fromhex(public_key_hex1))))
     address = '1AqTMY7kmHZxBuLUR5wJjPFUvqGs23sesr'
-    #log.debug(binascii.hexlify(address_to_pay_to_pubkey_hash(address)))
+    #print(binascii.hexlify(address_to_pay_to_pubkey_hash(address)))

@@ -183,8 +183,7 @@ class Wallet(object):
         key = str(key)
         walletdb = self.open()
         if not key in walletdb:
-            self.log.debug("********************************")
-            self.log.debug("Walletdb: key error")
+            self.log.error("Walletdb: key error")
         value = loads(walletdb[key])
         walletdb.close()
         return value
@@ -239,7 +238,6 @@ class Wallet(object):
         account = loads(walletdb[accountname])
         #vault = loads(walletdb[vaults[0]])
         walletdb.close()
-        # self.log.debug(account)
         for subaccount in account.itervalues():
             subaccount['public_key'] = subaccount['public_key'].encode('hex')
             subaccount['private_key'] = subaccount['private_key'].encode('hex')
@@ -299,11 +297,6 @@ class Wallet(object):
         private_key = key.get_privkey()
         public_key = key.get_pubkey()
         address = pubkey_to_address(public_key)
-        """
-        self.log.debug("Address: ", address)
-        self.log.debug("Private key: ", type(private_key), private_key)
-        self.log.debug("Public key: ", type(public_key), public_key)
-        """
         return {"address": address, "public_key": public_key, "private_key": private_key, "balance": 0.0, 'height' : 0, 'received' : []}
 
     # create and return a new address
@@ -323,7 +316,7 @@ class Wallet(object):
             account = loads(walletdb[accountname])
             account[subaccount['address']] = subaccount
         else:
-            self.log.debug("account: ", accountname, " not in accounts")
+            self.log.debug("account: %s not in accounts" % accountname)
             self.log.debug("creating new account")
             account = {subaccount['address']: subaccount}
             # add the new account name to account names
@@ -354,9 +347,9 @@ class Wallet(object):
         for address, subaccount in account.iteritems():
             transactions = self.chaindb.listreceivedbyaddress(subaccount['address'])
             subaccount['balance'] = 0
-            self.log.debug(transactions)
+            self.log.debug("%r" % transactions)
             for transaction in transactions.itervalues():
-                self.log.debug(transaction)
+                self.log.debug("%r" % transaction)
                 subaccount['balance'] = subaccount['balance'] + transaction['value']
             subaccount['received'] = transactions
         # sanitize the return values ... convert from bin to hex
@@ -444,13 +437,10 @@ class Wallet(object):
                     continue
                 else:
                     subaccounts.append(subaccount)
-                    # self.log.debug("got one subaccount", subaccount)
-                    # self.log.debug("subaccounts: ", subaccounts)
                     funds = funds + subaccount['balance']
                     if funds >= amount + utils.calculate_fees(None):
                         break
 
-        # self.log.debug("subaccounts 2: ", subaccounts)
         # incase of insufficient funds, return
         if funds < amount + utils.calculate_fees(None):
             self.log.debug("In sufficient funds, exiting, return")
@@ -459,7 +449,6 @@ class Wallet(object):
         # create transaction
         tx = CTransaction()
 
-        # self.log.debug("subaccounts 3: ", subaccounts)
         # to the receiver
         txout = CTxOut()
         txout.nValue = amount
@@ -472,12 +461,9 @@ class Wallet(object):
         public_keys = []
         private_keys = []
         # secrets = []
-        # self.log.debug("subaccounts 4: ", subaccounts)
         for subaccount in subaccounts:
-            # self.log.debug("subaccount: ", subaccount)
             # get received by from address
             previous_txouts = subaccount['received']
-            # self.log.debug("Previous txouts", previous_txouts)
             for received in previous_txouts:
                 txin = CTxIn()
                 txin.prevout = COutPoint()
@@ -511,19 +497,13 @@ class Wallet(object):
         txhash = str(tx.sha256)
         # sign the transaction
         for public_key, private_key, txin in zip(public_keys, private_keys, tx.vin):
-            #self.log.debug("Public key: ", type(public_key), public_key)
-            #self.log.debug("Private key: ", type(private_key), private_key)
             key = CKey()
             key.set_pubkey(public_key)
             key.set_privkey(private_key)
             signature = key.sign(txhash)
-            #self.log.debug("Public key: ", key.get_pubkey())
-            #self.log.debug("Private key: ", key.get_privkey())
             # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
             scriptSig = chr(len(signature)) + signature + chr(len(public_key)) + public_key
-            #self.log.debug("Adding signature: ", binascii.hexlify(scriptSig))
             txin.scriptSig = scriptSig
-            #self.log.debug("Tx Validity: ", tx.is_valid())
         return tx
 
 
@@ -539,7 +519,6 @@ class Wallet(object):
                     continue
                 else:
                     subaccounts.append(subaccount)
-                    # self.log.debug("subaccounts: ", subaccounts)
                     funds = funds + subaccount['balance']
                     if funds >= amount + utils.calculate_fees(None):
                         break
@@ -556,8 +535,6 @@ class Wallet(object):
         txout = CTxOut()
         txout.nValue = amount
         vault_address = utils.addresses_to_vault_address(toaddress, tomaster_address, timeout)
-        #self.log.debug('############################################')
-        #self.log.debug("\n\nVault address: " + vault_address + "\n\n")
         #txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(toaddress)
         #txout.scriptPubKey = utils.addresses_to_pay_to_vault_script(toaddress, tomaster_address, timeout)
         txout.scriptPubKey = utils.vault_address_to_pay_to_vault_script(vault_address)
@@ -571,13 +548,9 @@ class Wallet(object):
         nValueOut = amount
         public_keys = []
         private_keys = []
-        # secrets = []
-        # self.log.debug("subaccounts 4: ", subaccounts)
         for subaccount in subaccounts:
-            # self.log.debug("subaccount: ", subaccount)
             # get received by from address
             previous_txouts = subaccount['received']
-            # self.log.debug("Previous txouts", previous_txouts)
             for received in previous_txouts:
                 txin = CTxIn()
                 txin.prevout = COutPoint()
@@ -588,7 +561,6 @@ class Wallet(object):
                 nValueIn = nValueIn + received['value']
                 public_keys.append(subaccount['public_key'])
                 private_keys.append(subaccount['private_key'])
-                # secrets.append(subaccount['secret'])
                 if nValueIn >= amount + utils.calculate_fees(tx):
                     break
             if nValueIn >= amount + utils.calculate_fees(tx):
@@ -609,7 +581,7 @@ class Wallet(object):
         # calculate txhash
         tx.calc_sha256()
         txhash = str(tx.sha256)
-        self.log.debug("###### Sending to vault", txhash)
+        self.log.debug("Sending to vault %064x" % txhash)
         # sign the transaction
         for public_key, private_key, txin in zip(public_keys, private_keys, tx.vin):
             key = CKey()
@@ -618,10 +590,9 @@ class Wallet(object):
             signature = key.sign(txhash)
             # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
             scriptSig = chr(len(signature)) + signature + chr(len(public_key)) + public_key
-            #self.log.debug("Adding signature: ", binascii.hexlify(scriptSig))
+            self.log.debug("Adding signature: %064x" % scriptSig)
             txin.scriptSig = scriptSig
-            #self.log.debug("Tx Validity: ", tx.is_valid())
-        #self.log.debug("returning tx")
+            self.log.debug("Tx Validity: %064x" % tx.is_valid())
         # push data to vault
         """
         "txhash": {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
@@ -640,7 +611,7 @@ class Wallet(object):
         # select the input addresses
         funds = 0
         vault = self.getvault(fromvaultaddress)
-        #self.log.debug(vault)
+        self.log.debug("%r" % vault)
         if vault['amount'] + utils.calculate_fees(None) < amount:
             self.log.debug("In sufficient funds in vault, exiting, return")
             return
@@ -693,28 +664,19 @@ class Wallet(object):
         #   signature = key.sign(txhash)
         public_key = vault['public_key']
         private_key = vault['private_key']
-        #self.log.debug("Public key: ", type(public_key), public_key)
-        #self.log.debug("Private key: ", type(private_key), private_key)
         key = CKey()
         key.set_pubkey(public_key)
         key.set_privkey(private_key)
-        """
-        self.log.debug(vault['public_key'] == key.get_pubkey())
-        self.log.debug(vault['private_key'] == key.get_privkey())
-        self.log.debug(public_key == key.get_pubkey())
-        self.log.debug(private_key == key.get_privkey())
-        self.log.debug("vault: public_key: ", vault['public_key'])
-        self.log.debug("key: public key:          ", key.get_pubkey())
-        self.log.debug("vault: private_key: ", vault['private_key'])
-        self.log.debug("key: private key:          ", key.get_privkey())
-        """
+        self.log.debug("vault: public_key: %064x " % vault['public_key'])
+        self.log.debug("key:   public key: %064x " % key.get_pubkey())
+        self.log.debug("vault: private_key: %064x" % vault['private_key'])
+        self.log.debug("key:  private key:  %064x" % key.get_privkey())
         signature = key.sign(txhash)
         # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
         scriptSig = chr(len(signature)) + signature + chr(len(vault['public_key'])) + vault['public_key']
-        #self.log.debug("Adding signature: ", binascii.hexlify(scriptSig))
+        self.log.debug("Adding signature: %064x" % scriptSig)
         txin.scriptSig = scriptSig
-        #self.log.debug("####################################################################")
-        #self.log.debug("Tx Validity: ", tx.is_valid())
+        self.log.debug("Tx Validity: %r" % tx.is_valid())
 
         return tx
 
@@ -724,7 +686,7 @@ class Wallet(object):
         # select the input addresses
         funds = 0
         vault = self.getvault(fromvaultaddress)
-        #self.log.debug vault
+        self.log.debug("%r" % vault)
         if vault['amount'] + utils.calculate_fees(None) < amount:
             self.log.debug("In sufficient funds in vault, exiting, return")
             return
@@ -750,7 +712,7 @@ class Wallet(object):
         # FIXME
         txin.prevout.hash = received['txhash']
         tmp_var = self.get("vault:" + fromvaultaddress)
-        self.log.debug("(&&&&&&&)", tmp_var)
+        self.log.debug("%r" % tmp_var)
         txin.prevout.hash = tmp_var['txhash']
         txin.prevout.n = received['n']
         txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ...
@@ -767,9 +729,9 @@ class Wallet(object):
             change_txout = CTxOut()
             change_txout.nValue = excessAmount - fees
             account = self.getaccount()
-            #self.log.debug(account)
+            self.log.debug(account)
             changeaddress = account.values()[0]['address']
-            #self.log.debug("Change address: ", changeaddress)
+            self.log.debug("Change address: %s" % changeaddress)
             change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
             tx.vout.append(change_txout)
 
@@ -784,14 +746,11 @@ class Wallet(object):
         signature = mkey.sign(txhash)
         # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
         scriptSig = chr(len(signature)) + signature + chr(len(vault['master_public_key'])) + vault['master_public_key']
-        #self.log.debug("Adding signature: ", binascii.hexlify(scriptSig))
+        self.log.debug("Adding signature: %064x" % scriptSig)
         txin.scriptSig = scriptSig
-        """
-        self.log.debug("####################################################################")
-        self.log.debug("Signature: ", binascii.hexlify(chr(len(signature)) + signature))
-        self.log.debug("Key length: ", binascii.hexlify(chr(len(vault['master_public_key']))))
-        self.log.debug("Keys: ", binascii.hexlify(vault['master_public_key']))
-        self.log.debug("Tx Validity: ", tx.is_valid())
-        """
+        self.log.debug("Signature: %064x" % (chr(len(signature)) + signature))
+        self.log.debug("Key length: %d" % chr(len(vault['master_public_key'])))
+        self.log.debug("Keys: %064x" % vault['master_public_key'])
+        self.log.debug("Tx Validity: %r" % tx.is_valid())
 
         return tx

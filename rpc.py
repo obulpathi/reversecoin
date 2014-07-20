@@ -224,7 +224,7 @@ class RPCExec(object):
 
         if block is None:
             ret = {}
-            log.debug("no block!")
+            self.log.debug("no block!")
             return (None, err)
         self.work_blocks[block.hashMerkleRoot] = block
 
@@ -241,7 +241,6 @@ class RPCExec(object):
         data = bufreverse(data)
         res['data'] = data.encode('hex')
 
-        #log.debug("Getwork returning: ", res)
         return (res, None)
 
     def getwork_submit(self, hexstr):

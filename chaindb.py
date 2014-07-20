@@ -142,7 +142,7 @@ class ChainDb(object):
 
 
     def gettxidx(self, txhash):
-        self.log.debug("Get txidx: ", txhash)
+        self.log.debug("Get txidx: %064x" % txhash)
         # FIXME
         # txhash = 37134457849310544379321847815222979621050716835863032481174257422146321182194
         #txhash = 12824763890879036705026737530911428117291262166163414962171072969605310215475
@@ -150,7 +150,7 @@ class ChainDb(object):
         try:
             ser_value = self.db.Get('tx:'+ser_txhash)
         except KeyError:
-            self.log.debug('DB KEY Error: ', txhash)
+            self.log.debug('DB KEY Error: %064x' % txhash)
             return None
 
         pos = string.find(ser_value, ' ')
@@ -203,7 +203,7 @@ class ChainDb(object):
     def sendtovault(self, toaddress, tomaster_address, timeout, amount):
         tx = self.wallet.sendtovault(toaddress, tomaster_address, timeout, amount)
         tx.calc_sha256()
-        self.log.debug("Adding to vault: ", tx.sha256)
+        self.log.debug("Adding to vault: %064x" % tx.sha256)
         self.mempool.add(tx)
 
     def withdrawfromvault(self, fromaddress, toaddress, amount):
@@ -246,17 +246,12 @@ class ChainDb(object):
                     if not txin.scriptSig:
                         continue
                     script_key_hash_hex = binascii.hexlify(utils.scriptSig_to_public_key_hash(txin.scriptSig))
-                    # self.log.debug 'script_key_hash_hex: ', script_key_hash_hex
-                    # self.log.debug 'public_key_hash_hex: ', public_key_hash_hex
                     if script_key_hash_hex == public_key_hash_hex:
                         del txouts[txin.prevout.hash]
                 # if this transaction refers to this address in output, add this transaction
                 for n, txout in enumerate(tx.vout):
                     script_key_hash_hex = utils.output_script_to_public_key_hash(txout.scriptPubKey)
-                    # self.log.debug 'script_key_hash_hex: ', script_key_hash_hex
-                    # self.log.debug 'public_key_hash_hex: ', public_key_hash_hex
                     if script_key_hash_hex == public_key_hash_hex:
-                        #   self.log.debug ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
                         tx.calc_sha256()
                         txouts[tx.sha256] = {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
                                              'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
@@ -271,7 +266,7 @@ class ChainDb(object):
         end_height = self.getheight()
         #public_key_hash_hex = binascii.hexlify(utils.address_to_public_key_hash(address))
 
-        self.log.debug("scriptSig: ", binascii.hexlify(scriptSig))
+        self.log.debug("scriptSig: %064x" % scriptSig)
         for height in xrange(end_height):
             data = self.db.Get('height:' + str(height))
             heightidx = HeightIdx()
@@ -285,14 +280,11 @@ class ChainDb(object):
                     # if its a coinbase transaction, skip
                     if not txin.scriptSig:
                         continue
-                    #self.log.debug "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
-                    #self.log.debug "scriptSigs", binascii.hexlify(scriptSigs)
                     if txin.scriptSig == scriptSig:
-                        #self.log.debug "txin.scriptSig: ", binascii.hexlify(txin.scriptSig)
-                        self.log.debug("scriptSigs", binascii.hexlify(scriptSigs))
+                        self.log.debug("scriptSigs %064x" % scriptSigs)
                         del txouts[txin.prevout.hash]
                     else:
-                        self.log.debug("txin.scriptSig: ", binascii.hexlify(txin.scriptSig))
+                        self.log.debug("txin.scriptSig: %064x" % txin.scriptSig)
                     """
                     for scriptSig in scriptSigs:
                         if txin.scriptSig in scriptSig:
@@ -300,15 +292,13 @@ class ChainDb(object):
                     """
                     # FIXME >>>>>>>>>>>>>>>>>>>>>
                     # script_vault = binascii.hexlify(utils.scriptSig_to_vault(txin.scriptSig))
-                    # self.log.debug 'script_key_hash_hex: ', script_key_hash_hex
-                    # self.log.debug 'public_key_hash_hex: ', public_key_hash_hex
                     # if script_key_hash_hex == public_key_hash_hex:
                     #    del txouts[txin.prevout.hash]
                 # if this transaction refers to this address in output, add this transaction
                 for n, txout in enumerate(tx.vout):
                     if scriptPubKey == txout.scriptPubKey:
-                        self.log.debug("Vault input txhash: ", height, n, tx.sha256, tx, \
-                            tx.calc_sha256())
+                        self.log.debug("Vault input txhash: %d\t%d\t%064x\t%s%064x" \
+                                       % height, n, tx.sha256, tx, tx.calc_sha256())
                         txouts[tx.sha256] = {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
                                              'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
         return txouts
@@ -806,7 +796,6 @@ class ChainDb(object):
                 continue
 
             blksize = struct.unpack("<i", buf[sizepos:blkpos])[0]
-            # self.log.debug("blkpos: ", blkpos, "blksize: ", blksize, "buflen: ", buflen)
             if (blkpos + blksize) > buflen:
                 wanted = 8 + blksize
                 continue
@@ -817,7 +806,7 @@ class ChainDb(object):
             f = cStringIO.StringIO(ser_blk)
             block = CBlock()
             block.deserialize(f)
-            # self.log.debug("adding the genesis block")
+            self.log.debug("Adding the genesis block")
             self.putblock(block)
 
     def newblock_txs(self):
@@ -826,7 +815,7 @@ class ChainDb(object):
         for tx in self.mempool.pool.itervalues():
             # query finalized, non-coinbase mempool tx's
             if tx.is_coinbase() or not tx.is_final():
-                #self.log.debug("Coinbase or FINAL ... not adding")
+                self.log.debug("Coinbase or FINAL ... not adding")
                 continue
             # iterate through inputs, calculate total input value
             valid = True
@@ -837,8 +826,9 @@ class ChainDb(object):
                 in_tx = self.gettx(tin.prevout.hash)
                 if (in_tx is None or
                     tin.prevout.n >= len(in_tx.vout)):
-                    self.log.debug('in_tx is None: ', in_tx is None)
-                    self.log.debug('tin.prevout.n >= len(in_tx.vout)', tin.prevout.n >= len(in_tx.vout))
+                    self.log.debug('in_tx is None: %r' % in_tx is None)
+                    self.log.debug('tin.prevout.n >= len(in_tx.vout): %r' \
+                                    % tin.prevout.n >= len(in_tx.vout))
                     valid = False
                 else:
                     v = in_tx.vout[tin.prevout.n].nValue
@@ -846,7 +836,7 @@ class ChainDb(object):
                     dPriority += Decimal(v * 1)
 
             if not valid:
-                self.log.debug("Transaction not valid ###################")
+                self.log.error("Transaction not valid")
                 continue
             # iterate through outputs, calculate total output value
             for txout in tx.vout:
@@ -855,7 +845,7 @@ class ChainDb(object):
             # calculate fees paid, if any
             tx.nFeesPaid = nValueIn - nValueOut
             if tx.nFeesPaid < 0:
-                self.log.debug("Fees < 0 skipping transaction >>>>>>>>>>>>>..")
+                self.log.warning("Fees < 0 skipping transaction")
                 continue
 
             # calculate fee-per-KB and priority
@@ -907,14 +897,12 @@ class ChainDb(object):
                 txlist.append(tx)
                 txlist_bytes += tx.ser_size
                 free_bytes -= tx.ser_size
-        self.log.debug('Returning the transaction list >>>>>>>')
         self.log.debug('Length: %s' % len(txlist))
         self.log.debug('List: %s' % txlist)
         return txlist
 
     def newblock(self):
         tophash = self.gettophash()
-        # self.log.debug("Tophash: ", tophash)
         prevblock = self.getblock(tophash)
         if prevblock is None:
             return None
@@ -960,8 +948,7 @@ class ChainDb(object):
             block = self.getblock(blkhash)
 
             self.log.debug("\n")
-            self.log.debug("Block: ", height)
-            # self.log.debug block
+            self.log.debug("Block: %d", height)
             for tx in block.vtx:
                 for txin in tx.vin:
                     if not txin.scriptSig:
