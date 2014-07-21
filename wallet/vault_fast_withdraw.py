@@ -24,5 +24,6 @@ if not (fromaddress and toaddress):
     print("Not enough accounts, quitting")
     sys.exit(1)
 
-connection = bitcoinrpc.connect_to_remote(rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
+amount = 20
+print("Transfering: " + str(amount) + "\tfrom address: " + fromaddress + "\tto address: " + toaddress)
 connection.fastwithdrawfromvault(fromaddress, toaddress, amount)
