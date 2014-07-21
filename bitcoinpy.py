@@ -102,11 +102,10 @@ if __name__ == '__main__':
     if new_install:
         # initialize wallet
         wallet.initialize()
-    # FIXME: fix the logging ... don't pass the logger ...
     mempool = MemPool()
-    chaindb = ChainDb(settings, settings['db'], logger, mempool, wallet, netmagic, False, False)
-    node = Node(None, logger, mempool, chaindb, netmagic)
-    peermgr = PeerManager(node, logger, mempool, chaindb, netmagic)
+    chaindb = ChainDb(settings, settings['db'], mempool, wallet, netmagic, False, False)
+    node = Node(None, mempool, chaindb, netmagic)
+    peermgr = PeerManager(node, mempool, chaindb, netmagic)
     node.peermgr = peermgr
     wallet.chaindb = chaindb
 
@@ -125,7 +124,7 @@ if __name__ == '__main__':
         connection.start()
 
     # start HTTP server for JSON-RPC
-    rpcexec = rpc.RPCExec(peermgr, mempool, chaindb, wallet, logger, settings['rpcuser'], settings['rpcpass'])
+    rpcexec = rpc.RPCExec(peermgr, mempool, chaindb, wallet, settings['rpcuser'], settings['rpcpass'])
     rpcserver = gevent.pywsgi.WSGIServer(('', settings['rpcport']), rpcexec.handle_request)
     rpc_server_thread = gevent.Greenlet(rpcserver.serve_forever)
     threads.append(rpc_server_thread)

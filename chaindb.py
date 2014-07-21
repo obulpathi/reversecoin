@@ -13,8 +13,10 @@ import time
 import utils
 import binascii
 import shutil
+import logging
 from decimal import Decimal
 from cache import Cache
+
 
 from common import *
 from bitcoin.serialize import *
@@ -82,9 +84,8 @@ class HeightIdx(object):
 
 
 class ChainDb(object):
-    def __init__(self, settings, datadir, log, mempool, wallet, netmagic, readonly=False, fast_dbm=False):
+    def __init__(self, settings, datadir, mempool, wallet, netmagic, readonly=False, fast_dbm=False):
         self.settings = settings
-        self.log = log
         self.mempool = mempool
         self.wallet = wallet
         self.readonly = readonly
@@ -93,6 +94,7 @@ class ChainDb(object):
         self.blk_cache = Cache(500)
         self.orphans = {}
         self.orphan_deps = {}
+        self.logger = logging.getLogger(__name__)
 
         # LevelDB to hold:
         #    tx:*      transaction outputs
@@ -107,7 +109,7 @@ class ChainDb(object):
         try:
             self.db.Get('misc:height')
         except KeyError:
-            self.log.debug("INITIALIZING EMPTY BLOCKCHAIN DATABASE")
+            self.logger.debug("INITIALIZING EMPTY BLOCKCHAIN DATABASE")
             batch = leveldb.WriteBatch()
             batch.Put('misc:height', str(-1))
             batch.Put('misc:msg_start', self.netmagic.msg_start)
@@ -119,18 +121,18 @@ class ChainDb(object):
             start = self.db.Get('misc:msg_start')
             if start != self.netmagic.msg_start: raise KeyError
         except KeyError:
-            self.self.log.debug("Database magic number mismatch. Data corruption or incorrect network?")
+            self.self.logger.debug("Database magic number mismatch. Data corruption or incorrect network?")
             raise RuntimeError
 
 
     def puttxidx(self, txhash, txidx, batch=None):
-        self.log.debug("Put txidx: %s " % txhash)
+        self.logger.debug("Put txidx: %s " % txhash)
         ser_txhash = ser_uint256(txhash)
 
         try:
             self.db.Get('tx:'+ser_txhash)
             old_txidx = self.gettxidx(txhash)
-            self.self.log.debug("WARNING: overwriting duplicate TX %064x, height %d, oldblk %064x, \
+            self.self.logger.debug("WARNING: overwriting duplicate TX %064x, height %d, oldblk %064x, \
             oldspent %x, newblk %064x" % (txhash, self.getheight(), old_txidx.blkhash, old_txidx.spentmask, txidx.blkhash))
         except KeyError:
             pass
@@ -142,12 +144,12 @@ class ChainDb(object):
 
 
     def gettxidx(self, txhash):
-        self.log.debug("Get txidx: %064x" % txhash)
+        self.logger.debug("Get txidx: %064x" % txhash)
         ser_txhash = ser_uint256(txhash)
         try:
             ser_value = self.db.Get('tx:'+ser_txhash)
         except KeyError:
-            self.log.debug('DB KEY Error: %064x' % txhash)
+            self.logger.debug('DB KEY Error: %064x' % txhash)
             return None
 
         pos = string.find(ser_value, ' ')
@@ -162,7 +164,7 @@ class ChainDb(object):
     def gettx(self, txhash):
         txidx = self.gettxidx(txhash)
         if txidx is None:
-            self.log.debug('tdidx is None')
+            self.logger.debug('tdidx is None')
             return None
 
         block = self.getblock(txidx.blkhash)
@@ -172,10 +174,10 @@ class ChainDb(object):
                 return tx
             else:
                 # FIXME: temporary hack to get the code working
-                self.log.debug("ERROR: Missing TX %064x in block %064x" % (txhash, txidx.blkhash))
+                self.logger.debug("ERROR: Missing TX %064x in block %064x" % (txhash, txidx.blkhash))
                 return tx
 
-        self.log.debug("ERROR: Missing TX %064x in block %064x" % (txhash, txidx.blkhash))
+        self.logger.debug("ERROR: Missing TX %064x in block %064x" % (txhash, txidx.blkhash))
         return None
 
 
@@ -200,7 +202,7 @@ class ChainDb(object):
     def sendtovault(self, toaddress, tomaster_address, timeout, amount):
         tx = self.wallet.sendtovault(toaddress, tomaster_address, timeout, amount)
         tx.calc_sha256()
-        self.log.debug("Adding to vault: %064x" % tx.sha256)
+        self.logger.debug("Adding to vault: %064x" % tx.sha256)
         self.mempool.add(tx)
 
     def withdrawfromvault(self, fromaddress, toaddress, amount):
@@ -219,8 +221,8 @@ class ChainDb(object):
 
     def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
-        self.log.debug("fast withdraw from vault")
-        self.log.debug(self.mempool.add(tx))
+        self.logger.debug("fast withdraw from vault")
+        self.logger.debug(self.mempool.add(tx))
 
     def overridevaulttx(self, fromvault, toaddress, amount):
         tx = self.wallet.overridevaulttx(self, fromvault, toaddress, amount)
@@ -264,7 +266,7 @@ class ChainDb(object):
         end_height = self.getheight()
         #public_key_hash_hex = binascii.hexlify(utils.address_to_public_key_hash(address))
 
-        self.log.debug("scriptSig: %s" % scriptSig)
+        self.logger.debug("scriptSig: %s" % scriptSig)
         for height in xrange(end_height):
             data = self.db.Get('height:' + str(height))
             heightidx = HeightIdx()
@@ -279,10 +281,10 @@ class ChainDb(object):
                     if not txin.scriptSig:
                         continue
                     if txin.scriptSig == scriptSig:
-                        self.log.debug("scriptSigs %064x" % scriptSigs)
+                        self.logger.debug("scriptSigs %064x" % scriptSigs)
                         del txouts[txin.prevout.hash]
                     else:
-                        self.log.debug("txin.scriptSig: %s" % txin.scriptSig)
+                        self.logger.debug("txin.scriptSig: %s" % txin.scriptSig)
                     """
                     for scriptSig in scriptSigs:
                         if txin.scriptSig in scriptSig:
@@ -296,7 +298,7 @@ class ChainDb(object):
                 for n, txout in enumerate(tx.vout):
                     if scriptPubKey == txout.scriptPubKey:
                         tx.calc_sha256()
-                        self.log.debug("Vault input txhash: %d %d %064x %s" \
+                        self.logger.debug("Vault input txhash: %d %d %064x %s" \
                                        % (height, n, tx.sha256, tx))
                         txouts[tx.sha256] = {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
                                              'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
@@ -453,16 +455,16 @@ class ChainDb(object):
                 try:
                     txfrom = self.mempool.pool[txin.prevout.hash]
                 except:
-                    self.log.debug("TX %064x/%d no-dep %064x" %
+                    self.logger.debug("TX %064x/%d no-dep %064x" %
                             (tx.sha256, i, txin.prevout.hash))
                     return False
             if txfrom is None:
-                self.log.debug("TX %064x/%d no-dep %064x" %
+                self.logger.debug("TX %064x/%d no-dep %064x" %
                         (tx.sha256, i, txin.prevout.hash))
                 return False
 
             if not VerifySignature(txfrom, tx, i, 0):
-                self.log.debug("TX %064x/%d sigfail" % (tx.sha256, i))
+                self.logger.debug("TX %064x/%d sigfail" % (tx.sha256, i))
                 return False
 
         return True
@@ -490,7 +492,7 @@ class ChainDb(object):
         try:
             chk_hash = self.netmagic.checkpoints[blkmeta.height]
             if chk_hash != block.sha256:
-                self.log.debug("Block %064x does not match checkpoint hash %064x, height %d" % (
+                self.logger.debug("Block %064x does not match checkpoint hash %064x, height %d" % (
                     block.sha256, chk_hash, blkmeta.height))
                 return False
         except KeyError:
@@ -499,7 +501,7 @@ class ChainDb(object):
         # check TX connectivity
         outpts = self.spent_outpts(block)
         if outpts is None:
-            self.log.debug("Unconnectable block %064x" % (block.sha256, ))
+            self.logger.debug("Unconnectable block %064x" % (block.sha256, ))
             return False
 
         # verify script signatures
@@ -513,7 +515,7 @@ class ChainDb(object):
                     continue
 
                 if not self.tx_signed(tx, block, False):
-                    self.log.debug("Invalid signature in block %064x" % (block.sha256, ))
+                    self.logger.debug("Invalid signature in block %064x" % (block.sha256, ))
                     return False
 
         # update database pointers for best chain
@@ -522,7 +524,7 @@ class ChainDb(object):
         batch.Put('misc:height', str(blkmeta.height))
         batch.Put('misc:tophash', ser_hash)
 
-        self.log.debug("ChainDb: height %d, block %064x" % (
+        self.logger.debug("ChainDb: height %d, block %064x" % (
                 blkmeta.height, block.sha256))
 
         # all TX's in block are connectable; index
@@ -533,10 +535,10 @@ class ChainDb(object):
                 neverseen += 1
             txidx = TxIdx(block.sha256)
             if not self.puttxidx(tx.sha256, txidx, batch):
-                self.log.debug("TxIndex failed %064x" % (tx.sha256,))
+                self.logger.debug("TxIndex failed %064x" % (tx.sha256,))
                 return False
 
-        self.log.debug("MemPool: blk.vtx.sz %d, neverseen %d, poolsz %d" % (len(block.vtx), neverseen, self.mempool.size()))
+        self.logger.debug("MemPool: blk.vtx.sz %d, neverseen %d, poolsz %d" % (len(block.vtx), neverseen, self.mempool.size()))
 
         # mark deps as spent
         for outpt in outpts:
@@ -579,7 +581,7 @@ class ChainDb(object):
         batch.Put('misc:tophash', ser_prevhash)
         self.db.Write(batch)
 
-        self.log.debug("ChainDb(disconn): height %d, block %064x" % (
+        self.logger.debug("ChainDb(disconn): height %d, block %064x" % (
                 prevmeta.height, block.hashPrevBlock))
 
         return True
@@ -602,7 +604,7 @@ class ChainDb(object):
         return meta.height
 
     def reorganize(self, new_best_blkhash):
-        self.log.debug("REORGANIZE")
+        self.logger.debug("REORGANIZE")
 
         conn = []
         disconn = []
@@ -632,10 +634,10 @@ class ChainDb(object):
             if fork == 0:
                 return False
 
-        self.log.debug("REORG disconnecting top hash %064x" % (old_best_blkhash,))
-        self.log.debug("REORG connecting new top hash %064x" % (new_best_blkhash,))
-        self.log.debug("REORG chain union point %064x" % (fork,))
-        self.log.debug("REORG disconnecting %d blocks, connecting %d blocks" % (len(disconn), len(conn)))
+        self.logger.debug("REORG disconnecting top hash %064x" % (old_best_blkhash,))
+        self.logger.debug("REORG connecting new top hash %064x" % (new_best_blkhash,))
+        self.logger.debug("REORG chain union point %064x" % (fork,))
+        self.logger.debug("REORG disconnecting %d blocks, connecting %d blocks" % (len(disconn), len(conn)))
 
         for block in disconn:
             if not self.disconnect_block(block):
@@ -646,7 +648,7 @@ class ChainDb(object):
                   block, self.getblockmeta(block.sha256)):
                 return False
 
-        self.log.debug("REORGANIZE DONE")
+        self.logger.debug("REORGANIZE DONE")
         return True
 
     def set_best_chain(self, ser_prevhash, ser_hash, block, blkmeta):
@@ -662,13 +664,13 @@ class ChainDb(object):
         block.calc_sha256()
 
         if not block.is_valid():
-            self.log.debug("Invalid block %064x" % (block.sha256, ))
+            self.logger.debug("Invalid block %064x" % (block.sha256, ))
             return False
 
         if not self.have_prevblock(block):
             self.orphans[block.sha256] = True
             self.orphan_deps[block.hashPrevBlock] = block
-            self.log.debug("Orphan block %064x (%d orphans)" % (block.sha256, len(self.orphan_deps)))
+            self.logger.debug("Orphan block %064x (%d orphans)" % (block.sha256, len(self.orphan_deps)))
             return False
 
         top_height = self.getheight()
@@ -719,7 +721,7 @@ class ChainDb(object):
 
         # if chain is not best chain, proceed no further
         if (blkmeta.work <= top_work):
-            self.log.debug("ChainDb: height %d (weak), block %064x" % (blkmeta.height, block.sha256))
+            self.logger.debug("ChainDb: height %d (weak), block %064x" % (blkmeta.height, block.sha256))
             return True
 
         # update global chain pointers
@@ -732,7 +734,7 @@ class ChainDb(object):
     def putblock(self, block):
         block.calc_sha256()
         if self.haveblock(block.sha256, True):
-            self.log.debug("Duplicate block %064x submitted" % (block.sha256, ))
+            self.logger.debug("Duplicate block %064x submitted" % (block.sha256, ))
             return False
 
         if not self.putoneblock(block):
@@ -768,7 +770,7 @@ class ChainDb(object):
 
     def loadfile(self, filename):
         fd = os.open(filename, os.O_RDONLY)
-        self.log.debug("IMPORTING DATA FROM " + filename)
+        self.logger.debug("IMPORTING DATA FROM " + filename)
         buf = ''
         wanted = 4096
         while True:
@@ -805,7 +807,7 @@ class ChainDb(object):
             f = cStringIO.StringIO(ser_blk)
             block = CBlock()
             block.deserialize(f)
-            self.log.debug("Adding the genesis block")
+            self.logger.debug("Adding the genesis block")
             self.putblock(block)
 
     def newblock_txs(self):
@@ -814,7 +816,7 @@ class ChainDb(object):
         for tx in self.mempool.pool.itervalues():
             # query finalized, non-coinbase mempool tx's
             if tx.is_coinbase() or not tx.is_final():
-                self.log.debug("Coinbase or FINAL ... not adding")
+                self.logger.debug("Coinbase or FINAL ... not adding")
                 continue
             # iterate through inputs, calculate total input value
             valid = True
@@ -825,8 +827,8 @@ class ChainDb(object):
                 in_tx = self.gettx(tin.prevout.hash)
                 if (in_tx is None or
                     tin.prevout.n >= len(in_tx.vout)):
-                    self.log.debug('in_tx is None: %r' % in_tx is None)
-                    self.log.debug('tin.prevout.n >= len(in_tx.vout): %r' \
+                    self.logger.debug('in_tx is None: %r' % in_tx is None)
+                    self.logger.debug('tin.prevout.n >= len(in_tx.vout): %r' \
                                     % tin.prevout.n >= len(in_tx.vout))
                     valid = False
                 else:
@@ -835,7 +837,7 @@ class ChainDb(object):
                     dPriority += Decimal(v * 1)
 
             if not valid:
-                self.log.error("Transaction not valid")
+                self.logger.error("Transaction not valid")
                 continue
             # iterate through outputs, calculate total output value
             for txout in tx.vout:
@@ -844,7 +846,7 @@ class ChainDb(object):
             # calculate fees paid, if any
             tx.nFeesPaid = nValueIn - nValueOut
             if tx.nFeesPaid < 0:
-                self.log.warning("Fees < 0 skipping transaction")
+                self.logger.warning("Fees < 0 skipping transaction")
                 continue
 
             # calculate fee-per-KB and priority
@@ -896,8 +898,8 @@ class ChainDb(object):
                 txlist.append(tx)
                 txlist_bytes += tx.ser_size
                 free_bytes -= tx.ser_size
-        self.log.debug('Length: %s' % len(txlist))
-        self.log.debug('List: %s' % txlist)
+        self.logger.debug('Length: %s' % len(txlist))
+        self.logger.debug('List: %s' % txlist)
         return txlist
 
     def newblock(self):
@@ -946,14 +948,14 @@ class ChainDb(object):
             blkhash = heightidx.blocks[0]
             block = self.getblock(blkhash)
 
-            self.log.debug("\n")
-            self.log.debug("Block: %d", height)
+            self.logger.debug("\n")
+            self.logger.debug("Block: %d", height)
             for tx in block.vtx:
                 for txin in tx.vin:
                     if not txin.scriptSig:
                         continue
-                    self.log.debug("Some tx in # ")
+                    self.logger.debug("Some tx in # ")
                 for n, txout in enumerate(tx.vout):
                     address = utils.output_script_to_address(txout.scriptPubKey)
-                    self.log.debug(str(n) + ": Sent " + str(txout.nValue) + " to: " + address)
+                    self.logger.debug(str(n) + ": Sent " + str(txout.nValue) + " to: " + address)
         return None
