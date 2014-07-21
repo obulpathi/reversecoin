@@ -32,7 +32,6 @@ BUGS
 ----
 * Remove hardcoded fees
 * Remove hardcoded timeout for vault
-* Auto Vault Send, Withdraw and Fast Withdraw Scripts
 * Enforce single Vault or Support multiple Vaults per address pair
 * Fix FIXMEs
 
