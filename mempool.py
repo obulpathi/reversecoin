@@ -20,10 +20,10 @@ class MemPool(object):
 		hash = tx.sha256
 		hashstr = uint256_to_shortstr(hash)
 		if hash in self.pool:
-			self.logger.debug("MemPool.add(%s): already known" % (hashstr,))
+			self.logger.warning("MemPool.add(%s): already known" % (hashstr,))
 			return False
 		if not tx.is_valid():
-			self.logger.debug("MemPool.add(%s): invalid TX" % (hashstr, ))
+			self.logger.error("MemPool.add(%s): invalid TX" % (hashstr, ))
 			return False
 		self.pool[hash] = tx
 		self.logger.debug("MemPool.add(%s), poolsz %d" % (hashstr, len(self.pool)))

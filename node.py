@@ -60,11 +60,11 @@ class Node(Greenlet): # its not a greenlet .. its just a module
 
     def send_getblocks(self, connection, timecheck=True):
         if not connection.getblocks_ok:
-            self.logger.debug("getblock_ok is false .. not fetching any blocks")
+            self.logger.warning("getblock_ok is false .. not fetching any blocks")
             return
         now = time.time()
         if timecheck and (now - connection.last_getblocks) < 5:
-            self.logger.debug("time chack failed .. not getting blocks")
+            self.logger.warning("time chack failed .. not getting blocks")
             return
         connection.last_getblocks = now
         our_height = self.chaindb.getheight()
@@ -90,7 +90,7 @@ class Node(Greenlet): # its not a greenlet .. its just a module
         if message.command == "version":
             self.ver_send = min(PROTO_VERSION, message.nVersion)
             if self.ver_send < MIN_PROTO_VERSION:
-                self.logger.debug("Obsolete version %d, closing" % (self.ver_send,))
+                self.logger.warning("Obsolete version %d, closing" % (self.ver_send,))
                 self.handle_close()
                 return
             if (self.ver_send >= NOBLKS_VERSION_START and self.ver_send <= NOBLKS_VERSION_END):
@@ -127,9 +127,9 @@ class Node(Greenlet): # its not a greenlet .. its just a module
                 self.send_message(want)
         elif message.command == "tx":
             if self.chaindb.tx_is_orphan(message.tx):
-                self.logger.debug("MemPool: Ignoring orphan TX %064x" % (message.tx.sha256,))
+                self.logger.warning("MemPool: Ignoring orphan TX %064x" % (message.tx.sha256,))
             elif not self.chaindb.tx_signed(message.tx, None, True):
-                self.logger.debug("MemPool: Ignoring failed-sig TX %064x" % (message.tx.sha256,))
+                self.logger.error("MemPool: Ignoring failed-sig TX %064x" % (message.tx.sha256,))
             else:
                 self.mempool.add(message.tx)
         elif message.command == "block":

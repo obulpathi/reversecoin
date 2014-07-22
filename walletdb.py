@@ -200,7 +200,7 @@ class Wallet(object):
             # if wallet is not initialized, return
             if 'accounts' in walletdb:
                 walletdb.close()
-                self.logger.debug("Wallet is already initialized!")
+                self.logger.warning("Wallet is already initialized!")
                 return None
             subaccount = self.getnewsubaccount()
             walletdb['account'] = dumps({subaccount['address']: subaccount})
@@ -224,13 +224,13 @@ class Wallet(object):
         # if wallet is not initialized, return
         if 'accounts' not in walletdb:
             walletdb.close()
-            self.logger.debug("Wallet not initialized ... quitting!")
+            self.logger.error("Wallet not initialized ... quitting!")
             return None
         # if wallet is initialized
         accountnames = loads(walletdb['accounts'])
         vaults = loads(walletdb['vaults'])
         if accountname not in accountnames:
-            self.logger.debug("Error: Account not found")
+            self.logger.warning("Error: Account not found")
             return
         # if account is in wallet
         account = loads(walletdb[accountname])
@@ -263,7 +263,7 @@ class Wallet(object):
         walletdb = self.open()
         # if wallet is not initialized, return
         if 'accounts' not in walletdb:
-            self.logger.debug("Wallet not initialized ... quitting!")
+            self.logger.error("Wallet not initialized ... quitting!")
             return None
         # wallet is initialized
         accountnames = loads(walletdb['accounts'])
@@ -304,7 +304,7 @@ class Wallet(object):
         walletdb = self.open(writable = True)
         # if wallet is not initialized
         if 'accounts' not in walletdb:
-            self.logger.debug("Wallet not initialized ... quitting!")
+            self.logger.error("Wallet not initialized ... quitting!")
             return None
         # if wallet is initialized
         subaccount = self.getnewsubaccount()
@@ -330,14 +330,15 @@ class Wallet(object):
         if not accountname:
             accountname = "account"
         walletdb = self.open()
-        # if wallet is not initialized, return
+        # if wallet is not initialized, return:
+        # FIXME: refactor is wallet initialized
         if 'accounts' not in walletdb:
-            self.logger.debug("Wallet not initialized ... quitting!")
+            self.logger.error("Wallet not initialized ... quitting!")
             return None
         # if wallet is initialized
         accountnames = loads(walletdb['accounts'])
         if accountname not in accountnames:
-            self.logger.debug("Error: Account not found")
+            self.logger.error("Error: Account not found")
             return
         # if account is in wallet
         account = loads(walletdb['account']) # FIXME: account = loads(walletdb[accountname])
@@ -441,7 +442,7 @@ class Wallet(object):
 
         # incase of insufficient funds, return
         if funds < amount + utils.calculate_fees(None):
-            self.logger.debug("In sufficient funds, exiting, return")
+            self.logger.warning("In sufficient funds, exiting, return")
             return
 
         # create transaction
@@ -523,7 +524,7 @@ class Wallet(object):
 
         # incase of insufficient funds, return
         if funds < amount + utils.calculate_fees(None):
-            self.logger.debug("In sufficient funds, exiting, return")
+            self.logger.warning("In sufficient funds, exiting, return")
             return
 
         # create transaction
@@ -611,7 +612,7 @@ class Wallet(object):
         vault = self.getvault(fromvaultaddress)
         self.logger.debug("%r" % vault)
         if vault['amount'] + utils.calculate_fees(None) < amount:
-            self.logger.debug("In sufficient funds in vault, exiting, return")
+            self.logger.warning("In sufficient funds in vault, exiting, return")
             return
 
         # create transaction
@@ -686,7 +687,7 @@ class Wallet(object):
         vault = self.getvault(fromvaultaddress)
         self.logger.debug("%r" % vault)
         if vault['amount'] + utils.calculate_fees(None) < amount:
-            self.logger.debug("In sufficient funds in vault, exiting, return")
+            self.logger.warning("In sufficient funds in vault, exiting, return")
             return
 
         # create transaction

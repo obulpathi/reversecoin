@@ -225,7 +225,7 @@ class RPCExec(object):
 
         if block is None:
             ret = {}
-            self.logger.debug("no block!")
+            self.logger.error("no block!")
             return (None, err)
         self.work_blocks[block.hashMerkleRoot] = block
 

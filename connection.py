@@ -47,8 +47,8 @@ class Connection(Greenlet):
             try:
                 self.socket.connect((self.dstaddr, self.dstport))
             except Exception, err:
-                self.logger.debug("Exception: %r\t%s", Exception, err)
-                self.logger.debug("Unable to establish connection")
+                self.logger.error("Exception: %r\t%s", Exception, err)
+                self.logger.error("Unable to establish connection")
                 self.handle_close()
             self.sendVersionMessage()
 
@@ -112,7 +112,7 @@ class Connection(Greenlet):
                 t.deserialize(f)
                 self.node.got_message(self, t)
             else:
-                self.logger.debug("UNKNOWN COMMAND %s %s" % (command, repr(msg)))
+                self.logger.warning("UNKNOWN COMMAND %s %s" % (command, repr(msg)))
 
     def send_message(self, message):
         if verbose_sendmsg(message):
@@ -122,5 +122,5 @@ class Connection(Greenlet):
             self.socket.sendall(tmsg)
             self.last_sent = time.time()
         except Exception, err:
-            self.logger.debug("Exception: %r %s" % Exception, err)
+            self.logger.error("Exception: %r %s" % Exception, err)
             self.handle_close()
