@@ -3,10 +3,11 @@ TODO
 
 FEATURES
 --------
-* Add documentation
+* Add documentation and notes
 * Mark the bugs with #FIXME tag
 * Installation and documentation for installation
 * Initialization and documentation for initialization
+* Delayed confirmation of vault withdraws
 * Fix hash and scriptSig formats
 * Fix tx hash and block hash for vault_fastwithdraw in chaindb and wallet
 * Validate transactions
@@ -30,6 +31,7 @@ FEATURES
 
 BUGS
 ----
+* Fix Balance check for vault addresses
 * Remove hardcoded fees
 * Remove hardcoded timeout for vault
 * Enforce single Vault or Support multiple Vaults per address pair
