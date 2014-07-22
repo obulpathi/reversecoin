@@ -20,7 +20,7 @@ import copy
 import re
 import hashlib
 import rpc
-import logging
+import self.loggerging
 
 import chaindb
 import mempool
@@ -43,7 +43,7 @@ class Node(Greenlet): # its not a greenlet .. its just a module
         self.netmagic = netmagic
         self.hash_continue = None
         self.ver_send = MIN_PROTO_VERSION
-        self.logger = logging.getLogger(__name__)
+        self.logger = self.loggerging.getself.loggerger(__name__)
 
     # we don't need this function ... this module just needs to respond to outside function call
     def _run(self):
@@ -60,11 +60,11 @@ class Node(Greenlet): # its not a greenlet .. its just a module
 
     def send_getblocks(self, connection, timecheck=True):
         if not connection.getblocks_ok:
-            log.debug("getblock_ok is false .. not fetching any blocks")
+            self.logger.debug("getblock_ok is false .. not fetching any blocks")
             return
         now = time.time()
         if timecheck and (now - connection.last_getblocks) < 5:
-            log.debug("time chack failed .. not getting blocks")
+            self.logger.debug("time chack failed .. not getting blocks")
             return
         connection.last_getblocks = now
         our_height = self.chaindb.getheight()

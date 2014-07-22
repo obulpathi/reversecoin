@@ -11,6 +11,7 @@ import time
 import sys
 import hashlib
 import cStringIO
+import logging
 
 from common import *
 from bitcoin.coredefs import MIN_PROTO_VERSION
@@ -31,22 +32,23 @@ class Connection(Greenlet):
         self.last_block_rx = time.time()
         self.last_getblocks = 0
         self.hash_continue = None
-        self.log = log
         self.ver_recv = MIN_PROTO_VERSION
         self.remote_height = -1
+        logging.basicConfig(level=logging.DEBUG)
+        self.logger = logging.getLogger(__name__)
 
         if self.socket:
             self.direction = "INCOMING"
-            log.debug("in coming connection")
+            self.logger.debug("in coming connection")
         else:
             self.socket = gevent.socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.direction = "OUTGOING"
-            log.debug("outgoing connection!")
+            self.logger.debug("outgoing connection!")
             try:
                 self.socket.connect((self.dstaddr, self.dstport))
             except Exception, err:
-                log.debug("Exception: %r\t%s", Exception, err)
-                log.debug("Unable to establish connection")
+                self.logger.debug("Exception: %r\t%s", Exception, err)
+                self.logger.debug("Unable to establish connection")
                 self.handle_close()
             self.sendVersionMessage()
 
@@ -62,7 +64,7 @@ class Connection(Greenlet):
         self.send_message(vt)
 
     def _run(self):
-        log.debug("Connected: %s" % self.dstaddr)
+        self.logger.debug("Connected: %s" % self.dstaddr)
         # wait for message and respond using hooks in node
         while True:
             try:
@@ -75,7 +77,7 @@ class Connection(Greenlet):
             self.got_data()
 
     def handle_close(self):
-        log.debug("Closing %s" % self.dstaddr)
+        self.logger.debug("Closing %s" % self.dstaddr)
         self.recvbuf = ""
         try:
             self.sock.shutdown(socket.SHUT_RDWR)
@@ -110,15 +112,15 @@ class Connection(Greenlet):
                 t.deserialize(f)
                 self.node.got_message(self, t)
             else:
-                log.debug("UNKNOWN COMMAND %s %s" % (command, repr(msg)))
+                self.logger.debug("UNKNOWN COMMAND %s %s" % (command, repr(msg)))
 
     def send_message(self, message):
         if verbose_sendmsg(message):
-            log.debug("send %s" % repr(message))
+            self.logger.debug("send %s" % repr(message))
         tmsg = message_to_str(self.node.netmagic, message)
         try:
             self.socket.sendall(tmsg)
             self.last_sent = time.time()
         except Exception, err:
-            log.debug("Exception: %r %s" % Exception, err)
+            self.logger.debug("Exception: %r %s" % Exception, err)
             self.handle_close()

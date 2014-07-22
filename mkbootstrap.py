@@ -39,23 +39,17 @@ opts.add_argument('--latest', dest='latest', action='store_true')
 
 args = opts.parse_args()
 
-# to log to a file
-# log = Log.Log(SETTINGS['log'])
-
-# stdout logging
-log = log.Log()
-
-mempool = mempool.MemPool(log)
+mempool = mempool.MemPool()
 netmagic = NETWORKS[MY_NETWORK]
-chaindb = chaindbc.ChainDb(SETTINGS, SETTINGS['db'], log, mempool, netmagic, True)
+chaindb = chaindbc.ChainDb(SETTINGS, SETTINGS['db'], mempool, netmagic, True)
 
 if args.latest:
 	scan_height = chaindb.getheight()
 else:
 	scan_height = 216116
-	
+
 out_fn = 'bootstrap.dat'
-log.write("Outputting to %s, up to height %d" % (out_fn, scan_height))
+print("Outputting to %s, up to height %d" % (out_fn, scan_height))
 
 outf = open(out_fn, 'wb')
 
@@ -68,7 +62,7 @@ for height in xrange(scan_height+1):
 	try:
 		heightidx.deserialize(chaindb.db.Get('height:'+heightstr))
 	except KeyError:
-		log.write("Height " + str(height) + " not found.")
+		print("Height " + str(height) + " not found.")
 		continue
 
 	blkhash = heightidx.blocks[0]
@@ -85,8 +79,7 @@ for height in xrange(scan_height+1):
 
 	scanned += 1
 	if (scanned % 1000) == 0:
-		log.write("Scanned height %d (%d failures)" % (
+		print("Scanned height %d (%d failures)" % (
 			height, failures))
 
-log.write("Scanned %d blocks (%d failures)" % (scanned, failures))
-
+print("Scanned %d blocks (%d failures)" % (scanned, failures))
