@@ -16,6 +16,7 @@ FEATURES
 * Add test cases
 * Installation using python wheels
 * Support for pay to script hash
+* Support for multisig transactions
 * Grammar and spell check
 * Wallet compatibility
 * Support for stratum miner

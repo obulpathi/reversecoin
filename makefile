@@ -1,15 +1,6 @@
 all:
 	python bitcoinpy.py config.cfg
 
-debug:
-	python -m pdb bitcoinpy.py config.cfg
-
-test:
-	python test.py
-
-tmp:
-	python tmp.py
-
 clean:
 	rm -rf ~/.bitcoinpy
 	rm -f wallet/vault.db
@@ -22,4 +13,4 @@ new:
 	python bitcoinpy.py config.cfg
 
 install:
-	sudo apt-get install python-gevent libleveldb1 python-leveldb python-bsddb3 
+	sudo apt-get install python-gevent libleveldb1 python-leveldb python-bsddb3 python-sqlite 
