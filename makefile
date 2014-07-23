@@ -13,4 +13,5 @@ new:
 	python bitcoinpy.py config.cfg
 
 install:
-	sudo apt-get install python-gevent libleveldb1 python-leveldb python-bsddb3 python-sqlite 
+	sudo apt-get install python-dev libleveldb1
+	sudo apt-get install python-gevent python-leveldb python-bsddb3 python-sqlite
