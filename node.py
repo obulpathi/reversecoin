@@ -20,7 +20,7 @@ import copy
 import re
 import hashlib
 import rpc
-import self.loggerging
+import logging
 
 import chaindb
 import mempool
@@ -43,7 +43,7 @@ class Node(Greenlet): # its not a greenlet .. its just a module
         self.netmagic = netmagic
         self.hash_continue = None
         self.ver_send = MIN_PROTO_VERSION
-        self.logger = self.loggerging.getself.loggerger(__name__)
+        self.logger = logging.getLogger(__name__)
 
     # we don't need this function ... this module just needs to respond to outside function call
     def _run(self):

@@ -28,10 +28,9 @@ walletdb: wallet data structure
                 address: address
                 public_key: public_key
                 private_key: private_key
-                # secret: secret:
                 balance: 0.0
                 height: 0
-                received : []
+                received : [transactions]
     vaults: list of vaults
         vault:
             name: name of the vault
