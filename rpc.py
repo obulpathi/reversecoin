@@ -13,6 +13,7 @@ import struct
 import sys
 import itertools
 import logging
+import binascii
 
 import chaindb
 from bitcoin.core import CBlock
@@ -63,6 +64,12 @@ def bufreverse(in_buf):
         word = struct.unpack('@I', in_buf[i:i+4])[0]
         out_words.append(struct.pack('@I', bytereverse(word)))
     return ''.join(out_words)
+
+def accountToJSON(account):
+    for address, subaccount in account.iteritems():
+        subaccount['public_key'] = binascii.hexlify(subaccount['public_key'])
+        subaccount['private_key'] = binascii.hexlify(subaccount['private_key'])
+    return account
 
 def blockToJSON(block, blkmeta, cur_height):
     block.calc_sha256()
@@ -121,7 +128,9 @@ class RPCExec(object):
         return (self.chaindb.dumpblockchain(params[0], params[1]), None)
 
     def getaccount(self, params):
-        return (self.wallet.getaccount(params[0]), None)
+        account = self.wallet.getaccount(params[0])
+        res = accountToJSON(account)
+        return (res, None)
 
     def getvault(self, params):
         return (self.wallet.getvault(), None)

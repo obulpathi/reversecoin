@@ -233,19 +233,17 @@ class Wallet(object):
             return
         # if account is in wallet
         account = loads(walletdb[accountname])
-        #vault = loads(walletdb[vaults[0]])
         walletdb.close()
         for subaccount in account.itervalues():
-            subaccount['public_key'] = subaccount['public_key'].encode('hex')
-            subaccount['private_key'] = subaccount['private_key'].encode('hex')
             subaccount['balance'] = self.chaindb.getbalance(subaccount['address'])
             subaccount['received'] = self.chaindb.listreceivedbyaddress(subaccount['address']).values()
+        """
         # return vaults
-        # self.logger.debug("Vault: ", vault)
         for vault in vaults:
             subaccount = {}
             #subaccount = {address: vault}
             subaccount['address'] = vault
+            # FIXME
             subaccount['public_key'] = 'vault pubkey'
             subaccount['private_key'] = 'vault privkey'
             subaccount['height'] = 0
@@ -253,6 +251,7 @@ class Wallet(object):
             subaccount['received'] = self.chaindb.listreceivedbyvault(vault).values()
             #account[vault] = subaccount
             account['vault'] = subaccount
+        """
         return account
 
 
@@ -350,7 +349,7 @@ class Wallet(object):
                 self.logger.debug("%r" % transaction)
                 subaccount['balance'] = subaccount['balance'] + transaction['value']
             subaccount['received'] = transactions
-        # sanitize the return values ... convert from bin to hex
+        # FIXME
         for address, subaccount in account.iteritems():
             subaccount['public_key'] = 1234
             subaccount['private_key'] = 5678
@@ -362,12 +361,11 @@ class Wallet(object):
         account = self.getaccount()
         for subaccount in account:
             if subaccount == address:
-                # fix the unhexlifying part ... this sucks .. store in raw format in DB
-                public_key = binascii.unhexlify(account[subaccount]['public_key'])
-                private_key = binascii.unhexlify(account[subaccount]['private_key'])
+                public_key = account[subaccount]['public_key']
+                private_key = account[subaccount]['private_key']
             if subaccount == master_address:
-                master_public_key = binascii.unhexlify(account[subaccount]['public_key'])
-                master_private_key = binascii.unhexlify(account[subaccount]['private_key'])
+                master_public_key = account[subaccount]['public_key']
+                master_private_key = account[subaccount]['private_key']
         # open wallet
         walletdb = self.open(writable = True)
         vault = {'name' : vault_name,
@@ -383,18 +381,12 @@ class Wallet(object):
 
     # return a vault
     def getvault(self, vaultname = None):
-        #self.logger.debug(type(vaultname), vaultname)
+        self.logger.debug("%r %r" % (type(vaultname), vaultname))
         walletdb = self.open()
         if not vaultname:
             vaultname = loads(walletdb['vaults'])[0]
         vault = loads(walletdb[str(vaultname)])
         walletdb.close()
-        """
-        vault['private_key'] = 'private_key'
-        vault['master_private_key'] = 'master_private_key'
-        vault['public_key'] = 'public_key'
-        vault['master_public_key'] = 'master_public_key'
-        """
         return vault
 
     # delete a vault
