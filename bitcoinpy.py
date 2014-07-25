@@ -36,8 +36,7 @@ settings = {}
 if __name__ == '__main__':
 
     # setup logging
-    #logging.basicConfig(level=logging.DEBUG)
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
 
     if len(sys.argv) != 2:

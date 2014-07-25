@@ -278,6 +278,7 @@ class Wallet(object):
         for vault in vaults:
             subaccount = {}
             subaccount = {'address': vault}
+            # FIXME
             subaccount['pubkey'] = 'pubkey'
             subaccount['privkey'] = 'privkey'
             subaccount['height'] = 0
@@ -321,7 +322,6 @@ class Wallet(object):
         walletdb[accountname] = dumps(account)
         walletdb.sync()
         walletdb.close()
-        self.logger.debug("subaccount: %s" % subaccount)
         return subaccount['public_key'], subaccount['address']
 
     # return balance of an account

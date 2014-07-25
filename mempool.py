@@ -11,8 +11,7 @@ class MemPool(object):
 	def __init__(self):
 		self.pool = {}
 		# setup logging
-		logging.basicConfig(level=logging.INFO)
-		# FIXME: log -> logging
+		logging.basicConfig(level=logging.DEBUG)
 		self.logger = logging.getLogger(__name__)
 
 	def add(self, tx):

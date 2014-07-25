@@ -265,7 +265,7 @@ class ChainDb(object):
         txouts = {}
         end_height = self.getheight()
 
-        self.logger.debug("scriptSig: %s" % scriptSig)
+        self.logger.debug("scriptSig: %s" % binascii.hexlify(scriptSig))
         for height in xrange(end_height):
             data = self.db.Get('height:' + str(height))
             heightidx = HeightIdx()
@@ -283,7 +283,7 @@ class ChainDb(object):
                         self.logger.debug("scriptSigs %064x" % scriptSigs)
                         del txouts[txin.prevout.hash]
                     else:
-                        self.logger.debug("txin.scriptSig: %s" % txin.scriptSig)
+                        self.logger.debug("txin.scriptSig: %s" % binascii.hexlify(txin.scriptSig))
                     """
                     for scriptSig in scriptSigs:
                         if txin.scriptSig in scriptSig:
