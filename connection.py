@@ -64,7 +64,8 @@ class Connection(Greenlet):
         self.send_message(vt)
 
     def _run(self):
-        self.logger.debug("Connected: %s" % self.dstaddr)
+        print self.dstaddr
+        self.logger.debug("Connected: " + str(self.dstaddr))
         # wait for message and respond using hooks in node
         while True:
             try:
@@ -77,7 +78,7 @@ class Connection(Greenlet):
             self.got_data()
 
     def handle_close(self):
-        self.logger.debug("Closing %s" % self.dstaddr)
+        self.logger.debug("Closing " + str(self.dstaddr))
         self.recvbuf = ""
         try:
             self.sock.shutdown(socket.SHUT_RDWR)
@@ -122,5 +123,5 @@ class Connection(Greenlet):
             self.socket.sendall(tmsg)
             self.last_sent = time.time()
         except Exception, err:
-            self.logger.error("Exception: %r %s" % Exception, err)
+            self.logger.error("Exception: %r" % err)
             self.handle_close()

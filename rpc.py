@@ -260,6 +260,7 @@ class RPCExec(object):
 
         data = bufreverse(data)
         blkhdr = data[:80]
+        # FIXME: what is the correct thing to do?
         # why are we passing blkheader for constructing block, should not we pass the whole block"
         # f = cStringIO.StringIO(blkhdr)
         f = cStringIO.StringIO(data)
