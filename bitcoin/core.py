@@ -191,11 +191,11 @@ class CTransaction(object):
         if not self.is_coinbase():
             for tin in self.vin:
                 if not tin.is_valid():
-                    print("tin is invalid >>>>>>>>>>>")
+                    print("tin is invalid")
                     return False
         for tout in self.vout:
             if not tout.is_valid():
-                print("tout is invalid >>>>>>>>>>>>>>")
+                print("tout is invalid")
                 return False
         return True
     def is_final(self):
@@ -351,4 +351,3 @@ class CAlert(object):
         return r
     def __repr__(self):
         return "CAlert(vchMsg.sz %d, vchSig.sz %d)" % (len(self.vchMsg), len(self.vchSig))
-
