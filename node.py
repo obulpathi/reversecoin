@@ -45,7 +45,6 @@ class Node(Greenlet): # its not a greenlet .. its just a module
         self.ver_send = MIN_PROTO_VERSION
         self.logger = logging.getLogger(__name__)
 
-    # we don't need this function ... this module just needs to respond to outside function call
     def _run(self):
         self.logger.debug(self.dstaddr + " connected")
         while True:
@@ -60,11 +59,11 @@ class Node(Greenlet): # its not a greenlet .. its just a module
 
     def send_getblocks(self, connection, timecheck=True):
         if not connection.getblocks_ok:
-            self.logger.warning("getblock_ok is false .. not fetching any blocks")
+            self.logger.warning("getblock_ok is false, not fetching any blocks")
             return
         now = time.time()
         if timecheck and (now - connection.last_getblocks) < 5:
-            self.logger.warning("time chack failed .. not getting blocks")
+            self.logger.warning("time check failed, not fetching blocks")
             return
         connection.last_getblocks = now
         our_height = self.chaindb.getheight()
@@ -75,7 +74,7 @@ class Node(Greenlet): # its not a greenlet .. its just a module
             inv.hash = self.netmagic.block0
             gd.inv.append(inv)
             connection.send_message(gd)
-        elif our_height < self.remote_height:
+        elif our_height < connection.remote_height:
             gb = msg_getblocks(self.ver_send)
             if our_height >= 0:
                 gb.locator.vHave.append(self.chaindb.gettophash())
