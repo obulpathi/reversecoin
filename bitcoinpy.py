@@ -23,7 +23,7 @@ import shutil
 import logging
 
 import rpc
-from walletdb import Wallet
+from walletdb import WalletDB
 from node import Node
 from mempool import MemPool
 from chaindb import ChainDb
@@ -98,16 +98,16 @@ if __name__ == '__main__':
             pass
 
     # create wallet
-    wallet = Wallet()
+    walletdb = WalletDB()
     if new_install:
         # initialize wallet
-        wallet.initialize()
+        walletdb.initialize()
     mempool = MemPool()
-    chaindb = ChainDb(settings, settings['db'], mempool, wallet, netmagic, False, False)
+    chaindb = ChainDb(settings, settings['db'], mempool, walletdb, netmagic, False, False)
     node = Node(None, mempool, chaindb, netmagic)
     peermgr = PeerManager(node, mempool, chaindb, netmagic)
     node.peermgr = peermgr
-    wallet.chaindb = chaindb
+    walletdb.chaindb = chaindb
 
     # load blocks.dat into db, if db is newly created
     if new_install:
@@ -124,7 +124,7 @@ if __name__ == '__main__':
         connection.start()
 
     # start HTTP server for JSON-RPC
-    rpcexec = rpc.RPCExec(peermgr, mempool, chaindb, wallet, settings['rpcuser'], settings['rpcpass'])
+    rpcexec = rpc.RPCExec(peermgr, mempool, chaindb, walletdb, settings['rpcuser'], settings['rpcpass'])
     rpcserver = gevent.pywsgi.WSGIServer(('', settings['rpcport']), rpcexec.handle_request)
     rpc_server_thread = gevent.Greenlet(rpcserver.serve_forever)
     threads.append(rpc_server_thread)

@@ -13,6 +13,8 @@ FEATURES
 * Validate transactions
 * Transaction and Block Propagation
 * Auto difficulty adjustment
+* VaultDB as a separate file
+* VaultChain in a separate file
 * Redo code layout
 * Add test cases
 * Installation using python wheels

@@ -135,7 +135,7 @@ class ChainDb(object):
             self.self.logger.warning("Overwriting duplicate TX %064x, height %d, oldblk %064x, \
             oldspent %x, newblk %064x" % (txhash, self.getheight(), old_txidx.blkhash, old_txidx.spentmask, txidx.blkhash))
         except KeyError:
-            self.logger.error("Put txidx: %s does not exist" % txhash)
+            pass
         batch = self.db if batch is not None else batch
         batch.Put('tx:'+ser_txhash, hex(txidx.blkhash) + ' ' +
                            hex(txidx.spentmask))
@@ -209,15 +209,8 @@ class ChainDb(object):
         tx = self.wallet.withdrawfromvault(fromaddress, toaddress, amount)
         # FIXME: get timeout
         self.mempool.add(tx)
-        # add it to sqlite
-        # store in sqlitedb
-        connection = sqlite3.connect('vault.db')
-        cursor = connection.cursor()
-        # FIXME
-        #cursor.execute("INSERT INTO vaults VALUES(" + str(tx.sha256) + "," + datetime() + timeout))
-        connection.commit()
-        connection.close() # don't close and reopen connection every now and then OK
-                           # maintain an open session
+        # add it to VaultDB
+        FIXME
 
     def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)

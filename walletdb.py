@@ -149,7 +149,7 @@ def gen_eckey(passphrase=None, secret=None, pkey=None, compressed=False, rounds=
     return k
 
 # Wallet class
-class Wallet(object):
+class WalletDB(object):
     def __init__(self, walletfile = "~/.bitcoinpy/wallet.dat"):
         self.walletfile = os.path.expanduser(walletfile)
         self.walletdir = os.path.split(self.walletfile)[0]
