@@ -126,7 +126,7 @@ class ChainDb(object):
 
 
     def puttxidx(self, txhash, txidx, batch=None):
-        self.logger.debug("Put txidx: %s " % txhash)
+        self.logger.debug("Put txidx: %064x " % txhash)
         ser_txhash = ser_uint256(txhash)
 
         try:
@@ -172,11 +172,6 @@ class ChainDb(object):
             tx.calc_sha256()
             if tx.sha256 == txhash:
                 return tx
-            else:
-                # FIXME: temporary hack to get the code working
-                self.logger.error("ERROR: Missing TX %064x in block %064x" % (txhash, txidx.blkhash))
-                return tx
-
         self.logger.error("ERROR: Missing TX %064x in block %064x" % (txhash, txidx.blkhash))
         return None
 
@@ -209,8 +204,8 @@ class ChainDb(object):
         tx = self.wallet.withdrawfromvault(fromaddress, toaddress, amount)
         # FIXME: get timeout
         self.mempool.add(tx)
+        #FIXME
         # add it to VaultDB
-        FIXME
 
     def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)

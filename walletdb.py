@@ -237,7 +237,6 @@ class WalletDB(object):
         for subaccount in account.itervalues():
             subaccount['balance'] = self.chaindb.getbalance(subaccount['address'])
             subaccount['received'] = self.chaindb.listreceivedbyaddress(subaccount['address']).values()
-        """
         # return vaults
         for vault in vaults:
             subaccount = {}
@@ -251,7 +250,6 @@ class WalletDB(object):
             subaccount['received'] = self.chaindb.listreceivedbyvault(vault).values()
             #account[vault] = subaccount
             account['vault'] = subaccount
-        """
         return account
 
 
@@ -592,7 +590,7 @@ class WalletDB(object):
                              'scriptPubKey': binascii.hexlify(txout.scriptPubKey)})
         """
         self.set("vault:" + vault_address, {'txhash': tx.sha256})
-
+        tx.calc_sha256()
         return tx
 
 
@@ -625,9 +623,11 @@ class WalletDB(object):
         # assuming vaults are not reused
         received = received.values()[0]
         txin.prevout.hash = received['txhash']
+        """
         # FIXME
         tmp_var = self.get("vault:" + fromvaultaddress)
         txin.prevout.hash = tmp_var['txhash']
+        """
         txin.prevout.n = received['n']
         txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ...
         tx.vin.append(txin)
@@ -647,24 +647,19 @@ class WalletDB(object):
         # calculate txhash
         tx.calc_sha256()
         txhash = str(tx.sha256)
-        # sign the transaction
-        #    key = CKey()
-        #    key.set_pubkey(public_key)
-        #    key.set_privkey(private_key)
-        #   signature = key.sign(txhash)
         public_key = vault['public_key']
         private_key = vault['private_key']
         key = CKey()
         key.set_pubkey(public_key)
         key.set_privkey(private_key)
-        self.logger.debug("vault: public_key: %s " % vault['public_key'])
-        self.logger.debug("key:   public key: %s " % key.get_pubkey())
-        self.logger.debug("vault: private_key: %s" % vault['private_key'])
-        self.logger.debug("key:  private key:  %s" % key.get_privkey())
+        self.logger.debug("vault: public_key: %s " % binascii.hexlify(vault['public_key']))
+        self.logger.debug("key:   public key: %s " % binascii.hexlify(key.get_pubkey()))
+        self.logger.debug("vault: private_key: %s" % binascii.hexlify(vault['private_key']))
+        self.logger.debug("key:  private key:  %s" % binascii.hexlify(key.get_privkey()))
         signature = key.sign(txhash)
         # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
         scriptSig = chr(len(signature)) + signature + chr(len(vault['public_key'])) + vault['public_key']
-        self.logger.debug("Adding signature: %s" % scriptSig)
+        self.logger.debug("Adding signature: %064x" % scriptSig)
         txin.scriptSig = scriptSig
         self.logger.debug("Tx Validity: %r" % tx.is_valid())
 
@@ -699,11 +694,7 @@ class WalletDB(object):
         received = self.chaindb.listreceivedbyvault(fromvaultaddress)
         # assuming vaults are not reused
         received = received.values()[0]
-        # FIXME
         txin.prevout.hash = received['txhash']
-        tmp_var = self.get("vault:" + fromvaultaddress)
-        self.logger.debug("%r" % tmp_var)
-        txin.prevout.hash = tmp_var['txhash']
         txin.prevout.n = received['n']
         txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ...
         tx.vin.append(txin)

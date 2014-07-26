@@ -184,8 +184,7 @@ class CTransaction(object):
         r += struct.pack(b"<I", self.nLockTime)
         return r
     def calc_sha256(self):
-        if self.sha256 is None:
-            self.sha256 = Hash(self.serialize())
+        self.sha256 = Hash(self.serialize())
     def is_valid(self):
         self.calc_sha256()
         if not self.is_coinbase():
