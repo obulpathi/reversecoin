@@ -147,7 +147,7 @@ class CTxOut(object):
             return False
         script = CScript()
         if not script.tokenize(self.scriptPubKey):
-            print(self.scriptPubKey)
+            print(binascii.hexlify(self.scriptPubKey))
             print("script invalid")
             return False
         return True

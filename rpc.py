@@ -69,6 +69,8 @@ def accountToJSON(account):
     for address, subaccount in account.iteritems():
         subaccount['public_key'] = binascii.hexlify(subaccount['public_key'])
         subaccount['private_key'] = binascii.hexlify(subaccount['private_key'])
+        for txins in subaccount['received']:
+            txins['scriptPubKey'] = binascii.hexlify(txins['scriptPubKey'])
     return account
 
 def blockToJSON(block, blkmeta, cur_height):
@@ -301,9 +303,6 @@ class RPCExec(object):
 
     def withdrawfromvault(self, params):
         return (self.chaindb.withdrawfromvault(params[0], params[1], params[2]), None)
-
-    def overridevaulttx(self, params):
-        return (self.chaindb.overridevaulttx(params[0], params[1], params[2]), None)
 
     def fastwithdrawfromvault(self, params):
         return (self.chaindb.fastwithdrawfromvault(params[0], params[1], params[2]), None)

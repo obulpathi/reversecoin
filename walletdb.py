@@ -342,15 +342,11 @@ class WalletDB(object):
         for address, subaccount in account.iteritems():
             transactions = self.chaindb.listreceivedbyaddress(subaccount['address'])
             subaccount['balance'] = 0
-            self.logger.debug("%r" % transactions)
+            self.logger.debug("Transactions: %r" % transactions)
             for transaction in transactions.itervalues():
-                self.logger.debug("%r" % transaction)
+                self.logger.debug("Transaction: %r" % transaction)
                 subaccount['balance'] = subaccount['balance'] + transaction['value']
             subaccount['received'] = transactions
-        # FIXME
-        for address, subaccount in account.iteritems():
-            subaccount['public_key'] = 1234
-            subaccount['private_key'] = 5678
         return account
 
     # vault functions
@@ -379,7 +375,7 @@ class WalletDB(object):
 
     # return a vault
     def getvault(self, vaultname = None):
-        self.logger.debug("%r %r" % (type(vaultname), vaultname))
+        self.logger.debug("Vaultname: %r %r" % (type(vaultname), vaultname))
         walletdb = self.open()
         if not vaultname:
             vaultname = loads(walletdb['vaults'])[0]
@@ -523,8 +519,6 @@ class WalletDB(object):
         txout = CTxOut()
         txout.nValue = amount
         vault_address = utils.addresses_to_vault_address(toaddress, tomaster_address, timeout)
-        #txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(toaddress)
-        #txout.scriptPubKey = utils.addresses_to_pay_to_vault_script(toaddress, tomaster_address, timeout)
         txout.scriptPubKey = utils.vault_address_to_pay_to_vault_script(vault_address)
         tx.vout.append(txout)
 
@@ -544,7 +538,7 @@ class WalletDB(object):
                 txin.prevout = COutPoint()
                 txin.prevout.hash = received['txhash']
                 txin.prevout.n = received['n']
-                txin.scriptSig = binascii.unhexlify(received['scriptPubKey'])
+                txin.scriptSig = received['scriptPubKey']
                 tx.vin.append(txin)
                 nValueIn = nValueIn + received['value']
                 public_keys.append(subaccount['public_key'])
@@ -578,7 +572,7 @@ class WalletDB(object):
             signature = key.sign(txhash)
             # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
             scriptSig = chr(len(signature)) + signature + chr(len(public_key)) + public_key
-            self.logger.debug("Adding signature: %s" % scriptSig)
+            self.logger.debug("Adding signature: %s" % binascii.hexlify(scriptSig))
             txin.scriptSig = scriptSig
             self.logger.debug("Tx Validity: %064x" % tx.is_valid())
         # push data to vault
@@ -623,11 +617,6 @@ class WalletDB(object):
         # assuming vaults are not reused
         received = received.values()[0]
         txin.prevout.hash = received['txhash']
-        """
-        # FIXME
-        tmp_var = self.get("vault:" + fromvaultaddress)
-        txin.prevout.hash = tmp_var['txhash']
-        """
         txin.prevout.n = received['n']
         txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ...
         tx.vin.append(txin)
@@ -671,7 +660,6 @@ class WalletDB(object):
         # select the input addresses
         funds = 0
         vault = self.getvault(fromvaultaddress)
-        self.logger.debug("%r" % vault)
         if vault['amount'] + utils.calculate_fees(None) < amount:
             self.logger.warning("In sufficient funds in vault, exiting, return")
             return
@@ -696,7 +684,7 @@ class WalletDB(object):
         received = received.values()[0]
         txin.prevout.hash = received['txhash']
         txin.prevout.n = received['n']
-        txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ...
+        txin.scriptSig = received['scriptPubKey']
         tx.vin.append(txin)
 
         # calculate nValueIn
@@ -710,7 +698,6 @@ class WalletDB(object):
             change_txout = CTxOut()
             change_txout.nValue = excessAmount - fees
             account = self.getaccount()
-            self.logger.debug(account)
             changeaddress = account.values()[0]['address']
             self.logger.debug("Change address: %s" % changeaddress)
             change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
@@ -719,19 +706,16 @@ class WalletDB(object):
         # calculate txhash
         tx.calc_sha256()
         txhash = str(tx.sha256)
-        public_key = vault['master_public_key']
-        private_key = vault['master_private_key']
         mkey = CKey()
-        mkey.set_pubkey(public_key)
-        mkey.set_privkey(private_key)
+        mkey.set_pubkey(vault['master_public_key'])
+        mkey.set_privkey(vault['master_private_key'])
         signature = mkey.sign(txhash)
-        # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
-        scriptSig = chr(len(signature)) + signature + chr(len(vault['master_public_key'])) + vault['master_public_key']
-        self.logger.debug("Adding signature: %064x" % scriptSig)
+        # get the script
+        timeout = 100
+        script = utils.addresses_to_vault_script(vault['address'], \
+            vault['master_address'], timeout)
+        scriptSig = chr(0xd2) + chr(len(vault['master_public_key'])) + \
+            vault['master_public_key'] + chr(len(signature)) + signature + script
+        self.logger.debug("Adding signature: %s" % binascii.hexlify(scriptSig))
         txin.scriptSig = scriptSig
-        self.logger.debug("Signature: %064x" % (chr(len(signature)) + signature))
-        self.logger.debug("Key length: %d" % chr(len(vault['master_public_key'])))
-        self.logger.debug("Keys: %064x" % vault['master_public_key'])
-        self.logger.debug("Tx Validity: %r" % tx.is_valid())
-
         return tx

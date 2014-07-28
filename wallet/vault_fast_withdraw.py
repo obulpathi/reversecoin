@@ -24,6 +24,6 @@ if not (fromaddress and toaddress):
     print("Not enough accounts, quitting")
     sys.exit(1)
 
-amount = 20
+amount = 15
 print("Transfering: " + str(amount) + "\tfrom address: " + fromaddress + "\tto address: " + toaddress)
 connection.fastwithdrawfromvault(fromaddress, toaddress, amount)

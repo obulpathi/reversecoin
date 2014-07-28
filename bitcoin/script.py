@@ -145,7 +145,9 @@ OP_NOP9 = 0xb8
 OP_NOP10 = 0xb9
 
 # vault OPCODE
-OP_VAULT = 0xc4
+OP_VAULT = 0xd0
+OP_VAULT_WITHDRAW = 0xd1
+OP_VAULT_FAST_WITHDRAW = 0xd2
 
 # template matching params
 OP_SMALLINTEGER = 0xfa
@@ -275,7 +277,9 @@ VALID_OPCODES = {
     OP_NOP10,
 
     OP_VAULT,
-    
+    OP_VAULT_WITHDRAW,
+    OP_VAULT_FAST_WITHDRAW,
+
     OP_SMALLINTEGER,
     OP_PUBKEYS,
     OP_PUBKEYHASH,
@@ -395,6 +399,8 @@ OPCODE_NAMES = {
     OP_NOP9 : 'OP_NOP9',
     OP_NOP10 : 'OP_NOP10',
     OP_VAULT : 'OP_VAULT',
+    OP_VAULT_WITHDRAW: 'OP_VAULT_WITHDRAW',
+    OP_VAULT_FAST_WITHDRAW: 'OP_VAULT_FAST_WITHDRAW',
     OP_SMALLINTEGER : 'OP_SMALLINTEGER',
     OP_PUBKEYS : 'OP_PUBKEYS',
     OP_PUBKEYHASH : 'OP_PUBKEYHASH',
@@ -439,6 +445,7 @@ class CScript(object):
     def getop(self):
         s = self.getchars(1)
         if s is None:
+            print("s is None")
             return False
         opcode = ord(s)
 
@@ -448,6 +455,7 @@ class CScript(object):
 
         if opcode > OP_PUSHDATA4:
             if opcode not in VALID_OPCODES:
+                print('not valid opcode %r' % opcode)
                 return False
             self.sop = sop
             return True
@@ -459,6 +467,7 @@ class CScript(object):
             sop.ser_len += 1
             s = self.getchars(1)
             if s is None:
+                print('push data1 none')
                 return False
             datasize = ord(s)
 
@@ -466,6 +475,7 @@ class CScript(object):
             sop.ser_len += 2
             s = self.getchars(2)
             if s is None:
+                print('push data2 none')
                 return False
             datasize = struct.unpack(b"<H", s)[0]
 
@@ -473,12 +483,14 @@ class CScript(object):
             sop.ser_len += 4
             s = self.getchars(4)
             if s is None:
+                print('push data4 none')
                 return False
             datasize = struct.unpack(b"<I", s)[0]
 
         sop.ser_len += datasize
         sop.data = self.getchars(datasize)
         if sop.data is None:
+            print('no data')
             return False
 
         self.sop = sop

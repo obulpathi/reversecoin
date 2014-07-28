@@ -209,8 +209,7 @@ class ChainDb(object):
 
     def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
-        self.logger.debug("fast withdraw from vault")
-        self.logger.debug(self.mempool.add(tx))
+        self.mempool.add(tx)
 
     def overridevaulttx(self, fromvault, toaddress, amount):
         tx = self.wallet.overridevaulttx(self, fromvault, toaddress, amount)
@@ -241,8 +240,10 @@ class ChainDb(object):
                     script_key_hash_hex = utils.output_script_to_public_key_hash(txout.scriptPubKey)
                     if script_key_hash_hex == public_key_hash_hex:
                         tx.calc_sha256()
-                        txouts[tx.sha256] = {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
-                                             'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
+                        txouts[tx.sha256] = {'txhash': tx.sha256, \
+                                             'n': n, \
+                                             'value': txout.nValue, \
+                                             'scriptPubKey': txout.scriptPubKey}
         return txouts
 
 
@@ -262,33 +263,30 @@ class ChainDb(object):
             block = self.getblock(blkhash)
 
             for tx in block.vtx:
-                # if this transaction refers to this address in input, remove the previous transaction
                 for txin in tx.vin:
                     # if its a coinbase transaction, skip
                     if not txin.scriptSig:
                         continue
-                    if txin.scriptSig == scriptSig:
+                    # remove if a transaction is spent
+                    if txin.scriptSig[0] == chr(0xd1) or \
+                        txin.scriptSig[0] == chr(0xd2):
+                        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                        # == scriptSig:
                         self.logger.debug("scriptSigs %064x" % scriptSigs)
                         del txouts[txin.prevout.hash]
                     else:
                         self.logger.debug("txin.scriptSig: %s" % binascii.hexlify(txin.scriptSig))
-                    """
-                    for scriptSig in scriptSigs:
-                        if txin.scriptSig in scriptSig:
-                            del txouts[txin.prevout.hash]
-                    """
-                    # FIXME >>>>>>>>>>>>>>>>>>>>>
-                    # script_vault = binascii.hexlify(utils.scriptSig_to_vault(txin.scriptSig))
-                    # if script_key_hash_hex == public_key_hash_hex:
-                    #    del txouts[txin.prevout.hash]
-                # if this transaction refers to this address in output, add this transaction
+
                 for n, txout in enumerate(tx.vout):
+                    # add if a transaction is received
                     if scriptPubKey == txout.scriptPubKey:
                         tx.calc_sha256()
                         self.logger.debug("Vault input txhash: %d %d %064x %s" \
                                        % (height, n, tx.sha256, tx))
-                        txouts[tx.sha256] = {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
-                                             'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
+                        txouts[tx.sha256] = {'txhash': tx.sha256, \
+                                             'n': n, \
+                                             'value': txout.nValue, \
+                                             'scriptPubKey': txout.scriptPubKey}
         return txouts
 
     def haveblock(self, blkhash, checkorphans):
