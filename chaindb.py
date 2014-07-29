@@ -202,10 +202,7 @@ class ChainDb(object):
 
     def withdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.withdrawfromvault(fromaddress, toaddress, amount)
-        # FIXME: get timeout
         self.mempool.add(tx)
-        #FIXME
-        # add it to VaultDB
 
     def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
@@ -265,7 +262,7 @@ class ChainDb(object):
                     if not txin.scriptSig:
                         continue
                     # remove if a transaction is spent
-                    if txin.scriptSig[0] == chr(0xd1):
+                    if txin.scriptSig[0] == chr(0xd3):
                         scriptSig = txin.scriptSig
                         start_index = 0
                         # skip the vault withdraw type

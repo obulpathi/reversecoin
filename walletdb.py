@@ -593,7 +593,6 @@ class WalletDB(object):
         # select the input addresses
         funds = 0
         vault = self.getvault(fromvaultaddress)
-        self.logger.debug("%r" % vault)
         if vault['amount'] + utils.calculate_fees(None) < amount:
             self.logger.warning("In sufficient funds in vault, exiting, return")
             return
@@ -618,9 +617,11 @@ class WalletDB(object):
         received = received.values()[0]
         txin.prevout.hash = received['txhash']
         txin.prevout.n = received['n']
-        txin.scriptSig = binascii.unhexlify(received['scriptPubKey']) # we should not be doing unhexlify ...
+        txin.scriptSig = received['scriptPubKey']
         tx.vin.append(txin)
 
+        # calculate nValueIn
+        nValueIn = received['value']
         # calculate the total excess amount
         excessAmount = nValueIn - nValueOut
         # calculate the fees
@@ -629,29 +630,27 @@ class WalletDB(object):
         if excessAmount > fees:
             change_txout = CTxOut()
             change_txout.nValue = excessAmount - fees
-            changeaddress = subaccounts[0]['address']
-            change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
+            account = self.getaccount()
+            changeaddress = account.values()[0]['address']
+            self.logger.debug("Change address: %s" % changeaddress)
+            change_txout.scriptPubKey = \
+                utils.address_to_pay_to_pubkey_hash(changeaddress)
             tx.vout.append(change_txout)
 
         # calculate txhash
         tx.calc_sha256()
         txhash = str(tx.sha256)
-        public_key = vault['public_key']
-        private_key = vault['private_key']
         key = CKey()
-        key.set_pubkey(public_key)
-        key.set_privkey(private_key)
-        self.logger.debug("vault: public_key: %s " % binascii.hexlify(vault['public_key']))
-        self.logger.debug("key:   public key: %s " % binascii.hexlify(key.get_pubkey()))
-        self.logger.debug("vault: private_key: %s" % binascii.hexlify(vault['private_key']))
-        self.logger.debug("key:  private key:  %s" % binascii.hexlify(key.get_privkey()))
+        key.set_pubkey(vault['public_key'])
+        key.set_privkey(vault['private_key'])
         signature = key.sign(txhash)
-        # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
-        scriptSig = chr(len(signature)) + signature + chr(len(vault['public_key'])) + vault['public_key']
-        self.logger.debug("Adding signature: %064x" % scriptSig)
+        # get the script
+        timeout = 100
+        script = utils.addresses_to_vault_script(vault['address'], \
+            vault['master_address'], timeout)
+        scriptSig = chr(0xd1) + chr(len(signature)) + signature + script
+        self.logger.debug("Adding signature: %s" % binascii.hexlify(scriptSig))
         txin.scriptSig = scriptSig
-        self.logger.debug("Tx Validity: %r" % tx.is_valid())
-
         return tx
 
 
