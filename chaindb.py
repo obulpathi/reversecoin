@@ -24,6 +24,7 @@ from bitcoin.core import *
 from bitcoin.messages import msg_block, message_to_str, message_read
 from bitcoin.coredefs import COIN
 from bitcoin.scripteval import VerifySignature
+from bitcoin import serialize
 
 
 def tx_blk_cmp(a, b):
@@ -88,6 +89,7 @@ class ChainDb(object):
         self.settings = settings
         self.mempool = mempool
         self.wallet = wallet
+        self.difficulty = 100728831  #  Initial difficulty
         self.readonly = readonly
         self.netmagic = netmagic
         self.fast_dbm = fast_dbm
@@ -742,6 +744,15 @@ class ChainDb(object):
                        block, blkmeta):
             return False
 
+        # If just inserted block is multiple of 2016, compute new difficulty
+        if blkmeta.height % 2016 ==  0 and blkmeta.height != 0:
+            last_stamp = block.nTime
+            old_block_hash = heightidx.blocks[len(heightidx.blocks)-2016]
+            old_block = self.getblock(old_block_hash)
+            old_stamp = old_block.nTime
+            self.logger.debug("Changing difficulty from %02x" % self.difficulty)
+            self.difficulty = self.compute_difficulty(self.difficulty, last_stamp - old_stamp)
+            self.logger.debug("New difficulty %02x" % self.difficulty)
         return True
 
     def putblock(self, block):
@@ -765,6 +776,24 @@ class ChainDb(object):
             blkhash = block.sha256
 
         return True
+
+    def compute_difficulty(self, current_nbits, time_delta):
+        current_target = serialize.uint256_from_compact(current_nbits)
+        if time_delta > 4838400:  #  8 weeks max delta
+          time_delta = 4838400
+        elif time_delta < 302400:  #  1/2 week min delta
+          time_delta = 302400
+
+        #  Compute new target from previous target
+        new_target = current_target * time_delta / 1209600
+
+        if new_target > (2 ** (256-32) - 1):
+          new_target = (2 ** (256-32) - 1)
+
+        return serialize.compact_from_uint256(new_target)
+
+
+
 
     def locate(self, locator):
         for hash in locator.vHave:
@@ -820,6 +849,7 @@ class ChainDb(object):
             f = cStringIO.StringIO(ser_blk)
             block = CBlock()
             block.deserialize(f)
+            print format(block.nBits, '02x')
             self.logger.debug("Adding the genesis block")
             self.putblock(block)
 
@@ -945,7 +975,7 @@ class ChainDb(object):
         block = CBlock()
         block.hashPrevBlock = tophash
         block.nTime = int(time.time())
-        block.nBits = prevblock.nBits   # FIXME
+        block.nBits = self.difficulty   # FIXME
         block.vtx.append(coinbase)
         block.vtx.extend(txlist)
         block.hashMerkleRoot = block.calc_merkle()
