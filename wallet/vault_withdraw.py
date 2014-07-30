@@ -20,8 +20,11 @@ for subaccount in account.itervalues():
     if fromaddress and toaddress:
         break
 
-if not (fromaddress and toaddress):
-    print("Not enough accounts, quitting")
+if not fromaddress:
+    print("No vault account, quitting")
+    sys.exit(1)
+if not toaddress:
+    print("No empty accounts, quitting")
     sys.exit(1)
 
 amount = 15

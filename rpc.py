@@ -193,7 +193,7 @@ class RPCExec(object):
         return (d, None)
 
     def getnewaddress(self, params):
-        address = self.wallet.getnewaddress()
+        address = self.wallet.getnewaddress()[1]
         return (address, None)
 
     def getrawmempool(self, params):

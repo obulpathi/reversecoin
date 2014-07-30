@@ -16,8 +16,8 @@ received:
 send:
 	python send.py
 
-vault:
-	python vault.py
+getvault:
+	python getvault.py
 
 savings:
 	python savings.py

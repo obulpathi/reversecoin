@@ -14,10 +14,14 @@ toaddress = ''
 balance = 0
 for subaccount in account.itervalues():
     balance = balance + subaccount['balance']
-    if not subaccount['balance']:
+    if subaccount['balance'] == 0:
         toaddress = subaccount['address']
 
-if (not toaddress) and balance < 20:
+if not toaddress:
+    print("No account with zero balance, quitting")
+    sys.exit(1)
+
+if balance < 20:
     print("Not enough bitcoins in account, quitting")
     sys.exit(1)
 
