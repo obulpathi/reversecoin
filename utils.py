@@ -193,6 +193,11 @@ def public_keys_to_vault_script(public_key, master_public_key, timeout, fees = 0
     vault_script = public_key.encode('hex') + myhash(master_public_key.encode('hex')) + hex(timeout)[2:4] + hex(fees)[2:6]
     return vault_script
 
+
+def is_sent_to_vault(scriptPubKey):
+    pass
+
+
 """
 def addresses_to_vault_script(address, master_address, timeout, fees = 0):
     if timeout > 100:
@@ -310,33 +315,42 @@ def scriptSig_to_public_key_hash(script):
     # remove pubkey length and return
     return script [1:]
 
-def scriptSig_to_vault_address(script):
-    if not script:
-        return
-    # remove the key type
-    keytype = ord(script[1])
-    script = script[2:]
-    # remove the key
-    if keytype:
-        key_length = ord(script[0])
-        script = script[key_length+1:]
-    # remove signature
-    signature_length = ord(script[0])
-    vault_script = script[signature_length+1:]
-    #vault_script_ba = bytearray(vault_script)
-    hash160_address = myhash160(vault_script)
-    # add version byte: 0x08 for vault address
-    extended_address = '\x08' + hash160_address
-    # generate double SHA-256 hash of extended address
-    hash_address = myhash(extended_address)
-    # Take the first 4 bytes of the second SHA-256 hash. This is the address checksum
-    checksum = hash_address[:4]
-    # Add the 4 checksum bytes from point 7 at the end of extended RIPEMD-160 hash from point 4.
-    # This is the 25-byte binary Bitcoin Address.
-    binary_address = extended_address + checksum
-    # encode in base-58 format
-    vault_address = encode(binary_address)
-    return str(vault_address)
+
+def is_sent_from_vault(scriptSig):
+    if not scriptSig:
+        return False
+    if scriptSig[0] in [chr(0xd2), chr(0xd3)]:
+        return True
+    return False
+
+
+def scriptSig_to_vault_address(scriptSig):
+    if not scriptSig:
+        return None
+    if scriptSig[0] not in [chr(0xd2), chr(0xd3)]:
+        return None
+    key_type = scriptSig[0]
+    start_index = 0
+    # skip the vault withdraw type
+    start_index = start_index + 1
+    # skip the master key
+    if key_type == chr(0x02):
+        # skip the master key
+        start_index = start_index + ord(scriptSig[start_index]) + 1
+    # skip the signature
+    start_index = start_index + ord(scriptSig[start_index]) + 1
+    # get script length
+    script_length = ord(scriptSig[start_index])
+    # skip the script length
+    start_index = start_index + 1
+    # calculate the end index
+    end_index = start_index + script_length
+    # get the from address
+    vault_address = \
+        utils.vault_address_to_pay_to_vault_script(
+            scriptSig[start_index:end_index])
+
+    return vault_address
 
 """
 # Output script to address representation

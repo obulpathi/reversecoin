@@ -11,15 +11,27 @@ class VaultChain(object):
         # create vaultchaindb, if its does not exist
         cursor.execute('''CREATE TABLE IF NOT EXISTS vaultchain
                       (txhash varchar(50), date text)''')
+        # FIXME: once you fix other dependencies, remove this
+        cursor.execute("DELETE FROM vaults")
         connection.commit()
         connection.close()
 
     def addvaulttx(self, tx):
-        # add a transaction to VaultChainDB
+        # add a transaction to VaultChain
         connection = sqlite3.connect('vaultchain.db')
         cursor = connection.cursor()
         cursor.execute("INSERT INTO vaults VALUES(" + \
                         str(tx.sha256) + "," + datetime() + timeout))
+        connection.commit()
+        connection.close()
+
+    def addvaulttxs(self, txs):
+        # add transactions to VaultChain
+        connection = sqlite3.connect('vaultchain.db')
+        cursor = connection.cursor()
+        for tx in txs:
+            cursor.execute("INSERT INTO vaults VALUES(" + \
+                            str(tx.sha256) + "," + datetime() + timeout))
         connection.commit()
         connection.close()
 

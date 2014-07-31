@@ -12,7 +12,6 @@ FEATURES
 * Fix tx hash and block hash for vault_fastwithdraw in chaindb and wallet
 * Validate transactions
 * Transaction and Block Propagation
-* Auto difficulty adjustment
 * VaultDB as a separate file
 * VaultChain in a separate file
 * Redo code layout
@@ -35,10 +34,8 @@ FEATURES
 
 BUGS
 ----
-* Fix Balance check for vault addresses
 * Remove hardcoded fees
 * Remove hardcoded timeout for vault
-* Fix neverseen transaction for new genesis block
 * Enforce single Vault or Support multiple Vaults per address pair
 * Fix FIXMEs
 
