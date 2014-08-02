@@ -311,10 +311,10 @@ def output_script_to_address(script):
 def scriptSig_to_address(scriptSig):
     if not scriptSig:
         return None
-    elif ord(scriptSig[0]) in [OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM]:
+    elif ord(scriptSig[0]) in [OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, \
+        OP_VAULT_CONFIRM]:
         return scriptSig_to_vault_address(scriptSig)
     else:
-        return "Address" # FIXME
         public_key = sriptSig_to_pubkey(scriptSig)
         return public_key_to_address(public_key)
 
@@ -339,7 +339,8 @@ def is_sent_from_vault(scriptSig):
 def scriptSig_to_vault_address(scriptSig):
     if not scriptSig:
         return None
-    if ord(scriptSig[0]) not in [OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM]:
+    if ord(scriptSig[0]) not in [OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, \
+        OP_VAULT_CONFIRM]:
         return None
     key_type = scriptSig[0]
     start_index = 0
@@ -358,9 +359,9 @@ def scriptSig_to_vault_address(scriptSig):
     # calculate the end index
     end_index = start_index + script_length
     # get the from address
-    vault_address = \
-        utils.vault_address_to_pay_to_vault_script(
-            scriptSig[start_index:end_index])
+    # vault_address = vault_address_to_pay_to_vault_script(
+    vault_address = public_key_to_vault_address( \
+        scriptSig[start_index:end_index])
 
     return vault_address
 
