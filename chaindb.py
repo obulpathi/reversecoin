@@ -280,8 +280,10 @@ class ChainDb(object):
                         # calculate the end index
                         end_index = start_index + script_length
                         # get the from address
+                        # from_vault_address = \
+                        #    utils.vault_address_to_pay_to_vault_script
                         from_vault_address = \
-                            utils.vault_address_to_pay_to_vault_script(
+                            utils.public_key_to_vault_address( \
                                 scriptSig[start_index:end_index])
                     elif ord(txin.scriptSig[0]) == OP_VAULT_FAST_WITHDRAW:
                         scriptSig = txin.scriptSig
