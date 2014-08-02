@@ -1060,13 +1060,21 @@ class ChainDb(object):
             block = self.getblock(blkhash)
 
             self.logger.debug("\n")
-            self.logger.debug("Block: %d", height)
-            for tx in block.vtx:
-                for txin in tx.vin:
+            self.logger.debug("Block: %d", height+1)
+            for n, tx in enumerate(block.vtx):
+                self.logger.debug("\tTransaction %d" % (n+1))
+                self.logger.debug("\t\tInputs: %d" % len(tx.vin))
+                for m, txin in enumerate(tx.vin):
                     if not txin.scriptSig:
+                        self.logger.debug("\t\t\tCoinbase Transaction")
                         continue
-                    self.logger.debug("Some tx in # ")
-                for n, txout in enumerate(tx.vout):
-                    address = utils.output_script_to_address(txout.scriptPubKey)
-                    self.logger.debug(str(n) + ": Sent " + str(txout.nValue) + " to: " + address)
+                    address = utils.scriptSig_to_address(txin.scriptSig)
+                    self.logger.debug("\t\t\t%d: Sent %d from %s" % \
+                        (m+1, 0, address))
+                self.logger.debug("\t\tOutputs: %d" % len(tx.vout))
+                for m, txout in enumerate(tx.vout):
+                    address = utils.output_script_to_address( \
+                       txout.scriptPubKey)
+                    self.logger.debug("\t\t\t%d: Sent %d to %s" % \
+                        (m+1, txout.nValue, address))
         return None

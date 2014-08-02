@@ -308,6 +308,16 @@ def output_script_to_address(script):
     address = encode(binary_address)
     return address
 
+def scriptSig_to_address(scriptSig):
+    if not scriptSig:
+        return None
+    elif ord(scriptSig[0]) in [OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM]:
+        return scriptSig_to_vault_address(scriptSig)
+    else:
+        return "Address" # FIXME
+        public_key = sriptSig_to_pubkey(scriptSig)
+        return public_key_to_address(public_key)
+
 def scriptSig_to_public_key_hash(script):
     if not script:
         return
