@@ -3,6 +3,7 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import copy
 import string
 import cStringIO
 import leveldb
@@ -25,6 +26,7 @@ from bitcoin.messages import msg_block, message_to_str, message_read
 from bitcoin.coredefs import COIN
 from bitcoin.scripteval import VerifySignature
 from bitcoin import serialize
+from bitcoin.script import OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM
 
 
 def tx_blk_cmp(a, b):
@@ -264,7 +266,7 @@ class ChainDb(object):
                     if not txin.scriptSig:
                         continue
                     # remove if a transaction is spent
-                    if txin.scriptSig[0] == chr(0xd3):
+                    if ord(txin.scriptSig[0]) == OP_VAULT_CONFIRM:
                         scriptSig = txin.scriptSig
                         start_index = 0
                         # skip the vault withdraw type
@@ -281,7 +283,7 @@ class ChainDb(object):
                         from_vault_address = \
                             utils.vault_address_to_pay_to_vault_script(
                                 scriptSig[start_index:end_index])
-                    elif txin.scriptSig[0] == chr(0xd2):
+                    elif ord(txin.scriptSig[0]) == OP_VAULT_FAST_WITHDRAW:
                         scriptSig = txin.scriptSig
                         start_index = 0
                         # skip the vault withdraw type
@@ -817,6 +819,27 @@ class ChainDb(object):
 
             blkhash = block.sha256
 
+        # Add confirmed vault transactions to mempool
+        # FIXME: what if its not a wholesome transction ...
+        # if it contains other normal or fast txs? which might
+        # inject dependency into middle blocks?
+        # Lets assume that vaulttx has only one output (vault) and fees
+        # Else create two transactions ... in the beginning
+        # txs = self.get_confirmed_vault_txs()
+        # do not modify anything ... this stuff will be used later
+        # lets have one block confirmation :D
+        txs = copy.deepcopy(block.vtx)
+        for tx in txs:
+            for txin in tx.vin:
+                # FIXME: only for now
+                # if it a vault withdraw trnasaction:
+                if txin.scriptSig and ord(txin.scriptSig[0]) == OP_VAULT_WITHDRAW:
+                    # modify the vault transaction to confirm it
+                    print("#####################################")
+                    txin.scriptSig = chr(OP_VAULT_CONFIRM) + txin.scriptSig[1:]
+                    self.mempool.add(tx)
+            for txout in tx.vout:
+                pass
         return True
 
     def compute_difficulty(self, current_nbits, time_delta):
@@ -833,8 +856,6 @@ class ChainDb(object):
           new_target = (2 ** (256-32) - 1)
 
         return serialize.compact_from_uint256(new_target)
-
-
 
 
     def locate(self, locator):
@@ -894,6 +915,11 @@ class ChainDb(object):
             print format(block.nBits, '02x')
             self.logger.debug("Adding the genesis block")
             self.putblock(block)
+
+
+    def get_confirmed_vault_txs(self):
+        pass
+
 
     def newblock_txs(self):
         txlist = []

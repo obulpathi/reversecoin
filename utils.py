@@ -2,9 +2,11 @@
 
 import binascii
 import hashlib
+
 from bitcoin.key import CKey as Key
 from bitcoin.base58 import encode, decode
 from bitcoin.script import OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG
+from bitcoin.script import OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM
 
 def myhash(s):
     return hashlib.sha256(hashlib.sha256(s).digest()).digest()
@@ -319,7 +321,7 @@ def scriptSig_to_public_key_hash(script):
 def is_sent_from_vault(scriptSig):
     if not scriptSig:
         return False
-    if scriptSig[0] in [chr(0xd2), chr(0xd3)]:
+    if ord(scriptSig[0]) in [OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM]:
         return True
     return False
 
@@ -327,14 +329,14 @@ def is_sent_from_vault(scriptSig):
 def scriptSig_to_vault_address(scriptSig):
     if not scriptSig:
         return None
-    if scriptSig[0] not in [chr(0xd2), chr(0xd3)]:
+    if ord(scriptSig[0]) not in [OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM]:
         return None
     key_type = scriptSig[0]
     start_index = 0
     # skip the vault withdraw type
     start_index = start_index + 1
     # skip the master key
-    if key_type == chr(0x02):
+    if key_type == chr(OP_VAULT_FAST_WITHDRAW):
         # skip the master key
         start_index = start_index + ord(scriptSig[start_index]) + 1
     # skip the signature

@@ -7,9 +7,10 @@ from bsddb.db import *
 from pickle import dumps, loads
 
 import binascii
+from bitcoin import script
 from bitcoin.key import CKey
 from bitcoin.core import COutPoint, CTxIn, CTxOut, CTransaction
-
+from bitcoin.script import OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM
 
 # Joric/bitcoin-dev, june 2012, public domain
 import hashlib
@@ -648,7 +649,7 @@ class WalletDB(object):
         timeout = 100
         script = utils.addresses_to_vault_script(vault['address'], \
             vault['master_address'], timeout)
-        scriptSig = chr(0xd1) + chr(len(signature)) + signature + script
+        scriptSig = chr(OP_VAULT_WITHDRAW) + chr(len(signature)) + signature + script
         self.logger.debug("Adding signature: %s" % binascii.hexlify(scriptSig))
         txin.scriptSig = scriptSig
         return tx
@@ -713,8 +714,8 @@ class WalletDB(object):
         timeout = 100
         script = utils.addresses_to_vault_script(vault['address'], \
             vault['master_address'], timeout)
-        scriptSig = chr(0xd2) + chr(len(vault['master_public_key'])) + \
-            vault['master_public_key'] + chr(len(signature)) + signature + script
+        scriptSig = chr(OP_VAULT_FAST_WITHDRAW)+chr(len(vault['master_public_key'])) \
+        + vault['master_public_key'] + chr(len(signature)) + signature + script
         self.logger.debug("Adding signature: %s" % binascii.hexlify(scriptSig))
         txin.scriptSig = scriptSig
         return tx
