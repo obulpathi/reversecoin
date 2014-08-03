@@ -229,14 +229,14 @@ class ChainDb(object):
             block = self.getblock(blkhash)
 
             for tx in block.vtx:
-                # if this transaction refers to this address in input, remove the previous transaction
+                # remove if a transaction is spent
                 for txin in tx.vin:
                     if not txin.scriptSig:
                         continue
                     script_key_hash_hex = binascii.hexlify(utils.scriptSig_to_public_key_hash(txin.scriptSig))
                     if script_key_hash_hex == public_key_hash_hex:
                         del txouts[txin.prevout.hash]
-                # if this transaction refers to this address in output, add this transaction
+                # add if a transaction is received
                 for n, txout in enumerate(tx.vout):
                     script_key_hash_hex = utils.output_script_to_public_key_hash(txout.scriptPubKey)
                     if script_key_hash_hex == public_key_hash_hex:
@@ -249,7 +249,8 @@ class ChainDb(object):
 
 
     def listreceivedbyvault(self, vault_address):
-        scriptPubKey = utils.vault_address_to_pay_to_vault_script(vault_address)
+        scriptPubKey = utils.vault_address_to_pay_to_vault_script( \
+            vault_address)
         txouts = {}
         end_height = self.getheight()
 
@@ -265,48 +266,11 @@ class ChainDb(object):
                     # if its a coinbase transaction, skip
                     if not txin.scriptSig:
                         continue
-                    # remove if a transaction is spent
-                    if ord(txin.scriptSig[0]) == OP_VAULT_CONFIRM:
-                        scriptSig = txin.scriptSig
-                        start_index = 0
-                        # skip the vault withdraw type
-                        start_index = start_index + 1
-                        # skip the signature
-                        start_index = start_index + ord(scriptSig[start_index]) + 1
-                        # get script length
-                        script_length = ord(scriptSig[start_index])
-                        # skip the script length
-                        start_index = start_index + 1
-                        # calculate the end index
-                        end_index = start_index + script_length
-                        # get the from address
-                        # from_vault_address = \
-                        #    utils.vault_address_to_pay_to_vault_script
-                        from_vault_address = \
-                            utils.public_key_to_vault_address( \
-                                scriptSig[start_index:end_index])
-                    elif ord(txin.scriptSig[0]) == OP_VAULT_FAST_WITHDRAW:
-                        scriptSig = txin.scriptSig
-                        start_index = 0
-                        # skip the vault withdraw type
-                        start_index = start_index + 1
-                        # skip the master key
-                        start_index = start_index + ord(scriptSig[start_index]) + 1
-                        # skip the signature
-                        start_index = start_index + ord(scriptSig[start_index]) + 1
-                        # get script length
-                        script_length = ord(scriptSig[start_index])
-                        # skip the script length
-                        start_index = start_index + 1
-                        # calculate the end index
-                        end_index = start_index + script_length
-                        # get the from address
-                        from_vault_address = \
-                            utils.public_key_to_vault_address(
-                                scriptSig[start_index:end_index])
-                    else:
+                    if ord(txin.scriptSig[0]) not in [OP_VAULT_FAST_WITHDRAW,
+                        OP_VAULT_CONFIRM]:
                         continue
-
+                    # remove if a transaction is spent
+                    from_vault_address = utils.scriptSig_to_vault_address(txin.scriptSig)
                     if vault_address == from_vault_address:
                         self.logger.debug("Vault spent %064x" % txin.prevout.hash)
                         del txouts[txin.prevout.hash]
