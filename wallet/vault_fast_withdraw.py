@@ -14,7 +14,7 @@ fromaddress = None
 toaddress = None
 for subaccount in account.itervalues():
     if not fromaddress and subaccount['address'][0] == '4' \
-        and subaccount['balance'] > 20:
+        and subaccount['balance'] >= 20:
         fromaddress = subaccount['address']
     elif not toaddress and subaccount['address'][0] == '1':
         toaddress = subaccount['address']
@@ -25,7 +25,7 @@ if not fromaddress:
     print("No vault accounts to send from, quitting")
     sys.exit(1)
 
-if not toaddress):
+if not toaddress:
     print("No empty accounts to send, quitting")
     sys.exit(1)
 

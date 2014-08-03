@@ -136,7 +136,7 @@ class ChainDb(object):
         try:
             self.db.Get('tx:'+ser_txhash)
             old_txidx = self.gettxidx(txhash)
-            self.self.logger.warning("Overwriting duplicate TX %064x, height %d, oldblk %064x, \
+            self.logger.warning("Overwriting duplicate TX %064x, height %d, oldblk %064x, \
             oldspent %x, newblk %064x" % (txhash, self.getheight(), old_txidx.blkhash, old_txidx.spentmask, txidx.blkhash))
         except KeyError:
             pass
@@ -800,13 +800,12 @@ class ChainDb(object):
         # Else create two transactions ... in the beginning
         # txs = self.get_confirmed_vault_txs()
         # do not modify anything ... this stuff will be used later
-        # lets have one block confirmation :D
         # split the fees
         # check if its not already withdrawn or confirmed
 
-        txouts = {}
-        height = self.getheight()
-        confirmed_height = height - 4
+        # txouts = {}
+        end_height = self.getheight()
+        confirmed_height = end_height - 39
         if confirmed_height < 0:
             return
         data = self.db.Get('height:' + str(confirmed_height))
@@ -815,14 +814,36 @@ class ChainDb(object):
         blkhash = heightidx.blocks[0]
         block = self.getblock(blkhash)
 
+        # collect vault transactions
+        txs = []
         for tx in block.vtx:
             for txin in tx.vin:
                 if txin.scriptSig and txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
-                    # confirm the vault transaction
+                    txs.append(tx)
+
+        # remove overwritten transactions
+        for height in xrange(confirmed_height + 1, end_height):
+            data = self.db.Get('height:' + str(height))
+            heightidx = HeightIdx()
+            heightidx.deserialize(data)
+            blkhash = heightidx.blocks[0]
+            block = self.getblock(blkhash)
+
+            for tx in block.vtx:
+                for txin in tx.vin:
+                    if txin.scriptSig and txin.scriptSig[0] == chr(OP_VAULT_FAST_WITHDRAW):
+                        for ttx in txs:
+                            for ttxin in ttx.vin:
+                                if txin.prevout.hash == ttxin.prevout.hash:
+                                    txs.remove(ttx)
+
+        # confirm vault transactions
+        for tx in txs:
+            for txin in tx.vin:
+                if txin.scriptSig and txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
                     txin.scriptSig = chr(OP_VAULT_CONFIRM) + txin.scriptSig[1:]
                     self.mempool.add(tx)
-            for txout in tx.vout:
-                pass
+
         return
 
     def compute_difficulty(self, current_nbits, time_delta):

@@ -7,9 +7,6 @@ FEATURES
 * Mark the bugs with #FIXME tag
 * Installation and documentation for installation
 * Initialization and documentation for initialization
-* Delayed confirmation of vault withdraws
-* Fix hash and scriptSig formats
-* Fix tx hash and block hash for vault_fastwithdraw in chaindb and wallet
 * Validate transactions
 * Transaction and Block Propagation
 * VaultDB as a separate file
@@ -32,11 +29,18 @@ FEATURES
 * Monitoring System
 * Hardware Wallet
 
+CLEANUP:
+* Fix hash and scriptSig formats
+* Fix tx hash and block hash for vault_fastwithdraw in chaindb and wallet
+
 BUGS
 ----
 * Remove hardcoded fees
 * Remove hardcoded timeout for vault
+* Multiple vault support
 * Enforce single Vault or Support multiple Vaults per address pair
+* If same address appears in output tx twice, one txout is getting
+  overwritten in chaindb:listreceivedbyaddress
 * Fix FIXMEs
 
 NAME and ICON
