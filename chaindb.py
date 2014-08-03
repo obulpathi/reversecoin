@@ -219,8 +219,7 @@ class ChainDb(object):
     def listreceivedbyaddress(self, address):
         txouts = {}
         end_height = self.getheight()
-        public_key_hash_hex = binascii.hexlify(utils.address_to_public_key_hash(address))
-
+        public_key_hash = utils.address_to_public_key_hash(address)
         for height in xrange(end_height):
             data = self.db.Get('height:' + str(height))
             heightidx = HeightIdx()
@@ -233,13 +232,13 @@ class ChainDb(object):
                 for txin in tx.vin:
                     if not txin.scriptSig:
                         continue
-                    script_key_hash_hex = binascii.hexlify(utils.scriptSig_to_public_key_hash(txin.scriptSig))
-                    if script_key_hash_hex == public_key_hash_hex:
+                    script_key_hash = utils.scriptSig_to_public_key_hash(txin.scriptSig)
+                    if script_key_hash == public_key_hash:
                         del txouts[txin.prevout.hash]
                 # add if a transaction is received
                 for n, txout in enumerate(tx.vout):
-                    script_key_hash_hex = utils.output_script_to_public_key_hash(txout.scriptPubKey)
-                    if script_key_hash_hex == public_key_hash_hex:
+                    script_key_hash = utils.scriptPubKey_to_pubkey_hash(txout.scriptPubKey)
+                    if script_key_hash == public_key_hash:
                         tx.calc_sha256()
                         txouts[tx.sha256] = {'txhash': tx.sha256, \
                                              'n': n, \
@@ -695,7 +694,8 @@ class ChainDb(object):
         if not self.have_prevblock(block):
             self.orphans[block.sha256] = True
             self.orphan_deps[block.hashPrevBlock] = block
-            self.logger.warning("Orphan block %064x (%d orphans)" % (block.sha256, len(self.orphan_deps)))
+            self.logger.warning("Orphan block %064x (%d orphans)" % \
+                (block.sha256, len(self.orphan_deps)))
             return False
 
         top_height = self.getheight()
@@ -763,6 +763,7 @@ class ChainDb(object):
             self.logger.debug("Changing difficulty from %02x" % self.difficulty)
             self.difficulty = self.compute_difficulty(self.difficulty, last_stamp - old_stamp)
             self.logger.debug("New difficulty %02x" % self.difficulty)
+
         return True
 
     def putblock(self, block):
@@ -785,6 +786,12 @@ class ChainDb(object):
 
             blkhash = block.sha256
 
+        # confirm vault txs
+        self.confirm_vault_txs()
+
+        return True
+
+    def confirm_vault_txs(self):
         # Add confirmed vault transactions to mempool
         # FIXME: what if its not a wholesome transction ...
         # if it contains other normal or fast txs? which might
@@ -794,19 +801,29 @@ class ChainDb(object):
         # txs = self.get_confirmed_vault_txs()
         # do not modify anything ... this stuff will be used later
         # lets have one block confirmation :D
-        txs = copy.deepcopy(block.vtx)
-        for tx in txs:
+        # split the fees
+        # check if its not already withdrawn or confirmed
+
+        txouts = {}
+        height = self.getheight()
+        confirmed_height = height - 4
+        if confirmed_height < 0:
+            return
+        data = self.db.Get('height:' + str(confirmed_height))
+        heightidx = HeightIdx()
+        heightidx.deserialize(data)
+        blkhash = heightidx.blocks[0]
+        block = self.getblock(blkhash)
+
+        for tx in block.vtx:
             for txin in tx.vin:
-                # FIXME: only for now
-                # if it a vault withdraw trnasaction:
-                if txin.scriptSig and ord(txin.scriptSig[0]) == OP_VAULT_WITHDRAW:
-                    # modify the vault transaction to confirm it
-                    print("#####################################")
+                if txin.scriptSig and txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
+                    # confirm the vault transaction
                     txin.scriptSig = chr(OP_VAULT_CONFIRM) + txin.scriptSig[1:]
                     self.mempool.add(tx)
             for txout in tx.vout:
                 pass
-        return True
+        return
 
     def compute_difficulty(self, current_nbits, time_delta):
         current_target = serialize.uint256_from_compact(current_nbits)

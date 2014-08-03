@@ -308,6 +308,22 @@ def output_script_to_address(script):
     address = encode(binary_address)
     return address
 
+def scriptPubKey_to_pubkey_hash(scriptPubkey):
+    if not scriptPubkey:
+        return None
+    # is the script is a standard generation address
+    if scriptPubkey[:1] == binascii.unhexlify("41"):
+        return myhash160(bytearray.fromhex(binascii.hexlify(scriptPubkey[1:-1])))
+    # is the script is a standard transaction address
+    elif scriptPubkey[:3] == binascii.unhexlify("76a914"):
+        return scriptPubkey[3:-2]
+    elif scriptPubkey[:1] == binascii.unhexlify("14"):
+        # hex: "14" (Push 20 bytes) + vault_script_hash + "87" (OP_EQUAL) + "C4" (OP_VAULT)
+        return scriptPubkey[1:-2]
+    else:
+        raise Exception("Error unknown scritpt: ", binascii.hexlify(scriptPubkey))
+    return None
+
 def scriptSig_to_address(scriptSig):
     if not scriptSig:
         return None
