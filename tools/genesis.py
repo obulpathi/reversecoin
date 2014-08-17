@@ -4,6 +4,23 @@ import time
 import binascii
 from bitcoin.core import COutPoint, CTxIn, CTxOut, CTransaction, CBlock
 
+
+def uint256_from_compact(c):
+    nbytes = (c >> 24) & 0xFF
+    v = (c & 0xFFFFFF) << (8 * (nbytes - 3))
+    return v
+
+def compact_from_uint256(v):
+    v_hex = hex(v)
+    if int(v_hex[:4], 16) > 127:
+        v_hex = v_hex[:2] + "00" + v_hex[2:]
+    nbytes = 0xFF & ((len(v_hex)-3)//2)
+    nbytes = (nbytes << 8) | (int(v_hex[2:4], 16) & 0xFF)
+    nbytes = (nbytes << 8) | (int(v_hex[4:6], 16) & 0xFF)
+    nbytes = (nbytes << 8) | (int(v_hex[6:8], 16) & 0xFF)
+    return nbytes
+
+
 coinbase = "04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73"
 scriptPubKeyHex = "4104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"
 
@@ -38,14 +55,15 @@ block.nVersion = 1
 block.hashPrevBlock = 0
 block.hashMerkleRoot = 0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b
 block.nTime    = 1231006505
-block.nBits    = 100728831 # 0x0600ffff
+block.nBits    = 0x1f00ffff
 block.vtx = [tx]
 
-    
+
 i = 0
-target = 6901641034498895230248057944249341782018790077074986006051269912821760
-print target
-for i in xrange(10000000000):
+#target = 6901641034498895230248057944249341782018790077074986006051269912821760
+target = uint256_from_compact(block.nBits)
+print "Target: \t%064x" % target
+for i in xrange(1000000000000000):
     block.nNonce   = i
     block.sha256 = None
     block.calc_sha256()
@@ -53,7 +71,7 @@ for i in xrange(10000000000):
     # print calculated_hash
     # time.sleep(1)
     if calculated_hash < target:
-        print "Calculated hash: ", hex(block.sha256)
+        print "Calculated hash:  ", hex(block.sha256)
         break
 
 print "Valid: ", block.is_valid()

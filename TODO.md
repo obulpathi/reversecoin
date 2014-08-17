@@ -3,7 +3,6 @@ TODO
 
 FEATURES
 --------
-* VaultDB as a separate file
 * VaultChain in a separate file
 * Validate transactions
 * Transaction and Block Propagation

@@ -92,7 +92,8 @@ class ChainDb(object):
         self.mempool = mempool
         self.wallet = wallet
         self.vaultdb = vaultdb
-        self.difficulty = 100728831  #  Initial difficulty
+        #FIXME: set this value from genesis.dat
+        self.difficulty = 0x1f00ffff # Initial difficulty
         self.readonly = readonly
         self.netmagic = netmagic
         self.fast_dbm = fast_dbm
@@ -288,47 +289,6 @@ class ChainDb(object):
                                              'value': txout.nValue, \
                                              'scriptPubKey': txout.scriptPubKey}
         return txouts
-
-
-    def getpendingvaulttxs(self):
-        vaulttxs = {}
-        end_height = self.getheight()
-        # FIXME: lets make a simple assumption that,
-        # all vaults timeout after 6 blocks
-        # FIXME: Get the start_height from VaultDB
-        start_height = end_height - 6
-
-        for height in xrange(start_height, end_height):
-            data = self.db.Get('height:' + str(height))
-            heightidx = HeightIdx()
-            heightidx.deserialize(data)
-            blkhash = heightidx.blocks[0]
-            block = self.getblock(blkhash)
-
-            for tx in block.vtx:
-                for txin in tx.vin:
-                    # if its a vaulttx, add to VaultDB
-                    if utils.is_sent_from_vault(txin.scriptSig):
-                        vaulttxs[tx.sha256] = {'txhash': tx.sha256, \
-                                               'n': n, \
-                                               'value': txout.nValue, \
-                                               'scriptPubKey': txout.scriptPubKey}
-
-                # FIXME: fix the start_height and check if
-                # any of the vaulttx's are confirmed
-                """
-                for n, txout in enumerate(tx.vout):
-                    # add if a transaction is received
-                    if utils.is_sent_to_vault(txout.scriptPubKey):
-                        tx.calc_sha256()
-                        self.logger.debug("Vault input txhash: %d %d %064x %s" \
-                                       % (height, n, tx.sha256, tx))
-                        vaulttxs[tx.sha256] = {'txhash': tx.sha256, \
-                                               'n': n, \
-                                               'value': txout.nValue, \
-                                               'scriptPubKey': txout.scriptPubKey}
-                """
-        return vaulttxs
 
 
     def haveblock(self, blkhash, checkorphans):

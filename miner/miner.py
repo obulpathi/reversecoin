@@ -73,7 +73,7 @@ class BitcoinRPC:
         return self.rpc('getblockcount')
     def getwork(self, data=None):
         print "Sleeping before going for get work"
-        sleep(10)
+        #sleep(10)
         return self.rpc('getwork', data)
 
 def uint32(x):
@@ -114,7 +114,8 @@ class Miner:
 
         # decode 256-bit target value
         targetbin = targetstr.decode('hex')
-        targetbin = targetbin[::-1] # byte-swap and dword-swap
+        # do not uncomment the following line
+        #targetbin = targetbin[::-1] # byte-swap and dword-swap
         targetbin_str = targetbin.encode('hex')
         target = long(targetbin_str, 16)
 
@@ -136,8 +137,8 @@ class Miner:
             hash_o.update(hash1)
             hash = hash_o.digest()
 
-            # quick test for winning solution: high 16 bits zero?
-            if hash[-3:] != '\0\0\0':
+            # quick test for winning solution: high 8 bits zero?
+            if hash[-2:] != '\0\0':
                 continue
 
             # convert binary hash to 256-bit Python long
@@ -146,7 +147,7 @@ class Miner:
 
             hash_str = hash.encode('hex')
             l = long(hash_str, 16)
-            
+
             print "target: ", target
             print "nonce: ", l
             # proof-of-work test:  hash < target
@@ -155,7 +156,6 @@ class Miner:
                 return (nonce + 1, nonce_bin)
             else:
                 print time.asctime(), "PROOF-OF-WORK false positive %064x" % (l,)
-#               return (nonce + 1, nonce_bin)
 
         return (nonce + 1, None)
 
