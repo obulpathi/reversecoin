@@ -6,3 +6,5 @@ tags
 .idea/
 .pdbrc
 vault.db
+wallet/test_fastwithdraw.py
+wallet/test_withdraw.py
