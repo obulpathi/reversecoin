@@ -87,10 +87,11 @@ class HeightIdx(object):
 
 
 class ChainDb(object):
-    def __init__(self, settings, datadir, mempool, wallet, netmagic, readonly=False, fast_dbm=False):
+    def __init__(self, settings, datadir, mempool, wallet, vaultdb, netmagic, readonly=False, fast_dbm=False):
         self.settings = settings
         self.mempool = mempool
         self.wallet = wallet
+        self.vaultdb = vaultdb
         self.difficulty = 100728831  #  Initial difficulty
         self.readonly = readonly
         self.netmagic = netmagic
@@ -137,7 +138,8 @@ class ChainDb(object):
             self.db.Get('tx:'+ser_txhash)
             old_txidx = self.gettxidx(txhash)
             self.logger.warning("Overwriting duplicate TX %064x, height %d, oldblk %064x, \
-            oldspent %x, newblk %064x" % (txhash, self.getheight(), old_txidx.blkhash, old_txidx.spentmask, txidx.blkhash))
+            oldspent %x, newblk %064x" % (txhash, self.getheight(), old_txidx.blkhash, \
+            old_txidx.spentmask, txidx.blkhash))
         except KeyError:
             pass
         batch = self.db if batch is not None else batch
@@ -176,7 +178,8 @@ class ChainDb(object):
             tx.calc_sha256()
             if tx.sha256 == txhash:
                 return tx
-        self.logger.error("ERROR: Missing TX %064x in block %064x" % (txhash, txidx.blkhash))
+        self.logger.error("ERROR: Missing TX %064x in block %064x" % \
+            (txhash, txidx.blkhash))
         return None
 
 
@@ -786,6 +789,9 @@ class ChainDb(object):
 
             blkhash = block.sha256
 
+        # add vault transaction from this block to VaultDB
+        self.vaultdb.addblock(block)
+
         # confirm vault txs
         self.confirm_vault_txs()
 
@@ -803,47 +809,19 @@ class ChainDb(object):
         # split the fees
         # check if its not already withdrawn or confirmed
 
-        # txouts = {}
-        end_height = self.getheight()
-        confirmed_height = end_height - 39
-        if confirmed_height < 0:
-            return
-        data = self.db.Get('height:' + str(confirmed_height))
-        heightidx = HeightIdx()
-        heightidx.deserialize(data)
-        blkhash = heightidx.blocks[0]
-        block = self.getblock(blkhash)
+        # get unconfirmed vault transactions
+        txhashes = self.vaultdb.getconfirmedvaulttxs()
 
-        # collect vault transactions
-        txs = []
-        for tx in block.vtx:
-            for txin in tx.vin:
-                if txin.scriptSig and txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
-                    txs.append(tx)
-
-        # remove overwritten transactions
-        for height in xrange(confirmed_height + 1, end_height):
-            data = self.db.Get('height:' + str(height))
-            heightidx = HeightIdx()
-            heightidx.deserialize(data)
-            blkhash = heightidx.blocks[0]
-            block = self.getblock(blkhash)
-
-            for tx in block.vtx:
-                for txin in tx.vin:
-                    if txin.scriptSig and txin.scriptSig[0] == chr(OP_VAULT_FAST_WITHDRAW):
-                        for ttx in txs:
-                            for ttxin in ttx.vin:
-                                if txin.prevout.hash == ttxin.prevout.hash:
-                                    txs.remove(ttx)
+        # check to confirm that these transactions are not overwritten
+        # FIXME: TODO
 
         # confirm vault transactions
-        for tx in txs:
+        for txhash in txhashes:
+            tx = self.gettx(txhash)
             for txin in tx.vin:
                 if txin.scriptSig and txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
                     txin.scriptSig = chr(OP_VAULT_CONFIRM) + txin.scriptSig[1:]
                     self.mempool.add(tx)
-
         return
 
     def compute_difficulty(self, current_nbits, time_delta):
@@ -919,10 +897,6 @@ class ChainDb(object):
             print format(block.nBits, '02x')
             self.logger.debug("Adding the genesis block")
             self.putblock(block)
-
-
-    def get_confirmed_vault_txs(self):
-        pass
 
 
     def newblock_txs(self):

@@ -29,6 +29,7 @@ from mempool import MemPool
 from chaindb import ChainDb
 from connection import Connection
 from peermanager import PeerManager
+from vaultdb import VaultDB
 from bitcoin.coredefs import NETWORKS
 
 settings = {}
@@ -99,11 +100,14 @@ if __name__ == '__main__':
 
     # create wallet
     walletdb = WalletDB()
+    vaultdb = VaultDB()
     if new_install:
         # initialize wallet
         walletdb.initialize()
+        vaultdb.initialize()
     mempool = MemPool()
-    chaindb = ChainDb(settings, settings['db'], mempool, walletdb, netmagic, False, False)
+    chaindb = ChainDb(settings, settings['db'], mempool, walletdb, vaultdb, \
+        netmagic, False, False)
     node = Node(None, mempool, chaindb, netmagic)
     peermgr = PeerManager(node, mempool, chaindb, netmagic)
     node.peermgr = peermgr

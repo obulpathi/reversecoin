@@ -3,14 +3,7 @@ all:
 
 clean:
 	rm -rf ~/.bitcoinpy
-	rm -f wallet/vault.db
-
-new:
-	rm -rf ~/.bitcoinpy/*
-	rm -f wallet/vault.db
-	mkdir -p ~/.bitcoinpy/leveldb
-	cp genesis.dat ~/.bitcoinpy/blocks.dat
-	python bitcoinpy.py config.cfg
+	rm -f vault.db
 
 install:
 	sudo apt-get install python-dev libleveldb1

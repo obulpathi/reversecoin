@@ -1,15 +1,7 @@
-import sys
-import bitcoinrpc
-from bitcoinrpc.exceptions import InsufficientFunds
+from wallet import Wallet
 
-# JSON-RPC server user, password.  Uses HTTP Basic authentication.
-rpcuser="user"
-rpcpass="passwd"
-account = "account"
-
-connection = bitcoinrpc.connect_to_remote(rpcuser, rpcpass,
-    host='localhost', port=9333, use_https=False)
-account = connection.getaccount(account)
+wallet = Wallet()
+account = wallet.getaccount()
 
 if len(account) < 2:
     print("Not enough accounts to create vault, quitting")
@@ -31,4 +23,4 @@ amount = 20
 
 print("Transfering: %d toaddress: %s tomaster_address: %s" % \
      (amount, toaddress, tomaster_address))
-connection.sendtovault(toaddress, tomaster_address, timeout, amount)
+wallet.sendtovault(toaddress, tomaster_address, timeout, amount)

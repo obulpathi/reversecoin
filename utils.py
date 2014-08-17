@@ -78,8 +78,8 @@ def public_key_hex_to_address(public_key_hex):
 
 
 def addresses_to_vault_address(address, master_address, timeout):
-    timeout = 100
-    fees = 10000
+    timeout = 100 # FIXME: remove hardcoding
+    fees = 10000 # FIXME: remove hardcoding
     if timeout > 100:
         timeout = 100
     if fees > 10000:

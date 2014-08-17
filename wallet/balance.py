@@ -1,11 +1,7 @@
-import bitcoinrpc
+from wallet import Wallet
 
-# JSON-RPC server user, password.  Uses HTTP Basic authentication.
-rpcuser = "user"
-rpcpass = "passwd"
-account = "account"
+wallet = Wallet()
+account = wallet.getaccount()
 
-connection = bitcoinrpc.connect_to_remote(rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
-account = connection.getaccount(account)
 for subaccount in account.itervalues():
     print subaccount['address']  + ": ", subaccount['balance']
