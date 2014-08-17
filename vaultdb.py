@@ -7,6 +7,7 @@ from datetime import datetime
 from datetime import timedelta
 import logging
 import sqlite3 as sqlite
+import copy
 
 from bitcoin import script
 
@@ -48,9 +49,15 @@ class VaultDB(object):
         self.logger.debug('Removing confirmed transactions from VaultDB')
         connection = sqlite.connect('vault.db')
         cursor = connection.cursor()
-        cmd = "DELETE FROM vaults WHERE txhash = ?"
+        cmd = "DELETE FROM vaults WHERE txhash = (?)"
         for tx in txs:
-            values = (str(tx.sha256),)
+            new_tx = copy.deepcopy(tx)
+            for txin in new_tx.vin:
+                # if this is confirmed vault transaction, add it to confirmed txs
+                if txin.scriptSig and txin.scriptSig[0] == chr(script.OP_VAULT_CONFIRM):
+                    txin.scriptSig = chr(script.OP_VAULT_WITHDRAW) + txin.scriptSig[1:]
+            new_tx.calc_sha256()
+            values = (str(new_tx.sha256),)
             cursor.execute(cmd, values)
         connection.commit()
         connection.close()

@@ -31,6 +31,9 @@ vault_withdraw:
 vault_fast_withdraw:
 	python vault_fast_withdraw.py 
 
+vault_test:
+	python test_vault.py 
+
 info:
 	python info.py
 

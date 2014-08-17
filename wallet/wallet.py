@@ -17,8 +17,8 @@ class Wallet(object):
     def sendtovault(self, toaddress, tomaster_address, timeout, amount):
         self.connection.sendtovault(toaddress, tomaster_address, timeout, amount)
 
-    def withdrawfromvault(fromaddress, toaddress, amount):
+    def withdrawfromvault(self, fromaddress, toaddress, amount):
         self.connection.withdrawfromvault(fromaddress, toaddress, amount)
 
-    def fastwithdrawfromvault(fromaddress, toaddress, amount):
+    def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
         self.connection.fastwithdrawfromvault(fromaddress, toaddress, amount)
