@@ -14,6 +14,10 @@ class Wallet(object):
         account = self.connection.getaccount(account)
         return account
 
+    def getvaults(self):
+        vaults = self.connection.getvaults()
+        return vaults
+
     def sendtovault(self, toaddress, tomaster_address, timeout, amount):
         self.connection.sendtovault(toaddress, tomaster_address, timeout, amount)
 

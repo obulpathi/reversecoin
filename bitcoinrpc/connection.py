@@ -195,6 +195,12 @@ class BitcoinConnection(object):
         """
         return self.proxy.getvault()
 
+    def getvaults(self):
+        """
+        Returns the vaults in wallet.
+        """
+        return self.proxy.getvaults()
+
     def getaddressesbyaccount(self, account):
         """
         Returns the list of addresses for the given account.

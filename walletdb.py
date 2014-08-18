@@ -228,7 +228,6 @@ class WalletDB(object):
             return None
         # if wallet is initialized
         accountnames = loads(walletdb['accounts'])
-        vaults = loads(walletdb['vaults'])
         if accountname not in accountnames:
             self.logger.warning("Error: Account not found")
             return
@@ -238,19 +237,6 @@ class WalletDB(object):
         for subaccount in account.itervalues():
             subaccount['balance'] = self.chaindb.getbalance(subaccount['address'])
             subaccount['received'] = self.chaindb.listreceivedbyaddress(subaccount['address']).values()
-        # return vaults
-        for vault in vaults:
-            subaccount = {}
-            #subaccount = {address: vault}
-            subaccount['address'] = vault
-            # FIXME
-            subaccount['public_key'] = 'vault pubkey'
-            subaccount['private_key'] = 'vault privkey'
-            subaccount['height'] = 0
-            subaccount['balance'] = self.chaindb.getsavings(vault)
-            subaccount['received'] = self.chaindb.listreceivedbyvault(vault).values()
-            #account[vault] = subaccount
-            account['vault'] = subaccount
         return account
 
 
@@ -264,25 +250,55 @@ class WalletDB(object):
             return None
         # wallet is initialized
         accountnames = loads(walletdb['accounts'])
-        vaults = loads(walletdb['vaults'])
         for accountname in accountnames:
             account = loads(walletdb[accountname])
             accounts.append(account)
         walletdb.close()
+
         for account in accounts:
             for address, subaccount in account.iteritems():
                 subaccount['balance'] = self.chaindb.getbalance(subaccount['address'])
-                subaccount['received'] = self.chaindb.listreceivedbyaddress(subaccount['address']).values()
+                subaccount['received'] = self.chaindb.listreceivedbyaddress(
+                    subaccount['address']).values()
+
+        return accounts
+
+
+    # getvaults
+    def getvaults(self):
+        vaultaccounts = []
+        walletdb = self.open()
+        # if wallet is not initialized, return
+        if 'accounts' not in walletdb:
+            self.logger.error("Wallet not initialized ... quitting!")
+            return None
+        # wallet is initialized
+        vaults = loads(walletdb['vaults'])
         for vault in vaults:
+            vaultaccount = loads(walletdb[vault])
+            vaultaccounts.append(vaultaccount)
+        walletdb.close()
+
+        """
+        vault = {'name' : vault_name,
+                 'address': address, 'public_key': public_key, 'private_key': private_key,
+                 'master_address': master_address, 'master_public_key': master_public_key,
+                 'master_private_key': master_private_key, 'amount': amount, 'fees': fees}
+        """
+
+        #FIXME: format vault accounts in same form as general accounts
+        accounts = []
+        for vaultaccount in vaultaccounts:
             subaccount = {}
-            subaccount = {'address': vault}
-            # FIXME
-            subaccount['pubkey'] = 'pubkey'
-            subaccount['privkey'] = 'privkey'
+            subaccount ['address'] = vaultaccount['name']
+            subaccount['pubkey'] = vaultaccount['public_key']
+            subaccount['privkey'] = vaultaccount['private_key']
             subaccount['height'] = 0
-            subaccount['balance'] = self.chaindb.getsavings(vault)
+            #subaccount['balance'] = self.chaindb.getsavings(vault)
+            #subaccount['balance'] = vaultaccount['amount']
+            subaccount['balance'] = self.chaindb.getbalance(vaultaccount['name'])
             subaccount['received'] = self.chaindb.listreceivedbyvault(vault).values()
-            accounts.append(account)
+            accounts.append(subaccount)
         return accounts
 
 
@@ -365,8 +381,8 @@ class WalletDB(object):
         walletdb = self.open(writable = True)
         vault = {'name' : vault_name,
                  'address': address, 'public_key': public_key, 'private_key': private_key,
-                 'master_address': master_address, 'master_public_key': master_public_key, 'master_private_key': master_private_key,
-                 'amount': amount, 'fees': fees}
+                 'master_address': master_address, 'master_public_key': master_public_key,
+                 'master_private_key': master_private_key, 'amount': amount, 'fees': fees}
         walletdb[vault_name] = dumps(vault)
         vaults = loads(walletdb['vaults'])
         vaults.append(vault_name)
@@ -577,15 +593,8 @@ class WalletDB(object):
             txin.scriptSig = scriptSig
             self.logger.debug("Tx Validity: %064x" % tx.is_valid())
         # push data to vault
-        """
-        "txhash": {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
-                             'scriptPubKey': binascii.hexlify(txout.scriptPubKey)}
-
-        self.set(vault_address, {'txhash': tx.sha256, 'n': n, 'value': txout.nValue, \
-                             'scriptPubKey': binascii.hexlify(txout.scriptPubKey)})
-        """
-        self.set("vault:" + vault_address, {'txhash': tx.sha256})
         tx.calc_sha256()
+        self.set("vault:" + vault_address, {'txhash': tx.sha256})
         return tx
 
 

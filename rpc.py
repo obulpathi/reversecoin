@@ -24,6 +24,7 @@ VALID_RPCS = {
     "dumpblockchain",
     "getaccount",
     "getvault",
+    "getvaults",
     "getbalance",
     "getblockcount",
     "getblock",
@@ -72,6 +73,17 @@ def accountToJSON(account):
         for txins in subaccount['received']:
             txins['scriptPubKey'] = binascii.hexlify(txins['scriptPubKey'])
     return account
+
+def vaultsToJSON(vaults):
+    for vault in vaults:
+        vault['public_key'] = binascii.hexlify(vault['pubkey'])
+        vault['private_key'] = binascii.hexlify(vault['privkey'])
+        # FIXME: make both of them in same format and remove this
+        vault['pubkey'] = "none"
+        vault['privkey']  = "none"
+        for txins in vault['received']:
+            txins['scriptPubKey'] = binascii.hexlify(txins['scriptPubKey'])
+    return vaults
 
 def blockToJSON(block, blkmeta, cur_height):
     block.calc_sha256()
@@ -134,8 +146,10 @@ class RPCExec(object):
         res = accountToJSON(account)
         return (res, None)
 
-    def getvault(self, params):
-        return (self.wallet.getvault(), None)
+    def getvaults(self, params):
+        vaults = self.wallet.getvaults()
+        res = vaultsToJSON(vaults)
+        return (res, None)
 
     def getbalance(self, params):
         return (self.wallet.getbalance(params[0]), None)
