@@ -201,6 +201,12 @@ class BitcoinConnection(object):
         """
         return self.proxy.getvaults()
 
+    def getpendingtransactions(self):
+        """
+        Returns a list of pending vault transactions.
+        """
+        return self.proxy.getpendingtransactions()
+
     def getaddressesbyaccount(self, account):
         """
         Returns the list of addresses for the given account.

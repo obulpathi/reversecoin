@@ -32,6 +32,7 @@ VALID_RPCS = {
     "getconnectioncount",
     "getinfo",
     "getnewaddress",
+    "getpendingtransactions",
     "getrawmempool",
     "getrawtransaction",
     "getreceivedbyaddress",
@@ -208,6 +209,10 @@ class RPCExec(object):
 
     def getnewaddress(self, params):
         address = self.wallet.getnewaddress()[1]
+        return (address, None)
+
+    def getpendingtransactions(self, params):
+        address = self.chaindb.getpendingtransactions()
         return (address, None)
 
     def getrawmempool(self, params):

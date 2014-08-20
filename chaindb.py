@@ -198,6 +198,10 @@ class ChainDb(object):
             balance = balance + txout['value']
         return balance
 
+    def getpendingtransactions(self):
+        txs = [{'fromaddress': 'fromaddress', 'toaddress' : 'toaddress', 'amount': 1.0}]
+        return txs
+
     def sendtoaddress(self, toaddress, amount):
         tx = self.wallet.sendtoaddress(toaddress, amount)
         self.mempool.add(tx)
