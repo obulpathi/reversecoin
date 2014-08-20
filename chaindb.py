@@ -199,7 +199,11 @@ class ChainDb(object):
         return balance
 
     def getpendingtransactions(self):
-        txs = [{'fromaddress': 'fromaddress', 'toaddress' : 'toaddress', 'amount': 1.0}]
+        txhashs = self.vaultdb.getconfirmedvaulttxs()
+        txs = []
+        for txhash in txhashs:
+            tx = self.gettx(txhash)
+            txs.append(tx)
         return txs
 
     def sendtoaddress(self, toaddress, amount):
