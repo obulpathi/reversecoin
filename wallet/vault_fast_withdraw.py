@@ -1,34 +1,27 @@
-import sys
-import bitcoinrpc
-from bitcoinrpc.exceptions import InsufficientFunds
+from wallet import Wallet
 
-# JSON-RPC server user, password.  Uses HTTP Basic authentication.
-rpcuser = "user"
-rpcpass = "passwd"
-account = "account"
+wallet = Wallet()
+account = wallet.getaccount()
 
-connection = bitcoinrpc.connect_to_remote(rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
-account = connection.getaccount(account)
-
-fromaddress = None
 toaddress = None
 for subaccount in account.itervalues():
-    if not fromaddress and subaccount['address'][0] == '4' \
-        and subaccount['balance'] >= 20:
-        fromaddress = subaccount['address']
-    elif not toaddress and subaccount['address'][0] == '1':
+    if not toaddress:
         toaddress = subaccount['address']
-    if fromaddress and toaddress:
         break
+else:
+    print("No enough addresses to send to, quitting")
+    exit(1)
 
-if not fromaddress:
-    print("No vault accounts to send from, quitting")
-    sys.exit(1)
+print("Available vaults")
+vaults = wallet.getvaults()
+for n, vault in enumerate(vaults):
+    print "Id: ", n, vault['address']  + ": ", vault['balance']
+index = int(input("Enter the id of the vault you want to transfer balance from: "))
+fromaddress = vaults[index]['address']
+amount = int(input("Enter the balance to transfer from: {}: ".format(fromaddress)))
+if vaults[index]['balance'] < amount + 2:
+    print("In sufficient balance in vault, quitting")
+    exit(2)
 
-if not toaddress:
-    print("No empty accounts to send, quitting")
-    sys.exit(1)
-
-amount = 15
 print("Transfering: " + str(amount) + "\tfrom address: " + fromaddress + "\tto address: " + toaddress)
-connection.fastwithdrawfromvault(fromaddress, toaddress, amount)
+wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
