@@ -277,8 +277,8 @@ class ChainDb(object):
                     # if its a coinbase transaction, skip
                     if not txin.scriptSig:
                         continue
-                    if ord(txin.scriptSig[0]) not in [OP_VAULT_FAST_WITHDRAW,
-                        OP_VAULT_CONFIRM]:
+                    if ord(txin.scriptSig[0]) not in [OP_VAULT_WITHDRAW,
+                        OP_VAULT_FAST_WITHDRAW]:
                         continue
                     # remove if a transaction is spent
                     from_vault_address = utils.scriptSig_to_vault_address(txin.scriptSig)
