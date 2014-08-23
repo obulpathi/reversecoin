@@ -3,6 +3,13 @@ TODO
 
 FEATURES
 --------
+* Vault Change Address
+* Multiple vault support
+* If same address appears in output tx twice, one txout is getting
+  overwritten in chaindb:listreceivedbyaddress
+* Remove hardcoded fees
+* Remove hardcoded timeout for vault
+* Enforce single Vault or Support multiple Vaults per address pair
 * Validate transactions
 * Transaction and Block Propagation
 * CLEANUP and BUGS
@@ -14,6 +21,7 @@ FEATURES
 * Add test cases
 * Support for pay to script hash
 * Support for multisig transactions
+* Vault rate control
 * Wallet compatibility
 * Support for stratum miner
 * Support for all RPC function calls
@@ -25,12 +33,6 @@ FEATURES
 
 BUGS
 ----
-* Multiple vault support
-* Remove hardcoded fees
-* Remove hardcoded timeout for vault
-* Enforce single Vault or Support multiple Vaults per address pair
-* If same address appears in output tx twice, one txout is getting
-  overwritten in chaindb:listreceivedbyaddress
 * Fix FIXMEs
 
 NAME and ICON

@@ -641,10 +641,10 @@ class WalletDB(object):
             change_txout = CTxOut()
             change_txout.nValue = excessAmount - fees
             account = self.getaccount()
-            changeaddress = account.values()[0]['address']
+            changeaddress = fromvaultaddress
             self.logger.debug("Change address: %s" % changeaddress)
             change_txout.scriptPubKey = \
-                utils.address_to_pay_to_pubkey_hash(changeaddress)
+                utils.vault_address_to_pay_to_vault_script(changeaddress)
             tx.vout.append(change_txout)
 
         # calculate txhash
