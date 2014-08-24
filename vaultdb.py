@@ -68,12 +68,15 @@ class VaultDB(object):
         confirmed_txs = []
         for tx in block.vtx:
             for txin in tx.vin:
-                # if this is confirmed vault transaction, add it to confirmed txs
-                if txin.scriptSig and txin.scriptSig[0] == chr(script.OP_VAULT_CONFIRM):
-                    confirmed_txs.append(tx)
                 # if this is a vault initiate transaction, add it to new txs
                 if txin.scriptSig and txin.scriptSig[0] == chr(script.OP_VAULT_WITHDRAW):
                     new_txs.append(tx)
+                # if this is confirmed vault transaction, add it to confirmed txs
+                if txin.scriptSig and txin.scriptSig[0] == chr(script.OP_VAULT_CONFIRM):
+                    confirmed_txs.append(tx)
+                # if this is override vault transaction, add it to confirmed txs
+                if txin.scriptSig and txin.scriptSig[0] == chr(script.OP_VAULT_OVERRIDE):
+                    confirmed_txs.append(tx)
         self.removeconfirmedvaulttxs(confirmed_txs)
         self.addvaulttxs(new_txs)
 

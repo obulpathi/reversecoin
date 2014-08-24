@@ -602,6 +602,7 @@ class WalletDB(object):
     def withdrawfromvault(self, fromvaultaddress, toaddress, amount):
         # select the input addresses
         funds = 0
+        # FIXME: this is nto the correct way to check balance
         vault = self.getvault(fromvaultaddress)
         if vault['amount'] + utils.calculate_fees(None) < amount:
             self.logger.warning("In sufficient funds in vault, exiting, return")
@@ -659,6 +660,59 @@ class WalletDB(object):
         script = utils.addresses_to_vault_script(vault['address'], \
             vault['master_address'], timeout)
         scriptSig = chr(OP_VAULT_WITHDRAW) + chr(len(signature)) + signature + script
+        self.logger.debug("Adding signature: %s" % binascii.hexlify(scriptSig))
+        txin.scriptSig = scriptSig
+        return tx
+
+    # TODO: enforce double use of vaults
+    # TODO: remove amount
+    def overridevaulttx(self, fromvault, toaddress, amount):
+        # select the input addresses
+        received = self.chaindb.listreceivedbyvault(fromvaultaddress)
+        received = received.values()[0]
+        if received['value'] < 2 * utils.calculate_fees(None):
+            self.logger.warning("In sufficient funds in vault, exiting, return")
+            return
+        # calculate remaining amount
+        amount = received['value'] - utils.calculate_fees(None)
+        # create transaction
+        tx = CTransaction()
+
+        # to the receiver
+        txout = CTxOut()
+        txout.nValue = amount
+        txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(toaddress)
+        tx.vout.append(txout)
+
+        # from the sender
+        nValueIn = 0
+        nValueOut = amount
+
+        txin = CTxIn()
+        txin.prevout = COutPoint()
+        txin.prevout.hash = received['txhash']
+        txin.prevout.n = received['n']
+        txin.scriptSig = received['scriptPubKey']
+        tx.vin.append(txin)
+
+        # calculate nValueIn
+        nValueIn = received['value']
+        # calculate the total excess amount
+        excessAmount = nValueIn - nValueOut
+        # calculate the fees
+        fees = utils.calculate_fees(tx)
+        # calculate txhash
+        tx.calc_sha256()
+        txhash = str(tx.sha256)
+        key = CKey()
+        key.set_pubkey(vault['public_key'])
+        key.set_privkey(vault['private_key'])
+        signature = key.sign(txhash)
+        # get the script
+        timeout = 100
+        script = utils.addresses_to_vault_script(vault['address'], \
+            vault['master_address'], timeout)
+        scriptSig = chr(OP_VAULT_OVERRIDE) + chr(len(signature)) + signature + script
         self.logger.debug("Adding signature: %s" % binascii.hexlify(scriptSig))
         txin.scriptSig = scriptSig
         return tx

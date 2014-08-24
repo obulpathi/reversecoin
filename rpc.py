@@ -323,6 +323,9 @@ class RPCExec(object):
     def withdrawfromvault(self, params):
         return (self.chaindb.withdrawfromvault(params[0], params[1], params[2]), None)
 
+    def overridevaulttx(self, params):
+        return (self.chaindb.overridevaulttx(params[0], params[1], params[2]), None)
+
     def fastwithdrawfromvault(self, params):
         return (self.chaindb.fastwithdrawfromvault(params[0], params[1], params[2]), None)
 

@@ -31,5 +31,8 @@ class Wallet(object):
     def withdrawfromvault(self, fromaddress, toaddress, amount):
         self.connection.withdrawfromvault(fromaddress, toaddress, amount)
 
+    def overridevault(self, fromaddress, toaddress, amount):
+        self.connection.overridevault(fromaddress, toaddress, amount)
+
     def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
         self.connection.fastwithdrawfromvault(fromaddress, toaddress, amount)

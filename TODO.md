@@ -1,15 +1,21 @@
 TODO
 ====
 
-FEATURES
---------
-* Vault Change Address
-* Multiple vault support
+BUGS
+----
+* Fix FIXMEs
 * If same address appears in output tx twice, one txout is getting
   overwritten in chaindb:listreceivedbyaddress
+* Enforce single Vault or Support multiple Vaults per address pair
+* Migrate minimum fee check to client side
+* Check for vault override and vault confirm in same block
+* Enfore vault override and vault confirm does not happen together (new block creation)
+* Enfore that a vault override will not happen, if there is no balance / vault confir happened
 * Remove hardcoded fees
 * Remove hardcoded timeout for vault
-* Enforce single Vault or Support multiple Vaults per address pair
+
+FEATURES
+--------
 * Validate transactions
 * Transaction and Block Propagation
 * CLEANUP and BUGS
@@ -30,10 +36,6 @@ FEATURES
 * Exchange
 * Monitoring System
 * Hardware Wallet
-
-BUGS
-----
-* Fix FIXMEs
 
 NAME and ICON
 -------------
