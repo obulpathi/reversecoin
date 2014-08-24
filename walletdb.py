@@ -600,11 +600,10 @@ class WalletDB(object):
 
     # withdraw from vault
     def withdrawfromvault(self, fromvaultaddress, toaddress, amount):
-        # select the input addresses
-        funds = 0
-        # FIXME: this is nto the correct way to check balance
         vault = self.getvault(fromvaultaddress)
-        if vault['amount'] + utils.calculate_fees(None) < amount:
+        received = self.chaindb.listreceivedbyvault(fromvaultaddress)
+        received = received.values()[0]
+        if received['value'] < amount + 2 * utils.calculate_fees(None):
             self.logger.warning("In sufficient funds in vault, exiting, return")
             return
 
@@ -623,9 +622,6 @@ class WalletDB(object):
 
         txin = CTxIn()
         txin.prevout = COutPoint()
-        received = self.chaindb.listreceivedbyvault(fromvaultaddress)
-        # assuming vaults are not reused
-        received = received.values()[0]
         txin.prevout.hash = received['txhash']
         txin.prevout.n = received['n']
         txin.scriptSig = received['scriptPubKey']
@@ -636,7 +632,7 @@ class WalletDB(object):
         # calculate the total excess amount
         excessAmount = nValueIn - nValueOut
         # calculate the fees
-        fees = utils.calculate_fees(tx)
+        fees = 2 *                                                                                                                                                                 utils.calculate_fees(tx)
         # create change transaction, if there is any change left
         if excessAmount > fees:
             change_txout = CTxOut()
@@ -674,7 +670,7 @@ class WalletDB(object):
             self.logger.warning("In sufficient funds in vault, exiting, return")
             return
         # calculate remaining amount
-        amount = received['value'] - utils.calculate_fees(None)
+        amount = received['value'] - 2 * utils.calculate_fees(None)
         # create transaction
         tx = CTransaction()
 

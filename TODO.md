@@ -12,6 +12,10 @@ BUGS
 * Enfore that a vault override will not happen, if there is no balance / vault confir happened
 * Remove hardcoded fees
 * Remove hardcoded timeout for vault
+* Immediate flush and sync of blockchain upon block generation
+* One source for all kind of wallet questions
+* Vault Address format: scriptSig to vault address
+* Pending and active balance at the same time
 * Fix FIXMEs
 
 FEATURES
