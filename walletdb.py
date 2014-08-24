@@ -296,7 +296,7 @@ class WalletDB(object):
             subaccount['height'] = 0
             #subaccount['balance'] = self.chaindb.getsavings(vault)
             #subaccount['balance'] = vaultaccount['amount']
-            subaccount['balance'] = self.chaindb.getbalance(vaultaccount['name'])
+            subaccount['balance'] = self.chaindb.getsavings(vaultaccount['name'])
             subaccount['received'] = self.chaindb.listreceivedbyvault(vault).values()
             accounts.append(subaccount)
         return accounts
@@ -573,7 +573,7 @@ class WalletDB(object):
         if excessAmount > fees:
             change_txout = CTxOut()
             change_txout.nValue = excessAmount - fees
-            changeaddress = subaccounts[0]['address']
+            changeaddress = self.getnewaddress()[1]
             change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
             tx.vout.append(change_txout)
 
@@ -707,9 +707,10 @@ class WalletDB(object):
             change_txout = CTxOut()
             change_txout.nValue = excessAmount - fees
             account = self.getaccount()
-            changeaddress = account.values()[0]['address']
+            changeaddress = fromvaultaddress
             self.logger.debug("Change address: %s" % changeaddress)
-            change_txout.scriptPubKey = utils.address_to_pay_to_pubkey_hash(changeaddress)
+            change_txout.scriptPubKey = utils.vault_address_to_pay_to_vault_script(
+                changeaddress)
             tx.vout.append(change_txout)
 
         # calculate txhash

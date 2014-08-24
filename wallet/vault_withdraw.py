@@ -2,15 +2,7 @@ from wallet import Wallet
 
 wallet = Wallet()
 account = wallet.getaccount()
-
-toaddress = None
-for subaccount in account.itervalues():
-    if not toaddress:
-        toaddress = subaccount['address']
-        break
-else:
-    print("No enough addresses to send to, quitting")
-    exit(1)
+toaddress = wallet.getnewaddress()
 
 print("Available vaults")
 vaults = wallet.getvaults()

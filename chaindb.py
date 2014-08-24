@@ -240,13 +240,18 @@ class ChainDb(object):
             block = self.getblock(blkhash)
 
             for tx in block.vtx:
+                is_tx_vault_withdraw = False
                 # remove if a transaction is spent
                 for txin in tx.vin:
                     if not txin.scriptSig:
                         continue
+                    if txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
+                        is_tx_vault_withdraw = True
                     script_key_hash = utils.scriptSig_to_public_key_hash(txin.scriptSig)
                     if script_key_hash == public_key_hash:
                         del txouts[txin.prevout.hash]
+                if is_tx_vault_withdraw:
+                    continue
                 # add if a transaction is received
                 for n, txout in enumerate(tx.vout):
                     script_key_hash = utils.scriptPubKey_to_pubkey_hash(txout.scriptPubKey)
@@ -273,18 +278,24 @@ class ChainDb(object):
             block = self.getblock(blkhash)
 
             for tx in block.vtx:
+                is_tx_vault_withdraw = False
                 for txin in tx.vin:
                     # if its a coinbase transaction, skip
                     if not txin.scriptSig:
                         continue
-                    if ord(txin.scriptSig[0]) not in [OP_VAULT_WITHDRAW,
+                    if not ord(txin.scriptSig[0]) in [OP_VAULT_WITHDRAW,
                         OP_VAULT_FAST_WITHDRAW]:
                         continue
+                    if txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
+                        is_tx_vault_withdraw = True
                     # remove if a transaction is spent
                     from_vault_address = utils.scriptSig_to_vault_address(txin.scriptSig)
                     if vault_address == from_vault_address:
                         self.logger.debug("Vault spent %064x" % txin.prevout.hash)
                         del txouts[txin.prevout.hash]
+
+                if is_tx_vault_withdraw:
+                    continue
 
                 for n, txout in enumerate(tx.vout):
                     # add if a transaction is received

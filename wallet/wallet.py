@@ -14,6 +14,10 @@ class Wallet(object):
         account = self.connection.getaccount(account)
         return account
 
+    def getnewaddress(self, account = "account"):
+        address = self.connection.getnewaddress(account)
+        return address
+
     def getvaults(self):
         vaults = self.connection.getvaults()
         return vaults
