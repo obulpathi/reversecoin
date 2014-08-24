@@ -14,6 +14,6 @@ for vault in vaults:
 
 print ('\nPending Transfers')
 transactions = wallet.getpendingtransactions()
-for transaction in transactions:
-    print "From: ", transaction['fromaddress'], "To: ", transaction['toaddress'],\
-        transaction['amount']
+for transaction in transactions.itervalues():
+    for txouts in transaction['outputs']:
+        print txouts['toaddress'] + ": ", txouts['amount']

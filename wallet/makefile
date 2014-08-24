@@ -23,19 +23,22 @@ savings:
 	python savings.py
 
 vault_send:
-	python vault_send.py 
+	python vault_send.py
 
 vault_withdraw:
-	python vault_withdraw.py 
+	python vault_withdraw.py
 
 vault_fast_withdraw:
-	python vault_fast_withdraw.py 
+	python vault_fast_withdraw.py
 
 vault_test:
-	python test_vault.py 
+	python test_vault.py
+
+pending:
+	python vault_pending.py
 
 test:
-	python test.py 
+	python test.py
 
 info:
 	python info.py

@@ -3,7 +3,6 @@ TODO
 
 BUGS
 ----
-* Fix FIXMEs
 * If same address appears in output tx twice, one txout is getting
   overwritten in chaindb:listreceivedbyaddress
 * Enforce single Vault or Support multiple Vaults per address pair
@@ -13,6 +12,7 @@ BUGS
 * Enfore that a vault override will not happen, if there is no balance / vault confir happened
 * Remove hardcoded fees
 * Remove hardcoded timeout for vault
+* Fix FIXMEs
 
 FEATURES
 --------

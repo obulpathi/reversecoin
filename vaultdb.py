@@ -80,6 +80,18 @@ class VaultDB(object):
         self.removeconfirmedvaulttxs(confirmed_txs)
         self.addvaulttxs(new_txs)
 
+    def getpendingvaulttxs(self):
+        txs = []
+        connection = sqlite.connect('vault.db')
+        cursor = connection.cursor()
+        cmd = "SELECT * FROM vaults WHERE (?) < datetime"
+        values = (datetime.now(),)
+        cursor.execute(cmd, values)
+        for entry in cursor:
+            txs.append(int(entry[0]))
+        connection.close()
+        return txs
+
     def getconfirmedvaulttxs(self):
         txs = []
         connection = sqlite.connect('vault.db')

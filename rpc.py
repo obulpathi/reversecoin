@@ -212,8 +212,8 @@ class RPCExec(object):
         return (address, None)
 
     def getpendingtransactions(self, params):
-        address = self.chaindb.getpendingtransactions()
-        return (address, None)
+        transactions = self.chaindb.getpendingtransactions()
+        return (transactions, None)
 
     def getrawmempool(self, params):
         l = []

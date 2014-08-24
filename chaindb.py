@@ -199,12 +199,24 @@ class ChainDb(object):
         return balance
 
     def getpendingtransactions(self):
-        txhashs = self.vaultdb.getconfirmedvaulttxs()
-        txs = []
-        for txhash in txhashs:
+        pending_txs = {}
+        txhashs = self.vaultdb.getpendingvaulttxs()
+        for i, txhash in enumerate(txhashs):
+            pending_tx = {}
             tx = self.gettx(txhash)
-            txs.append(tx)
-        return txs
+            inputs = []
+            for txin in tx.vin:
+                #txin.scriptSig
+                inputs.append('From Vault Address')
+            pending_tx['inputs'] = inputs
+            outputs = []
+            for n, txout in enumerate(tx.vout):
+                output = {'toaddress': utils.output_script_to_address(txout.scriptPubKey),
+                          'amount': txout.nValue}
+                outputs.append(output)
+            pending_tx['outputs'] = outputs
+            pending_txs[str(n)] = pending_tx
+        return pending_txs
 
     def sendtoaddress(self, toaddress, amount):
         tx = self.wallet.sendtoaddress(toaddress, amount)
