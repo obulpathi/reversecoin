@@ -925,6 +925,8 @@ class ChainDb(object):
 
             # calculate fees paid, if any
             tx.nFeesPaid = nValueIn - nValueOut
+            if utils.is_vault_tx(tx):
+                tx.nFeesPaid = tx.nFeesPaid / 2
             if tx.nFeesPaid < 0:
                 self.logger.warning("Fees < 0 skipping transaction")
                 continue

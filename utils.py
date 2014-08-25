@@ -6,7 +6,8 @@ import hashlib
 from bitcoin.key import CKey as Key
 from bitcoin.base58 import encode, decode
 from bitcoin.script import OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG
-from bitcoin.script import OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM
+from bitcoin.script import OP_VAULT_WITHDRAW, OP_VAULT_CONFIRM, OP_VAULT_OVERRIDE
+from bitcoin.script import OP_VAULT_FAST_WITHDRAW
 
 
 def myhash(s):
@@ -321,6 +322,17 @@ def is_sent_from_vault(scriptSig):
         return True
     return False
 
+# Move this code in to tx itself is_vault_tx()
+def is_vault_tx(tx):
+    if tx.is_coinbase():
+        return False
+    if len(tx.vin) != 1:
+        return False
+    scriptSig = tx.vin[0].scriptSig
+    if ord(scriptSig[0]) in [OP_VAULT_WITHDRAW, OP_VAULT_CONFIRM, \
+        OP_VAULT_OVERRIDE]:
+        return True
+    return False
 
 def scriptSig_to_vault_address(scriptSig):
     if not scriptSig:
