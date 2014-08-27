@@ -10,7 +10,7 @@ import binascii
 from bitcoin import script
 from bitcoin.key import CKey
 from bitcoin.core import COutPoint, CTxIn, CTxOut, CTransaction
-from bitcoin.script import OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM
+from bitcoin.script import OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM, OP_VAULT_OVERRIDE
 
 # Joric/bitcoin-dev, june 2012, public domain
 import hashlib
@@ -662,9 +662,10 @@ class WalletDB(object):
 
     # TODO: enforce double use of vaults
     # TODO: remove amount
-    def overridevaulttx(self, fromvault, toaddress, amount):
+    def overridevaulttx(self, fromvaultaddress, toaddress, amount):
+        vault = self.getvault(fromvaultaddress)
         # select the input addresses
-        received = self.chaindb.listreceivedbyvault(fromvaultaddress)
+        received = self.chaindb.listallreceivedbyvault(fromvaultaddress)
         received = received.values()[0]
         if received['value'] < 2 * utils.calculate_fees(None):
             self.logger.warning("In sufficient funds in vault, exiting, return")

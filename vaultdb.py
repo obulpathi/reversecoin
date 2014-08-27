@@ -38,27 +38,36 @@ class VaultDB(object):
         for tx in txs:
             print tx.sha256, type(tx.sha256)
             values = (str(tx.sha256),
-                datetime.now() + timedelta(seconds=100)) #FIXME
+                datetime.now() + timedelta(seconds=10000)) #FIXME
             cursor.execute(cmd, values)
         connection.commit()
         connection.close()
         self.logger.debug('Added transactions to VaultDB')
 
     def removeconfirmedvaulttxs(self, txs):
+        if not txs:
+            return
         # remove confirmed transactions from VaultDB
         self.logger.debug('Removing confirmed transactions from VaultDB')
         connection = sqlite.connect('vault.db')
         cursor = connection.cursor()
         cmd = "DELETE FROM vaults WHERE txhash = (?)"
         for tx in txs:
+            if tx.is_coinbase():
+                continue
             new_tx = copy.deepcopy(tx)
             for txin in new_tx.vin:
                 # if this is confirmed vault transaction, add it to confirmed txs
-                if txin.scriptSig and txin.scriptSig[0] == chr(script.OP_VAULT_CONFIRM):
+                if txin.scriptSig[0] == chr(script.OP_VAULT_CONFIRM):
                     txin.scriptSig = chr(script.OP_VAULT_WITHDRAW) + txin.scriptSig[1:]
-            new_tx.calc_sha256()
-            values = (str(new_tx.sha256),)
-            cursor.execute(cmd, values)
+                    new_tx.calc_sha256()
+                    values = (str(new_tx.sha256),)
+                    cursor.execute(cmd, values)
+                    #break
+                if txin.scriptSig[0] == chr(script.OP_VAULT_OVERRIDE):
+                    # get the original pending transaction
+                    # by referring the previous hash and then delete it
+                    raise NotImplementedError
         connection.commit()
         connection.close()
         self.logger.debug('Removed confirmed transactions from VaultDB')

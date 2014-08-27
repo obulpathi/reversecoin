@@ -206,8 +206,7 @@ class ChainDb(object):
             tx = self.gettx(txhash)
             inputs = []
             for txin in tx.vin:
-                #txin.scriptSig
-                inputs.append('From Vault Address')
+                inputs.append(utils.scriptSig_to_vault_address(txin.scriptSig))
             pending_tx['inputs'] = inputs
             outputs = []
             for n, txout in enumerate(tx.vout):
@@ -237,7 +236,7 @@ class ChainDb(object):
         self.mempool.add(tx)
 
     def overridevaulttx(self, fromvault, toaddress, amount):
-        tx = self.wallet.overridevaulttx(self, fromvault, toaddress, amount)
+        tx = self.wallet.overridevaulttx(fromvault, toaddress, amount)
         self.mempool.add(tx)
 
     def listreceivedbyaddress(self, address):
@@ -249,6 +248,7 @@ class ChainDb(object):
             heightidx = HeightIdx()
             heightidx.deserialize(data)
             blkhash = heightidx.blocks[0]
+            self.blk_cache.delete(blkhash)
             block = self.getblock(blkhash)
 
             for tx in block.vtx:
@@ -290,16 +290,62 @@ class ChainDb(object):
             block = self.getblock(blkhash)
 
             for tx in block.vtx:
+                # if its a coinbase transaction, skip
+                if tx.is_coinbase():
+                    continue
                 is_tx_vault_withdraw = False
                 for txin in tx.vin:
-                    # if its a coinbase transaction, skip
-                    if not txin.scriptSig:
-                        continue
+                    if txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
+                        is_tx_vault_withdraw = True
                     if not ord(txin.scriptSig[0]) in [OP_VAULT_WITHDRAW,
                         OP_VAULT_FAST_WITHDRAW]:
                         continue
+                    # remove if a transaction is spent
+                    from_vault_address = utils.scriptSig_to_vault_address(txin.scriptSig)
+                    if vault_address == from_vault_address:
+                        self.logger.debug("Vault spent %064x" % txin.prevout.hash)
+                        del txouts[txin.prevout.hash]
+
+                if is_tx_vault_withdraw:
+                    continue
+
+                for n, txout in enumerate(tx.vout):
+                    # add if a transaction is received
+                    if scriptPubKey == txout.scriptPubKey:
+                        tx.calc_sha256()
+                        self.logger.debug("Vault input txhash: %d %d %064x %s" \
+                                       % (height, n, tx.sha256, tx))
+                        txouts[tx.sha256] = {'txhash': tx.sha256, \
+                                             'n': n, \
+                                             'value': txout.nValue, \
+                                             'scriptPubKey': txout.scriptPubKey}
+        return txouts
+
+
+    def listallreceivedbyvault(self, vault_address):
+        scriptPubKey = utils.vault_address_to_pay_to_vault_script( \
+            vault_address)
+        txouts = {}
+        end_height = self.getheight()
+
+        for height in xrange(end_height):
+            data = self.db.Get('height:' + str(height))
+            heightidx = HeightIdx()
+            heightidx.deserialize(data)
+            blkhash = heightidx.blocks[0]
+            block = self.getblock(blkhash)
+
+            for tx in block.vtx:
+                # if its a coinbase transaction, skip
+                if tx.is_coinbase():
+                    continue
+                is_tx_vault_withdraw = False
+                for txin in tx.vin:
                     if txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
                         is_tx_vault_withdraw = True
+                    if not ord(txin.scriptSig[0]) in [OP_VAULT_CONFIRM,
+                        OP_VAULT_FAST_WITHDRAW]:
+                        continue
                     # remove if a transaction is spent
                     from_vault_address = utils.scriptSig_to_vault_address(txin.scriptSig)
                     if vault_address == from_vault_address:
@@ -810,7 +856,7 @@ class ChainDb(object):
         for txhash in txhashes:
             tx = self.gettx(txhash)
             for txin in tx.vin:
-                if txin.scriptSig and txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
+                if txin.scriptSig and (txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW)):
                     txin.scriptSig = chr(OP_VAULT_CONFIRM) + txin.scriptSig[1:]
                     self.mempool.add(tx)
         return
@@ -943,19 +989,6 @@ class ChainDb(object):
             tx.dPriority = dPriority
 
             txlist.append(tx)
-
-        # get the vault transactions
-        # don't close and reopen connection every now and then OK ...
-        # maintain a class variable with open connection
-        connection = sqlite3.connect('vault.db')
-        cursor = connection.cursor()
-        # cursor.execute("SELECT * FROM vaults WHERE date < datetime())
-        for txhash, date in cursor:
-            tx = self.leveldb.gettxhash() # get transaction from leveldb or just refer to it :)
-            tx.final = True
-            tx.previous = previous_hash
-            txlist.append(tx)
-        connection.close()
 
         # sort list by fee-per-kb, then priority
         sorted_txlist = sorted(txlist, cmp=tx_blk_cmp, reverse=True)

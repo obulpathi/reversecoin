@@ -7,6 +7,9 @@ account:
 balance:
 	python balance.py
 
+vaults:
+	python getvaults.py
+
 blockchain:
 	python blockchain.py
 
@@ -27,6 +30,9 @@ vault_send:
 
 vault_withdraw:
 	python vault_withdraw.py
+
+vault_override:
+	python vault_override.py
 
 vault_fast_withdraw:
 	python vault_fast_withdraw.py

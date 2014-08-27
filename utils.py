@@ -298,7 +298,7 @@ def scriptSig_to_address(scriptSig):
     if not scriptSig:
         return None
     elif ord(scriptSig[0]) in [OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, \
-        OP_VAULT_CONFIRM]:
+        OP_VAULT_CONFIRM, OP_VAULT_OVERRIDE]:
         return scriptSig_to_vault_address(scriptSig)
     else:
         public_key = sriptSig_to_pubkey(scriptSig)
