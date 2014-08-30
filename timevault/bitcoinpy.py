@@ -32,9 +32,9 @@ from peermanager import PeerManager
 from vaultdb import VaultDB
 from bitcoin.coredefs import NETWORKS
 
-settings = {}
 
-if __name__ == '__main__':
+def run():
+    settings = {}
 
     # setup logging
     logging.basicConfig(level=logging.DEBUG)
@@ -161,3 +161,6 @@ if __name__ == '__main__':
             logger.info('Finished flushing database')
 
     start()
+
+if __name__ == '__main__':
+    run()

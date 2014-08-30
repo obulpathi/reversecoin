@@ -1,3 +1,2 @@
-python-gevent
-python-leveldb
-python-sqlite
+gevent
+leveldb

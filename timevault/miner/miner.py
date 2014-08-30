@@ -207,7 +207,7 @@ def miner_thread(id):
     miner = Miner(id)
     miner.loop()
 
-if __name__ == '__main__':
+def run():
     if len(sys.argv) != 2:
         print "Usage: pyminer.py CONFIG-FILE"
         sys.exit(1)
@@ -261,3 +261,6 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     print time.asctime(), "Miner Stops - %s:%s" % (settings['host'], settings['port'])
+
+if __name__ == '__main__':
+    run()
