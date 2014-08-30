@@ -8,6 +8,7 @@ from datetime import timedelta
 import logging
 import sqlite3 as sqlite
 import copy
+import os
 import binascii
 
 from bitcoin import script
@@ -15,14 +16,14 @@ import utils
 
 
 class VaultDB(object):
-    def __init__(self):
+    def __init__(self, datadir):
+        self.vaultfile = os.path.expanduser(datadir + '/vault.db')
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger(__name__)
 
-
     def initialize(self):
         # create sqlitedb, if its does not exist
-        connection = sqlite.connect('vault.db')
+        connection = sqlite.connect(self.vaultfile)
         cursor = connection.cursor()
         # create vaults table
         cmd = "CREATE TABLE vaults (txhash varchar(100), fromaddress varchar(100), datetime DATE)"
@@ -34,7 +35,7 @@ class VaultDB(object):
     def addvaulttxs(self, txs):
         # add transactions to VaultDB
         self.logger.debug('Adding transactions to VaultDB')
-        connection = sqlite.connect('vault.db')
+        connection = sqlite.connect(self.vaultfile)
         cursor = connection.cursor()
         cmd = "INSERT INTO vaults VALUES(?, ?, ?)"
         for tx in txs:
@@ -50,7 +51,7 @@ class VaultDB(object):
             return
         # remove confirmed transactions from VaultDB
         self.logger.debug('Removing confirmed transactions from VaultDB')
-        connection = sqlite.connect('vault.db')
+        connection = sqlite.connect(self.vaultfile)
         cursor = connection.cursor()
         cmd_confirmed = "DELETE FROM vaults WHERE txhash = (?)"
         cmd_override = "DELETE FROM vaults WHERE fromaddress = (?)"
@@ -96,7 +97,7 @@ class VaultDB(object):
 
     def getpendingvaulttxs(self):
         txs = []
-        connection = sqlite.connect('vault.db')
+        connection = sqlite.connect(self.vaultfile)
         cursor = connection.cursor()
         cmd = "SELECT * FROM vaults WHERE (?) < datetime"
         values = (datetime.now(),)
@@ -108,7 +109,7 @@ class VaultDB(object):
 
     def getconfirmedvaulttxs(self):
         txs = []
-        connection = sqlite.connect('vault.db')
+        connection = sqlite.connect(self.vaultfile)
         cursor = connection.cursor()
         cmd = "SELECT * FROM vaults WHERE (?) > datetime"
         values = (datetime.now(),)
@@ -119,7 +120,7 @@ class VaultDB(object):
         return txs
 
     def listpendingtxs(self):
-        connection = sqlite.connect('vault.db')
+        connection = sqlite.connect(self.vaultfile)
         cursor = connection.cursor()
         cmd = "SELECT * FROM vaults"
         print 'Pending transactions'

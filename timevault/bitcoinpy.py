@@ -32,7 +32,7 @@ from peermanager import PeerManager
 from vaultdb import VaultDB
 from bitcoin.coredefs import NETWORKS
 
-def initalize(datadir):
+def initialize(datadir):
     os.mkdir(datadir)
     os.mkdir(datadir + '/leveldb')
     # create blocks.dat file
@@ -98,11 +98,11 @@ def run(config_file = '~/bitcoinpy.cfg'):
     new_install = False
     if not os.path.isdir(os.path.expanduser(datadir)):
         new_install = True
-        initialize()
+        initialize(datadir)
 
     # create wallet
     walletdb = WalletDB()
-    vaultdb = VaultDB()
+    vaultdb = VaultDB(datadir)
     if new_install:
         # initialize wallet
         walletdb.initialize()
