@@ -24,6 +24,7 @@ import re
 import base64
 import httplib
 import sys
+import os
 from time import sleep
 from multiprocessing import Process
 
@@ -207,12 +208,8 @@ def miner_thread(id):
     miner = Miner(id)
     miner.loop()
 
-def run():
-    if len(sys.argv) != 2:
-        print "Usage: pyminer.py CONFIG-FILE"
-        sys.exit(1)
-
-    f = open(sys.argv[1])
+def run(config_file = "~/miner.cfg"):
+    f = open(os.path.expanduser(config_file))
     for line in f:
         # skip comment lines
         m = re.search('^\s*#', line)
@@ -263,4 +260,7 @@ def run():
     print time.asctime(), "Miner Stops - %s:%s" % (settings['host'], settings['port'])
 
 if __name__ == '__main__':
-    run()
+    if len(sys.argv) != 2:
+        print "Usage: pyminer.py CONFIG-FILE"
+        sys.exit(1)
+    run(sys.argv[1])

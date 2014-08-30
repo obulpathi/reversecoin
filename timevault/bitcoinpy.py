@@ -42,7 +42,7 @@ def initalize(datadir):
     with open(datadir + '/__db.001', 'a'):
         pass
 
-def run(config_file = '~/.bitcoinpy.cfg'):
+def run(config_file = '~/bitcoinpy.cfg'):
     settings = {}
 
     # setup logging
