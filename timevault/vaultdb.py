@@ -8,8 +8,10 @@ from datetime import timedelta
 import logging
 import sqlite3 as sqlite
 import copy
+import binascii
 
 from bitcoin import script
+import utils
 
 
 class VaultDB(object):
@@ -23,7 +25,7 @@ class VaultDB(object):
         connection = sqlite.connect('vault.db')
         cursor = connection.cursor()
         # create vaults table
-        cmd = "CREATE TABLE vaults (txhash varchar(100), datetime DATE)"
+        cmd = "CREATE TABLE vaults (txhash varchar(100), fromaddress varchar(100), datetime DATE)"
         cursor.execute(cmd)
         self.logger.debug('Created VaultDB')
         connection.commit()
@@ -34,10 +36,9 @@ class VaultDB(object):
         self.logger.debug('Adding transactions to VaultDB')
         connection = sqlite.connect('vault.db')
         cursor = connection.cursor()
-        cmd = "INSERT INTO vaults VALUES(?, ?)"
+        cmd = "INSERT INTO vaults VALUES(?, ?, ?)"
         for tx in txs:
-            print tx.sha256, type(tx.sha256)
-            values = (str(tx.sha256),
+            values = (str(tx.sha256), str(utils.tx_to_vault_address(tx)),
                 datetime.now() + timedelta(seconds=10000)) #FIXME
             cursor.execute(cmd, values)
         connection.commit()
@@ -51,7 +52,8 @@ class VaultDB(object):
         self.logger.debug('Removing confirmed transactions from VaultDB')
         connection = sqlite.connect('vault.db')
         cursor = connection.cursor()
-        cmd = "DELETE FROM vaults WHERE txhash = (?)"
+        cmd_confirmed = "DELETE FROM vaults WHERE txhash = (?)"
+        cmd_override = "DELETE FROM vaults WHERE fromaddress = (?)"
         for tx in txs:
             if tx.is_coinbase():
                 continue
@@ -62,17 +64,18 @@ class VaultDB(object):
                     txin.scriptSig = chr(script.OP_VAULT_WITHDRAW) + txin.scriptSig[1:]
                     new_tx.calc_sha256()
                     values = (str(new_tx.sha256),)
-                    cursor.execute(cmd, values)
+                    cursor.execute(cmd_confirmed, values)
                     #break
                 if txin.scriptSig[0] == chr(script.OP_VAULT_OVERRIDE):
-                    # get the original pending transaction
-                    # by referring the previous hash and then delete it
-                    raise NotImplementedError
+                    fromaddress = str(utils.scriptSig_to_vault_address(txin.scriptSig))
+                    values = (fromaddress,)
+                    cursor.execute(cmd_override, values)
         connection.commit()
         connection.close()
         self.logger.debug('Removed confirmed transactions from VaultDB')
 
     def addblock(self, block):
+        self.listpendingtxs()
         new_txs = []
         confirmed_txs = []
         for tx in block.vtx:
@@ -87,7 +90,9 @@ class VaultDB(object):
                 if txin.scriptSig and txin.scriptSig[0] == chr(script.OP_VAULT_OVERRIDE):
                     confirmed_txs.append(tx)
         self.removeconfirmedvaulttxs(confirmed_txs)
+        self.listpendingtxs()
         self.addvaulttxs(new_txs)
+        self.listpendingtxs()
 
     def getpendingvaulttxs(self):
         txs = []
@@ -112,3 +117,13 @@ class VaultDB(object):
             txs.append(int(entry[0]))
         connection.close()
         return txs
+
+    def listpendingtxs(self):
+        connection = sqlite.connect('vault.db')
+        cursor = connection.cursor()
+        cmd = "SELECT * FROM vaults"
+        print 'Pending transactions'
+        cursor.execute(cmd)
+        for entry in cursor:
+            print entry[0], entry[1], entry[2]
+        connection.close()

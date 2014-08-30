@@ -709,7 +709,8 @@ class WalletDB(object):
         timeout = 100
         script = utils.addresses_to_vault_script(vault['address'], \
             vault['master_address'], timeout)
-        scriptSig = chr(OP_VAULT_OVERRIDE) + chr(len(signature)) + signature + script
+        scriptSig = chr(OP_VAULT_OVERRIDE) + chr(len(vault['master_public_key'])) + \
+        vault['master_public_key'] + chr(len(signature)) + signature + script
         self.logger.debug("Adding signature: %s" % binascii.hexlify(scriptSig))
         txin.scriptSig = scriptSig
         return tx

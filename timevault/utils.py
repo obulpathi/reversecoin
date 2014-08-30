@@ -334,18 +334,24 @@ def is_vault_tx(tx):
         return True
     return False
 
+def tx_to_vault_address(tx):
+    if not is_vault_tx(tx):
+        return None
+    scriptSig = tx.vin[0].scriptSig
+    return scriptSig_to_vault_address(scriptSig)
+
 def scriptSig_to_vault_address(scriptSig):
     if not scriptSig:
         return None
     if ord(scriptSig[0]) not in [OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, \
-        OP_VAULT_CONFIRM]:
+        OP_VAULT_CONFIRM, OP_VAULT_OVERRIDE]:
         return None
     key_type = scriptSig[0]
     start_index = 0
     # skip the vault withdraw type
     start_index = start_index + 1
     # skip the master key
-    if key_type == chr(OP_VAULT_FAST_WITHDRAW):
+    if ord(key_type) in [OP_VAULT_FAST_WITHDRAW, OP_VAULT_OVERRIDE]:
         # skip the master key
         start_index = start_index + ord(scriptSig[start_index]) + 1
     # skip the signature
