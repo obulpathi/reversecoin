@@ -10,9 +10,9 @@ import socket
 import binascii
 import time
 import hashlib
-from bitcoin.serialize import *
-from bitcoin.coredefs import *
-from bitcoin.script import CScript
+from timevault.bitcoin.serialize import *
+from timevault.bitcoin.coredefs import *
+from timevault.bitcoin.script import CScript
 
 class CAddress(object):
     def __init__(self, protover=PROTO_VERSION):

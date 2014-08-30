@@ -32,19 +32,28 @@ from peermanager import PeerManager
 from vaultdb import VaultDB
 from bitcoin.coredefs import NETWORKS
 
+def initalize(datadir):
+    os.mkdir(datadir)
+    os.mkdir(datadir + '/leveldb')
+    # create blocks.dat file
+    shutil.copy('genesis.dat', os.path.join(datadir + '/blocks.dat'))
+    # create lock file for db
+    with open(datadir + '/__db.001', 'a'):
+        pass
 
-def run():
+def run(config_file = '~/.bitcoinpy.cfg'):
     settings = {}
 
     # setup logging
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
 
-    if len(sys.argv) != 2:
-        logger.error("Usage: bitcoinpy.py CONFIG-FILE")
-        sys.exit(1)
+    # check if configuration file exists
+    if not os.path.isfile(os.path.expanduser(config_file)):
+        logger.error('No configuration file: {0}'.format(config_file))
+        os.exit(1)
 
-    f = open(sys.argv[1])
+    f = open(config_file)
     for line in f:
         m = re.search('^(\w+)\s*=\s*(\S.*)$', line)
         if m is None:
@@ -77,26 +86,18 @@ def run():
     settings['rpcport'] = int(settings['rpcport'])
     settings['db'] = os.path.expanduser(settings['db'])
 
-
-
     if chain not in NETWORKS:
-        logger.error("invalid network")
-        sys.exit(1)
+        logger.error("invalid network, exiting")
+        sys.exit(2)
 
     netmagic = NETWORKS[chain]
-
     datadir = settings['db']
+
+    # initialize
     new_install = False
-    # if datadir is not there, create and initialize
-    if not os.path.isdir(datadir):
+    if not os.path.isdir(os.path.expanduser(datadir)):
         new_install = True
-        os.mkdir(datadir)
-        os.mkdir(datadir + '/leveldb')
-        # create blocks.dat file
-        shutil.copy('genesis.dat', os.path.join(datadir + '/blocks.dat'))
-        # create lock file for db
-        with open(datadir + '/__db.001', 'a'):
-            pass
+        initialize()
 
     # create wallet
     walletdb = WalletDB()
@@ -163,4 +164,8 @@ def run():
     start()
 
 if __name__ == '__main__':
-    run()
+    if len(sys.argv) != 2:
+        logger.error("Usage: bitcoinpy.py CONFIG-FILE")
+        sys.exit(1)
+
+    run(sys.argv[1])
