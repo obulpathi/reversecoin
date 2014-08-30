@@ -36,7 +36,8 @@ def initalize(datadir):
     os.mkdir(datadir)
     os.mkdir(datadir + '/leveldb')
     # create blocks.dat file
-    shutil.copy('genesis.dat', os.path.join(datadir + '/blocks.dat'))
+    shutil.copy(os.path.expanduser('~/genesis.dat'), \
+        os.path.join(datadir + '/blocks.dat'))
     # create lock file for db
     with open(datadir + '/__db.001', 'a'):
         pass
@@ -53,7 +54,7 @@ def run(config_file = '~/.bitcoinpy.cfg'):
         logger.error('No configuration file: {0}'.format(config_file))
         os.exit(1)
 
-    f = open(config_file)
+    f = open(os.path.expanduser(config_file))
     for line in f:
         m = re.search('^(\w+)\s*=\s*(\S.*)$', line)
         if m is None:
@@ -119,7 +120,7 @@ def run(config_file = '~/.bitcoinpy.cfg'):
         chaindb.loadfile(datadir + '/blocks.dat')
 
     if 'loadblock' in settings:
-        chaindb.loadfile(settings['loadblock'])
+        chaindb.loadfile(os.path.expanduser(settings['loadblock']))
 
     threads = []
 
