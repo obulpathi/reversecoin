@@ -931,7 +931,6 @@ class ChainDb(object):
             f = cStringIO.StringIO(ser_blk)
             block = CBlock()
             block.deserialize(f)
-            print format(block.nBits, '02x')
             self.logger.debug("Adding the genesis block")
             self.putblock(block)
 

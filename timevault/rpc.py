@@ -119,7 +119,6 @@ class RPCExec(object):
         self.rpcuser = rpcuser
         self.rpcpass = rpcpass
         self.logger = logging.getLogger(__name__)
-
         self.work_tophash = None
         self.work_blocks = {}
 

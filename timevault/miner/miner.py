@@ -23,6 +23,7 @@ import struct
 import re
 import base64
 import httplib
+import logging
 import sys
 import os
 from time import sleep
@@ -37,10 +38,12 @@ pp = pprint.PrettyPrinter(indent=4)
 class BitcoinRPC:
     OBJID = 1
 
-    def __init__(self, host, port, username, password):
+    def __init__(self, host, port, username, password, logger):
         authpair = "%s:%s" % (username, password)
         self.authhdr = "Basic %s" % (base64.b64encode(authpair))
         self.conn = httplib.HTTPConnection(host, port, False, 30)
+        self.logger = logger
+
     def rpc(self, method, params=None):
         self.OBJID += 1
         obj = { 'version' : '1.1',
@@ -61,19 +64,19 @@ class BitcoinRPC:
         body = resp.read()
         resp_obj = json.loads(body)
         if resp_obj is None:
-            print "JSON-RPC: cannot JSON-decode body"
+            self.logger.debug("JSON-RPC: cannot JSON-decode body")
             return None
         if 'error' in resp_obj and resp_obj['error'] != None:
             return resp_obj['error']
         if 'result' not in resp_obj:
-            print "JSON-RPC: no result in object"
+            self.logger.debug("JSON-RPC: no result in object")
             return None
 
         return resp_obj['result']
     def getblockcount(self):
         return self.rpc('getblockcount')
     def getwork(self, data=None):
-        print "Sleeping before going for get work"
+        self.logger.debug("Sleeping before going for get work")
         sleep(2)
         return self.rpc('getwork', data)
 
@@ -99,13 +102,14 @@ def wordreverse(in_buf):
     return ''.join(out_words)
 
 class Miner:
-    def __init__(self, id):
+    def __init__(self, id, logger):
         self.id = id
         self.max_nonce = MAX_NONCE
+        self.logger = logger
 
     def work(self, datastr, targetstr):
-        print "datastr: ", datastr
-        print "targerstr: ", targetstr
+        self.logger.debug("datastr: {0}".format(datastr))
+        self.logger.debug("targerstr: {0}".format(targetstr))
         # decode work data hex string to binary
         static_data = datastr.decode('hex')
         static_data = bufreverse(static_data)
@@ -149,14 +153,14 @@ class Miner:
             hash_str = hash.encode('hex')
             l = long(hash_str, 16)
 
-            print "target: ", target
-            print "nonce: ", l
+            self.logger.debug("target: {0}".format(target))
+            self.logger.debug("nonce: {0}".format(l))
             # proof-of-work test:  hash < target
             if l < target:
-                print time.asctime(), "PROOF-OF-WORK found: %064x" % (l,)
+                self.logger.debug("PROOF-OF-WORK found: %064x".format(l))
                 return (nonce + 1, nonce_bin)
             else:
-                print time.asctime(), "PROOF-OF-WORK false positive %064x" % (l,)
+                self.logger.debug("PROOF-OF-WORK found: false positive %064x".format(l))
 
         return (nonce + 1, None)
 
@@ -166,7 +170,7 @@ class Miner:
         solution = original_data[:152] + nonce + original_data[160:256]
         param_arr = [ solution ]
         result = rpc.getwork(param_arr)
-        print time.asctime(), "--> Upstream RPC result:", result
+        self.logger.debug("--> Upstream RPC result:".format(result))
 
     def iterate(self, rpc):
         work = rpc.getwork()
@@ -189,23 +193,23 @@ class Miner:
             self.max_nonce = 0xfffffffaL
 
         if settings['hashmeter']:
-            print "HashMeter(%d): %d hashes, %.2f Khash/sec" % (
+            self.logger.debug("HashMeter(%d): %d hashes, %.2f Khash/sec".format(
                   self.id, hashes_done,
-                  (hashes_done / 1000.0) / time_diff)
+                  (hashes_done / 1000.0) / time_diff))
 
         if nonce_bin is not None:
             self.submit_work(rpc, work['data'], nonce_bin)
 
     def loop(self):
-        rpc = BitcoinRPC(settings['host'], settings['port'], settings['rpcuser'], settings['rpcpass'])
+        rpc = BitcoinRPC(settings['host'], settings['port'], settings['rpcuser'], settings['rpcpass'], self.logger)
         if rpc is None:
             return
 
         while True:
             self.iterate(rpc)
 
-def miner_thread(id):
-    miner = Miner(id)
+def miner_thread(id, logger):
+    miner = Miner(id, logger)
     miner.loop()
 
 def run(config_file = "~/miner.cfg"):
@@ -236,28 +240,36 @@ def run(config_file = "~/miner.cfg"):
     if 'rpcuser' not in settings or 'rpcpass' not in settings:
         print "Missing username and/or password in cfg file"
         sys.exit(1)
+    if 'log' not in settings or (settings['log'] == '-'):
+        settings['log'] = None
 
     settings['port'] = int(settings['port'])
     settings['threads'] = int(settings['threads'])
     settings['hashmeter'] = int(settings['hashmeter'])
     settings['scantime'] = long(settings['scantime'])
 
+    # setup logging
+    if settings['log']:
+        logging.basicConfig(filename=settings['log'], level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+
     thr_list = []
     for thr_id in range(settings['threads']):
-        p = Process(target=miner_thread, args=(thr_id,))
+        p = Process(target=miner_thread, args=(thr_id,logger))
         p.start()
         thr_list.append(p)
         time.sleep(1)           # stagger threads
 
-    print settings['threads'], "mining threads started"
-
-    print time.asctime(), "Miner Starts - %s:%s" % (settings['host'], settings['port'])
+    logger.debug("{0} mining threads started".format(settings['threads']))
+    logger.debug("Miner Starts - %s:%s".format(settings['host'], settings['port']))
     try:
         for thr_proc in thr_list:
             thr_proc.join()
     except KeyboardInterrupt:
         pass
-    print time.asctime(), "Miner Stops - %s:%s" % (settings['host'], settings['port'])
+    logger.debug("Miner Stops - %s:%s".format(settings['host'], settings['port']))
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:

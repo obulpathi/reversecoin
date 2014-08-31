@@ -43,17 +43,12 @@ def initialize(datadir):
         pass
 
 def run(config_file = '~/bitcoinpy.cfg'):
-    settings = {}
-
-    # setup logging
-    logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger(__name__)
-
     # check if configuration file exists
     if not os.path.isfile(os.path.expanduser(config_file)):
-        logger.error('No configuration file: {0}'.format(config_file))
+        print('No configuration file: {0}'.format(config_file))
         os.exit(1)
 
+    settings = {}
     f = open(os.path.expanduser(config_file))
     for line in f:
         m = re.search('^(\w+)\s*=\s*(\S.*)$', line)
@@ -86,6 +81,13 @@ def run(config_file = '~/bitcoinpy.cfg'):
     settings['port'] = int(settings['port'])
     settings['rpcport'] = int(settings['rpcport'])
     settings['db'] = os.path.expanduser(settings['db'])
+
+    # setup logging
+    if settings['log']:
+        logging.basicConfig(filename=settings['log'], level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
 
     if chain not in NETWORKS:
         logger.error("invalid network, exiting")

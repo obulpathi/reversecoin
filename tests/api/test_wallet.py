@@ -1,7 +1,18 @@
+import os
+import time
+import threading
 import unittest
 
 from base import TestBase
 from timevault import bitcoinrpc
+
+class TimeVaultDaemon(threading.Thread):
+     def run(self):
+         os.system('timevaultd')
+
+class VaultMiner(threading.Thread):
+     def run(self):
+         os.system('vaultminer')
 
 class TestWallet(TestBase):
     def setUp(self):
@@ -9,6 +20,13 @@ class TestWallet(TestBase):
         rpcuser = "user"
         rpcpass = "passwd"
         account = "account"
+
+        vaultd = TimeVaultDaemon()
+        miner = VaultMiner()
+        vaultd.start()
+        miner.start()
+        time.sleep(2)
+
         self.connection = bitcoinrpc.connect_to_remote(
             rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
 

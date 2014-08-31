@@ -64,7 +64,6 @@ class Connection(Greenlet):
         self.send_message(vt)
 
     def _run(self):
-        print self.dstaddr
         self.logger.debug("Connected: " + str(self.dstaddr))
         # wait for message and respond using hooks in node
         while True:

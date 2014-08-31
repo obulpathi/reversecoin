@@ -123,7 +123,6 @@ class VaultDB(object):
         connection = sqlite.connect(self.vaultfile)
         cursor = connection.cursor()
         cmd = "SELECT * FROM vaults"
-        print 'Pending transactions'
         cursor.execute(cmd)
         for entry in cursor:
             print entry[0], entry[1], entry[2]
