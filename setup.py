@@ -14,6 +14,20 @@ reqs = [str(ir.req) for ir in install_reqs]
 shutil.copy('etc/config.cfg', os.path.expanduser('~/.bitcoinpy.cfg'))
 shutil.copy('etc/miner.cfg', os.path.expanduser('~/.vaultminer.cfg'))
 
+"""
+def initialize(datadir = "/home/obulpathi/.bitcoinpy"):
+    os.mkdir(datadir)
+    os.mkdir(datadir + '/leveldb')
+    # create blocks.dat file
+    shutil.copy(os.path.expanduser('~/.genesis.dat'), \
+        os.path.join(datadir + '/blocks.dat'))
+    # create lock file for db
+    with open(datadir + '/__db.001', 'a'):
+        pass
+
+initialize()
+"""
+
 setuptools.setup(
     install_requires=reqs,
     entry_points = {

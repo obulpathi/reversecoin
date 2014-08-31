@@ -36,8 +36,7 @@ def initialize(datadir):
     os.mkdir(datadir)
     os.mkdir(datadir + '/leveldb')
     # create blocks.dat file
-    shutil.copy('etc/genesis.dat', \
-        os.path.join(datadir + '/blocks.dat'))
+    shutil.copy('../etc/genesis.dat', os.path.join(datadir + '/blocks.dat'))
     # create lock file for db
     with open(datadir + '/__db.001', 'a'):
         pass
