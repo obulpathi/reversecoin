@@ -12,6 +12,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 
 # copy configuration files
 shutil.copy('etc/config.cfg', os.path.expanduser('~/.bitcoinpy.cfg'))
+shutil.copy('etc/miner.cfg', os.path.expanduser('~/.vaultminer.cfg'))
 
 setuptools.setup(
     install_requires=reqs,

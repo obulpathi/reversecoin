@@ -212,7 +212,7 @@ def miner_thread(id, logger):
     miner = Miner(id, logger)
     miner.loop()
 
-def run(config_file = "~/miner.cfg"):
+def run(config_file = "~/.vaultminer.cfg"):
     f = open(os.path.expanduser(config_file))
     for line in f:
         # skip comment lines
