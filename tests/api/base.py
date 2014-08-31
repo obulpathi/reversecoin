@@ -13,5 +13,4 @@ class TestBase(unittest.TestCase):
             rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
 
     def tearDown(self):
-        #self.connection.close() # FIXME
         pass

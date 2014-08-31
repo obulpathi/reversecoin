@@ -58,7 +58,7 @@ class TestWallet(TestBase):
 
     def test_vault_fast_withdraw(self):
         pass
-
-    def testDown(self):
-        super(TestBase, self).tearDown()
     """
+
+    def tearDown(self):
+        super(TestBase, self).tearDown()
