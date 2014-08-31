@@ -36,17 +36,17 @@ def initialize(datadir):
     os.mkdir(datadir)
     os.mkdir(datadir + '/leveldb')
     # create blocks.dat file
-    shutil.copy(os.path.expanduser('~/genesis.dat'), \
+    shutil.copy('etc/genesis.dat', \
         os.path.join(datadir + '/blocks.dat'))
     # create lock file for db
     with open(datadir + '/__db.001', 'a'):
         pass
 
-def run(config_file = '~/bitcoinpy.cfg'):
+def run(config_file = '~/.bitcoinpy.cfg'):
     # check if configuration file exists
     if not os.path.isfile(os.path.expanduser(config_file)):
         print('No configuration file: {0}'.format(config_file))
-        os.exit(1)
+        sys.exit(1)
 
     settings = {}
     f = open(os.path.expanduser(config_file))
