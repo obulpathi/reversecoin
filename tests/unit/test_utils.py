@@ -1,6 +1,6 @@
 import unittest
 
-import utils
+from timevault.bitcoin import utils
 
 class TestUtils(unittest.TestCase):
     def setUp(self):
