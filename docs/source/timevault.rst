@@ -1,14 +1,7 @@
-The :mod:`timevault` Modules
-=======================================
+``timevault`` package
+=====================
 
 .. automodule:: timevault.bitcoinpy
     :members:
     :undoc-members:
     :show-inheritance:
-
-
-**Sub-Modules:**
-
-.. toctree::
-
-   timevault.bitcoinpy
