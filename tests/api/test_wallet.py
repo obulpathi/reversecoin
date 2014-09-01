@@ -111,7 +111,6 @@ class TestWallet(TestBase):
         self.assertIsNotNone(address)
 
 
-    @unittest.skip('reason')
     def test_send(self):
         # wait until blocks are generated
         info = waituntilblocksgenerated(self.connection)

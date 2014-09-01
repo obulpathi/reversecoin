@@ -125,5 +125,5 @@ class VaultDB(object):
         cmd = "SELECT * FROM vaults"
         cursor.execute(cmd)
         for entry in cursor:
-            self.logger.debug('{0} {1} {2}'.format(entry[0], entry[1], entry[2])
+            self.logger.debug('{0} {1} {2}'.format(entry[0], entry[1], entry[2]))
         connection.close()

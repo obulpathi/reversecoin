@@ -470,7 +470,7 @@ class WalletDB(object):
                 txin.prevout = COutPoint()
                 txin.prevout.hash = received['txhash']
                 txin.prevout.n = received['n']
-                txin.scriptSig = binascii.unhexlify(received['scriptPubKey'])
+                txin.scriptSig = received['scriptPubKey']
                 tx.vin.append(txin)
                 nValueIn = nValueIn + received['value']
                 public_keys.append(subaccount['public_key'])
