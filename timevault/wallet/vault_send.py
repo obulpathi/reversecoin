@@ -18,4 +18,4 @@ amount = 20
 
 print("Transfering: %d toaddress: %s tomaster_address: %s" % \
      (amount, toaddress, tomaster_address))
-wallet.sendtovault(toaddress, tomaster_address, timeout, amount)
+print wallet.sendtovault(toaddress, tomaster_address, timeout, amount)

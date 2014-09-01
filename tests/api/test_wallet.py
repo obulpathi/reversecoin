@@ -104,15 +104,18 @@ class TestWallet(TestBase):
             timeout, amount)
         self.assertIsNotNone(vault_address)
 
-        while True:
+        test_vault = None
+        flag = False
+        while not flag:
             vaults = self.connection.getvaults()
             for vault in vaults:
                 if vault['address'] == vault_address and vault['balance'] > 0:
-                    break
+                    test_vault = vault
+                    flag = True
             time.sleep(1)
 
         # check if the new balance is reflected
-        self.assertEqual(vaults[vault_address]['balance'], amount)
+        self.assertEqual(int(test_vault['balance']), amount)
 
 
     @unittest.skip("Not Implemented")

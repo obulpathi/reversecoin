@@ -1,4 +1,4 @@
-import bitcoinrpc
+from timevault import bitcoinrpc
 
 class Wallet(object):
     def __init__(self):
@@ -26,13 +26,13 @@ class Wallet(object):
         return self.connection.getpendingtransactions()
 
     def sendtovault(self, toaddress, tomaster_address, timeout, amount):
-        self.connection.sendtovault(toaddress, tomaster_address, timeout, amount)
+        return self.connection.sendtovault(toaddress, tomaster_address, timeout, amount)
 
     def withdrawfromvault(self, fromaddress, toaddress, amount):
-        self.connection.withdrawfromvault(fromaddress, toaddress, amount)
+        return self.connection.withdrawfromvault(fromaddress, toaddress, amount)
 
     def overridevault(self, fromaddress, toaddress, amount):
-        self.connection.overridevaulttx(fromaddress, toaddress, amount)
+        return self.connection.overridevaulttx(fromaddress, toaddress, amount)
 
     def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
-        self.connection.fastwithdrawfromvault(fromaddress, toaddress, amount)
+        return self.connection.fastwithdrawfromvault(fromaddress, toaddress, amount)
