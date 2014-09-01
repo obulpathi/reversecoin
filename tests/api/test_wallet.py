@@ -111,6 +111,7 @@ class TestWallet(TestBase):
         self.assertIsNotNone(address)
 
 
+    @unittest.skip('reason')
     def test_send(self):
         # wait until blocks are generated
         info = waituntilblocksgenerated(self.connection)
@@ -141,7 +142,6 @@ class TestWallet(TestBase):
         vault = waituntilvaultupdated(self.connection, vaultaddress)
         self.assertEqual(int(vault['balance']), amount)
 
-
     def test_vault_withdraw(self):
         # wait until blocks are generated
         info = waituntilblocksgenerated(self.connection)
@@ -170,17 +170,17 @@ class TestWallet(TestBase):
         info = waituntilblocksgenerated(self.connection)
         self.assertTrue(info.blocks >= -1)
 
-        vaultaddress, amount = vaultsend(self.connection)
+        vaultaddress, vaultamount = vaultsend(self.connection)
         self.assertIsNotNone(vaultaddress)
 
         # wait for vault to get updated
         vault = waituntilvaultupdated(self.connection, vaultaddress)
-        self.assertEqual(int(vault['balance']), amount)
+        self.assertEqual(int(vault['balance']), vaultamount)
 
         # initiate vault withdraw
         fromaddress = vaultaddress
         toaddress = self.connection.getnewaddress()
-        amount = random.randint(0, amount)
+        amount = random.randint(0, vaultamount-1)
         self.connection.withdrawfromvault(fromaddress, toaddress, amount)
 
         # wait until withdraw begins
@@ -190,13 +190,12 @@ class TestWallet(TestBase):
         # initiate vault override
         fromaddress = vaultaddress
         toaddress = self.connection.getnewaddress()
-        amount = random.randint(0, amount)
-        self.connection.vaultoverride(fromaddress, toaddress, amount)
+        amount = vaultamount - 2
+        self.connection.overridevaulttx(fromaddress, toaddress, amount)
 
         # check for updated balance
         subaccount = waituntilaccountupdated(self.connection, toaddress)
         self.assertEqual(int(subaccount['balance']), amount)
-
 
     def test_vault_fast_withdraw(self):
         # wait until blocks are generated

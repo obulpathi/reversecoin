@@ -132,7 +132,7 @@ def run(config_file = '~/.bitcoinpy.cfg'):
 
     # start HTTP server for JSON-RPC
     rpcexec = rpc.RPCExec(peermgr, mempool, chaindb, walletdb, settings['rpcuser'], settings['rpcpass'])
-    rpcserver = gevent.pywsgi.WSGIServer(('', settings['rpcport']), rpcexec.handle_request)
+    rpcserver = gevent.pywsgi.WSGIServer(('', settings['rpcport']),  rpcexec.handle_request, log = None)
     rpc_server_thread = gevent.Greenlet(rpcserver.serve_forever)
     threads.append(rpc_server_thread)
 
