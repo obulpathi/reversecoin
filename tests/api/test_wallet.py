@@ -16,6 +16,26 @@ class VaultMiner(threading.Thread):
      def run(self):
          os.system('vaultminer')
 
+def vault_send(connection):
+    account = connection.getaccount('account')
+
+    # wait until you have generated some blocks
+    while True:
+        info = connection.getinfo()
+        if info.blocks > 1:
+            break
+        time.sleep(1)
+
+    # generate toaddresses
+    toaddress = connection.getnewaddress()
+    tomaster_address = connection.getnewaddress()
+    timeout = random.randint(0, 50)
+    amount = random.randint(0, 50)
+
+    vaultaddress = connection.sendtovault(toaddress, tomaster_address,
+        timeout, amount)
+    return vaultaddress, amount
+
 class TestWallet(TestBase):
     @classmethod
     def setUpClass(cls):
@@ -86,37 +106,17 @@ class TestWallet(TestBase):
 
 
     def test_vault_send(self):
-        account = self.connection.getaccount(self.account)
+        vaultaddress, amount = vault_send(self.connection)
+        self.assertIsNotNone(vaultaddress)
 
-        # wait until you have generated some blocks
+        # check for updated balance
         while True:
-            info = self.connection.getinfo()
-            if info.blocks > 1:
+            vaults = self.connection.getvaults()
+            vault = vaults[vaultaddress]
+            if vault['balance'] > 0:
+                self.assertEqual(int(vault['balance']), amount)
                 break
             time.sleep(1)
-
-        # generate toaddresses
-        toaddress = self.connection.getnewaddress()
-        tomaster_address = self.connection.getnewaddress()
-        timeout = random.randint(0, 50)
-        amount = random.randint(0, 50)
-
-        vault_address = self.connection.sendtovault(toaddress, tomaster_address,
-            timeout, amount)
-        self.assertIsNotNone(vault_address)
-
-        test_vault = None
-        flag = False
-        while not flag:
-            vaults = self.connection.getvaults()
-            for vaultname, vault in vaults.iteritems():
-                if vaultname == vault_address and vault['balance'] > 0:
-                    test_vault = vault
-                    flag = True
-            time.sleep(1)
-
-        # check if the new balance is reflected
-        self.assertEqual(int(test_vault['balance']), amount)
 
 
     @unittest.skip("Not Implemented")
@@ -125,26 +125,10 @@ class TestWallet(TestBase):
 
 
     def test_vault_fast_withdraw(self):
-        account = self.connection.getaccount(self.account)
-
-        # wait until you have generated some blocks
-        while True:
-            info = self.connection.getinfo()
-            if info.blocks > 1:
-                break
-            time.sleep(1)
-
-        # generate toaddresses
-        toaddress = self.connection.getnewaddress()
-        tomaster_address = self.connection.getnewaddress()
-        timeout = random.randint(0, 50)
-        amount = random.randint(0, 50)
-
-        vaultaddress = self.connection.sendtovault(toaddress, tomaster_address,
-            timeout, amount)
+        vaultaddress, amount = vault_send(self.connection)
         self.assertIsNotNone(vaultaddress)
 
-        # check for updates balance
+        # check for updated balance
         while True:
             vaults = self.connection.getvaults()
             vault = vaults[vaultaddress]
