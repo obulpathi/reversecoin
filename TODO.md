@@ -6,10 +6,10 @@ BUGS
 * Cache Coherency: Undo deleting cache items
 * Remove hardcoded fees
 * Remove hardcoded timeout for vault
+* Migrate minimum fee check to client side
 * Immediate flush and sync of blockchain upon block generation
 * One source for all kind of wallet questions
 * Balance active on vaults and pending transfers at the same time
-* Migrate minimum fee check to client side
 * Vault Address format: scriptSig to vault address
 * Enforce single vault per address
 * If same address appears in output tx twice, one txout is getting
@@ -21,9 +21,9 @@ BUGS
 
 FEATURES
 --------
+* Add test cases
 * Transaction and Block Propagation
 * Validate transactions
-* Add test cases
 * Installation using python wheels
 * Documentation for installation
 * PEP8 and flake check

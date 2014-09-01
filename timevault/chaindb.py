@@ -222,10 +222,12 @@ class ChainDb(object):
         self.mempool.add(tx)
 
     def sendtovault(self, toaddress, tomaster_address, timeout, amount):
-        tx = self.wallet.sendtovault(toaddress, tomaster_address, timeout, amount)
+        vault_address, tx = self.wallet.sendtovault(toaddress, tomaster_address,
+            timeout, amount)
         tx.calc_sha256()
         self.mempool.add(tx)
         self.logger.debug("Adding to vault: %064x" % tx.sha256)
+        return vault_address
 
     def withdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.withdrawfromvault(fromaddress, toaddress, amount)

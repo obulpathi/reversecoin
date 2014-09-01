@@ -77,7 +77,7 @@ class BitcoinRPC:
         return self.rpc('getblockcount')
     def getwork(self, data=None):
         self.logger.debug("Sleeping before going for get work")
-        sleep(2)
+        sleep(1)
         return self.rpc('getwork', data)
 
 def uint32(x):

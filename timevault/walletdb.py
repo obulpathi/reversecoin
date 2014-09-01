@@ -595,7 +595,7 @@ class WalletDB(object):
         # push data to vault
         tx.calc_sha256()
         self.set("vault:" + vault_address, {'txhash': tx.sha256})
-        return tx
+        return (vault_address, tx)
 
 
     # withdraw from vault
