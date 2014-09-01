@@ -16,7 +16,7 @@ class VaultMiner(threading.Thread):
      def run(self):
          os.system('vaultminer')
 
-def vault_send(connection):
+def vaultsend(connection):
     account = connection.getaccount('account')
 
     # wait until you have generated some blocks
@@ -36,6 +36,42 @@ def vault_send(connection):
         timeout, amount)
     return vaultaddress, amount
 
+
+def waituntilvaultupdated(connection, vaultaddress):
+    # check for updated balance
+    while True:
+        vaults = connection.getvaults()
+        vault = vaults[vaultaddress]
+        if vault['balance'] > 0:
+            return vault
+        time.sleep(1)
+
+def waituntilvaultempty(connection, vaultaddress):
+    # check for updated balance
+    while True:
+        vaults = connection.getvaults()
+        vault = vaults[vaultaddress]
+        if int(vault['balance']) == 0:
+            return vault
+        time.sleep(1)
+
+def waituntilaccountupdated(connection, address):
+    # check for updated balance
+    while True:
+        account = connection.getaccount('account')
+        subaccount = account[address]
+        if subaccount['balance'] > 0:
+            return subaccount
+        time.sleep(1)
+
+def waituntilblocksgenerated(connection):
+    # wait until you have generated some blocks
+    while True:
+        info = connection.getinfo()
+        if info.blocks > 1:
+            return info
+        time.sleep(1)
+
 class TestWallet(TestBase):
     @classmethod
     def setUpClass(cls):
@@ -44,6 +80,7 @@ class TestWallet(TestBase):
         vaultd.start()
         miner.start()
         time.sleep(2)
+
 
     def setUp(self):
         rpcuser = "user"
@@ -55,7 +92,6 @@ class TestWallet(TestBase):
 
     def test_account(self):
         account = self.connection.getaccount(self.account)
-
         self.assertIsInstance(account, dict)
         for subaccount in account.itervalues():
             self.assertIn('address', subaccount)
@@ -65,27 +101,20 @@ class TestWallet(TestBase):
 
 
     def test_info(self):
-        info = self.connection.getinfo()
-
+        # wait until blocks are generated
+        info = waituntilblocksgenerated(self.connection)
         self.assertTrue(info.blocks >= -1)
 
 
     def test_newaddress(self):
         address = self.connection.getnewaddress()
-
         self.assertIsNotNone(address)
 
 
-    @unittest.skip("Need to fix the walletdb")
     def test_send(self):
-        account = self.connection.getaccount(self.account)
-
-        # wait until you have generated some blocks
-        while True:
-            info = self.connection.getinfo()
-            if info.blocks > 1:
-                break
-            time.sleep(1)
+        # wait until blocks are generated
+        info = waituntilblocksgenerated(self.connection)
+        self.assertTrue(info.blocks >= -1)
 
         # generate a new toaddress
         toaddress = self.connection.getnewaddress()
@@ -95,47 +124,91 @@ class TestWallet(TestBase):
         account = self.connection.getaccount(self.account)
         self.assertIn(toaddress, account)
 
-        while True:
-            account = self.connection.getaccount(self.account)
-            if account[toaddress]['balance'] > 0:
-                break
-            time.sleep(1)
-
-        # check if the new balance is reflected
-        self.assertEqual(account[toaddress]['balance'], amount)
+        # wait for account to get updated
+        subaccount = waituntilaccountupdated(self.connection, toaddress)
+        self.assertEqual(int(subaccount['balance']), amount)
 
 
     def test_vault_send(self):
-        vaultaddress, amount = vault_send(self.connection)
+        # wait until blocks are generated
+        info = waituntilblocksgenerated(self.connection)
+        self.assertTrue(info.blocks >= -1)
+
+        vaultaddress, amount = vaultsend(self.connection)
         self.assertIsNotNone(vaultaddress)
 
-        # check for updated balance
-        while True:
-            vaults = self.connection.getvaults()
-            vault = vaults[vaultaddress]
-            if vault['balance'] > 0:
-                self.assertEqual(int(vault['balance']), amount)
-                break
-            time.sleep(1)
+        # wait for vault to get updated
+        vault = waituntilvaultupdated(self.connection, vaultaddress)
+        self.assertEqual(int(vault['balance']), amount)
 
 
-    @unittest.skip("Not Implemented")
     def test_vault_withdraw(self):
-        pass
+        # wait until blocks are generated
+        info = waituntilblocksgenerated(self.connection)
+        self.assertTrue(info.blocks >= -1)
+
+        vaultaddress, amount = vaultsend(self.connection)
+        self.assertIsNotNone(vaultaddress)
+
+        # wait for vault to get updated
+        vault = waituntilvaultupdated(self.connection, vaultaddress)
+        self.assertEqual(int(vault['balance']), amount)
+
+        # initiate vault withdraw
+        fromaddress = vaultaddress
+        toaddress = self.connection.getnewaddress()
+        amount = random.randint(0, amount)
+        self.connection.withdrawfromvault(fromaddress, toaddress, amount)
+
+        # wait for account to get updated
+        subaccount = waituntilaccountupdated(self.connection, toaddress)
+        self.assertEqual(int(subaccount['balance']), amount)
+
+
+    def test_vault_override(self):
+        # wait until blocks are generated
+        info = waituntilblocksgenerated(self.connection)
+        self.assertTrue(info.blocks >= -1)
+
+        vaultaddress, amount = vaultsend(self.connection)
+        self.assertIsNotNone(vaultaddress)
+
+        # wait for vault to get updated
+        vault = waituntilvaultupdated(self.connection, vaultaddress)
+        self.assertEqual(int(vault['balance']), amount)
+
+        # initiate vault withdraw
+        fromaddress = vaultaddress
+        toaddress = self.connection.getnewaddress()
+        amount = random.randint(0, amount)
+        self.connection.withdrawfromvault(fromaddress, toaddress, amount)
+
+        # wait until withdraw begins
+        vault = waituntilvaultempty(self.connection, vaultaddress)
+        self.assertEqual(int(vault['balance']), 0)
+
+        # initiate vault override
+        fromaddress = vaultaddress
+        toaddress = self.connection.getnewaddress()
+        amount = random.randint(0, amount)
+        self.connection.vaultoverride(fromaddress, toaddress, amount)
+
+        # check for updated balance
+        subaccount = waituntilaccountupdated(self.connection, toaddress)
+        self.assertEqual(int(subaccount['balance']), amount)
 
 
     def test_vault_fast_withdraw(self):
-        vaultaddress, amount = vault_send(self.connection)
+        # wait until blocks are generated
+        info = waituntilblocksgenerated(self.connection)
+        self.assertTrue(info.blocks >= -1)
+
+        vaultaddress, amount = vaultsend(self.connection)
         self.assertIsNotNone(vaultaddress)
 
-        # check for updated balance
-        while True:
-            vaults = self.connection.getvaults()
-            vault = vaults[vaultaddress]
-            if vault['balance'] > 0:
-                self.assertEqual(int(vault['balance']), amount)
-                break
-            time.sleep(1)
+        # wait for vault to get updated
+        vault = waituntilvaultupdated(self.connection, vaultaddress)
+        self.assertEqual(int(vault['balance']), amount)
 
         # initiate fast withdraw
         fromaddress = vaultaddress
@@ -143,14 +216,10 @@ class TestWallet(TestBase):
         amount = random.randint(0, amount)
         self.connection.fastwithdrawfromvault(fromaddress, toaddress, amount)
 
-        # check for updates balance
-        while True:
-            account = self.connection.getaccount(self.account)
-            subaccount = account[toaddress]
-            if subaccount['balance'] > 0:
-                self.assertEqual(int(subaccount['balance']), amount)
-                break
-            time.sleep(1)
+        # wait for account to get updated
+        subaccount = waituntilaccountupdated(self.connection, toaddress)
+        self.assertEqual(int(subaccount['balance']), amount)
+
 
     def tearDown(self):
         pass

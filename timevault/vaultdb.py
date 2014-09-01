@@ -40,7 +40,7 @@ class VaultDB(object):
         cmd = "INSERT INTO vaults VALUES(?, ?, ?)"
         for tx in txs:
             values = (str(tx.sha256), str(utils.tx_to_vault_address(tx)),
-                datetime.now() + timedelta(seconds=10000)) #FIXME
+                datetime.now() + timedelta(seconds=20)) #FIXME
             cursor.execute(cmd, values)
         connection.commit()
         connection.close()
