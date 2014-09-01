@@ -3,7 +3,6 @@ TODO
 
 BUGS
 ----
-* Balance: Vault override transaction: txhash mismatch
 * Cache Coherency: Undo deleting cache items
 * Remove hardcoded fees
 * Remove hardcoded timeout for vault
@@ -22,21 +21,18 @@ BUGS
 
 FEATURES
 --------
-* Validate transactions
 * Transaction and Block Propagation
-* CLEANUP and BUGS
-* Redo code layout
+* Validate transactions
+* Add test cases
 * Installation using python wheels
 * Documentation for installation
 * PEP8 and flake check
-* Add test cases
 * Add documentation and notes
 * Support for pay to script hash
 * Support for multisig transactions
 * Vault rate control
 * Wallet compatibility
 * Support for stratum miner
-* Support for all RPC function calls
 * Mining Pool
 * Exchange
 * Monitoring System
