@@ -76,7 +76,7 @@ def accountToJSON(account):
     return account
 
 def vaultsToJSON(vaults):
-    for vault in vaults:
+    for vaultname, vault in vaults.iteritems():
         vault['public_key'] = binascii.hexlify(vault['pubkey'])
         vault['private_key'] = binascii.hexlify(vault['privkey'])
         # FIXME: make both of them in same format and remove this

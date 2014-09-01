@@ -1,4 +1,5 @@
 import os
+import sys
 import random
 import time
 import threading
@@ -46,7 +47,7 @@ class TestWallet(TestBase):
     def test_info(self):
         info = self.connection.getinfo()
 
-        self.assertTrue(info.blocks >= 1)
+        self.assertTrue(info.blocks >= -1)
 
 
     def test_newaddress(self):
@@ -108,8 +109,8 @@ class TestWallet(TestBase):
         flag = False
         while not flag:
             vaults = self.connection.getvaults()
-            for vault in vaults:
-                if vault['address'] == vault_address and vault['balance'] > 0:
+            for vaultname, vault in vaults.iteritems():
+                if vaultname == vault_address and vault['balance'] > 0:
                     test_vault = vault
                     flag = True
             time.sleep(1)
@@ -123,7 +124,6 @@ class TestWallet(TestBase):
         pass
 
 
-    @unittest.skip("Not Implemented")
     def test_vault_fast_withdraw(self):
         account = self.connection.getaccount(self.account)
 
@@ -140,21 +140,33 @@ class TestWallet(TestBase):
         timeout = random.randint(0, 50)
         amount = random.randint(0, 50)
 
-        self.connection.sendtovault(toaddress, tomaster_address, timeout, amount)
+        vaultaddress = self.connection.sendtovault(toaddress, tomaster_address,
+            timeout, amount)
+        self.assertIsNotNone(vaultaddress)
 
-        vaults = wallet.getvaults()
-        for n, vault in enumerate(vaults):
-            print "Id: ", n, vault['address']  + ": ", vault['balance']
-        index = int(input("Enter the id of the vault you want to transfer balance from: "))
-        fromaddress = vaults[index]['address']
-        amount = int(input("Enter the balance to transfer from: {}: ".format(fromaddress)))
-        if vaults[index]['balance'] < amount + 2:
-            print("In sufficient balance in vault, quitting")
-            exit(2)
+        # check for updates balance
+        while True:
+            vaults = self.connection.getvaults()
+            vault = vaults[vaultaddress]
+            if vault['balance'] > 0:
+                self.assertEqual(int(vault['balance']), amount)
+                break
+            time.sleep(1)
 
-        print("Transfering: " + str(amount) + "\tfrom address: " + fromaddress + "\tto address: " + toaddress)
-        wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
+        # initiate fast withdraw
+        fromaddress = vaultaddress
+        toaddress = self.connection.getnewaddress()
+        amount = random.randint(0, amount)
+        self.connection.fastwithdrawfromvault(fromaddress, toaddress, amount)
 
+        # check for updates balance
+        while True:
+            account = self.connection.getaccount(self.account)
+            subaccount = account[toaddress]
+            if subaccount['balance'] > 0:
+                self.assertEqual(int(subaccount['balance']), amount)
+                break
+            time.sleep(1)
 
     def tearDown(self):
         pass

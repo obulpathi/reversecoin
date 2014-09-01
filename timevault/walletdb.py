@@ -287,7 +287,7 @@ class WalletDB(object):
         """
 
         #FIXME: format vault accounts in same form as general accounts
-        accounts = []
+        accounts = {}
         for vaultaccount in vaultaccounts:
             subaccount = {}
             subaccount ['address'] = vaultaccount['name']
@@ -298,7 +298,7 @@ class WalletDB(object):
             #subaccount['balance'] = vaultaccount['amount']
             subaccount['balance'] = self.chaindb.getsavings(vaultaccount['name'])
             subaccount['received'] = self.chaindb.listreceivedbyvault(vault).values()
-            accounts.append(subaccount)
+            accounts[vaultaccount['name']] = subaccount
         return accounts
 
 
