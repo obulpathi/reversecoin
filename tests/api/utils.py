@@ -11,7 +11,7 @@ class VaultMiner(threading.Thread):
      def run(self):
          os.system('vaultminer')
 
-def vaultsend(connection):
+def send_to_vault(connection, amount):
     account = connection.getaccount('account')
 
     # wait until you have generated some blocks
@@ -25,14 +25,13 @@ def vaultsend(connection):
     toaddress = connection.getnewaddress()
     tomaster_address = connection.getnewaddress()
     timeout = random.randint(0, 50)
-    amount = random.randint(0, 50)
 
     vaultaddress = connection.sendtovault(toaddress, tomaster_address,
         timeout, amount)
-    return vaultaddress, amount
+    return vaultaddress
 
 
-def waituntilvaultupdated(connection, vaultaddress):
+def wait_until_vault_has_balance(connection, vaultaddress):
     # check for updated balance
     while True:
         vaults = connection.getvaults()
@@ -41,7 +40,7 @@ def waituntilvaultupdated(connection, vaultaddress):
             return vault
         time.sleep(1)
 
-def waituntilvaultempty(connection, vaultaddress):
+def wait_until_vault_is_empty(connection, vaultaddress):
     # check for updated balance
     while True:
         vaults = connection.getvaults()
@@ -50,7 +49,7 @@ def waituntilvaultempty(connection, vaultaddress):
             return vault
         time.sleep(1)
 
-def waituntilaccountupdated(connection, address):
+def wait_until_account_has_balance(connection, address):
     # check for updated balance
     while True:
         account = connection.getaccount('account')
@@ -59,7 +58,7 @@ def waituntilaccountupdated(connection, address):
             return subaccount
         time.sleep(1)
 
-def waituntilblocksgenerated(connection):
+def wait_until_blocks_are_generated(connection):
     # wait until you have generated some blocks
     while True:
         info = connection.getinfo()
