@@ -16,14 +16,12 @@ class TestWallet(base.TestBase):
         miner.start()
         time.sleep(2)
 
-
     def setUp(self):
         rpcuser = "user"
         rpcpass = "passwd"
         self.account = "account"
         self.connection = bitcoinrpc.connect_to_remote(
             rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
-
 
     def test_account(self):
         account = self.connection.getaccount(self.account)
@@ -34,17 +32,14 @@ class TestWallet(base.TestBase):
             self.assertIn('private_key', subaccount)
             self.assertIn('balance', subaccount)
 
-
     def test_info(self):
         # wait until blocks are generated
         info = utils.wait_until_blocks_are_generated(self.connection)
         self.assertTrue(info.blocks >= -1)
 
-
     def test_newaddress(self):
         address = self.connection.getnewaddress()
         self.assertIsNotNone(address)
-
 
     def test_send(self):
         # wait until blocks are generated
@@ -62,7 +57,6 @@ class TestWallet(base.TestBase):
         # wait for account to get updated
         subaccount = utils.wait_until_account_has_balance(self.connection, toaddress)
         self.assertEqual(int(subaccount['balance']), amount)
-
 
     def test_vault_send(self):
         # wait until blocks are generated
@@ -100,7 +94,6 @@ class TestWallet(base.TestBase):
         subaccount = utils.wait_until_account_has_balance(self.connection, toaddress)
         self.assertEqual(int(subaccount['balance']), amount)
 
-
     def test_multiple_vault_withdraws(self):
         # wait until blocks are generated
         info = utils.wait_until_blocks_are_generated(self.connection)
@@ -117,20 +110,21 @@ class TestWallet(base.TestBase):
         # initiate vault withdraw
         fromaddress = vaultaddress
         toaddress = self.connection.getnewaddress()
-        withdrawamount = random.randint(0, amount)
+        withdrawamount = random.randint(0, amount/2)
         self.connection.withdrawfromvault(fromaddress, toaddress, withdrawamount)
 
         # wait for account to get updated
         subaccount = utils.wait_until_account_has_balance(self.connection, toaddress)
         self.assertEqual(int(subaccount['balance']), withdrawamount)
+        time.sleep(10)
         vault = self.connection.getvaults()[vaultaddress]
         self.assertEqual(int(vault['balance']), amount - withdrawamount - 2)
 
-        amount = amount - withdrawamount - 2
+        amount = int(vault['balance'])
         # initiate another vault withdraw
         fromaddress = vaultaddress
         toaddress = self.connection.getnewaddress()
-        withdrawamount = random.randint(0, amount)
+        withdrawamount = random.randint(0, amount/2)
         self.connection.withdrawfromvault(fromaddress, toaddress, withdrawamount)
 
         # wait for account to get updated
@@ -195,10 +189,8 @@ class TestWallet(base.TestBase):
         subaccount = utils.wait_until_account_has_balance(self.connection, toaddress)
         self.assertEqual(int(subaccount['balance']), amount)
 
-
     def tearDown(self):
         pass
-
 
     @classmethod
     def tearDownClass(cls):

@@ -9,7 +9,7 @@ for subaccount in account.itervalues():
 
 print ('\nVaults')
 vaults = wallet.getvaults()
-for vault in vaults:
+for vault in vaults.itervalues():
     print vault['address']  + ": ", vault['balance']
 
 print ('\nPending Transfers')

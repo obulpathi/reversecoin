@@ -157,7 +157,7 @@ class Miner:
             self.logger.debug("nonce: {0}".format(l))
             # proof-of-work test:  hash < target
             if l < target:
-                self.logger.debug("PROOF-OF-WORK found: %064x".format(l))
+                self.logger.debug("PROOF-OF-WORK found: {0}".format(l))
                 return (nonce + 1, nonce_bin)
             else:
                 self.logger.debug("PROOF-OF-WORK found: false positive %064x".format(l))
@@ -193,9 +193,9 @@ class Miner:
             self.max_nonce = 0xfffffffaL
 
         if settings['hashmeter']:
-            self.logger.debug("HashMeter(%d): %d hashes, %.2f Khash/sec".format(
+            self.logger.debug("HashMeter({0}): {1} hashes, {2} Khash/sec".format(
                   self.id, hashes_done,
-                  (hashes_done / 1000.0) / time_diff))
+                  round((hashes_done / 1000.0) / time_diff, 2)))
 
         if nonce_bin is not None:
             self.submit_work(rpc, work['data'], nonce_bin)
@@ -263,13 +263,13 @@ def run(config_file = "~/.vaultminer.cfg"):
         time.sleep(1)           # stagger threads
 
     logger.debug("{0} mining threads started".format(settings['threads']))
-    logger.debug("Miner Starts - %s:%s".format(settings['host'], settings['port']))
+    logger.debug("Miner Starts - {0}:{1}".format(settings['host'], settings['port']))
     try:
         for thr_proc in thr_list:
             thr_proc.join()
     except KeyboardInterrupt:
         pass
-    logger.debug("Miner Stops - %s:%s".format(settings['host'], settings['port']))
+    logger.debug("Miner Stops - {0}:{1}".format(settings['host'], settings['port']))
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:

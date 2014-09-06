@@ -58,16 +58,14 @@ class VaultDB(object):
         for tx in txs:
             if tx.is_coinbase():
                 continue
-            new_tx = copy.deepcopy(tx)
-            for txin in new_tx.vin:
+            for txin in tx.vin:
                 # if this is confirmed vault transaction, add it to confirmed txs
                 if txin.scriptSig[0] == chr(script.OP_VAULT_CONFIRM):
                     txin.scriptSig = chr(script.OP_VAULT_WITHDRAW) + txin.scriptSig[1:]
-                    new_tx.calc_sha256()
-                    values = (str(new_tx.sha256),)
+                    tx.calc_sha256()
+                    values = (str(tx.sha256),)
                     cursor.execute(cmd_confirmed, values)
-                    #break
-                if txin.scriptSig[0] == chr(script.OP_VAULT_OVERRIDE):
+                elif txin.scriptSig[0] == chr(script.OP_VAULT_OVERRIDE):
                     fromaddress = str(utils.scriptSig_to_vault_address(txin.scriptSig))
                     values = (fromaddress,)
                     cursor.execute(cmd_override, values)

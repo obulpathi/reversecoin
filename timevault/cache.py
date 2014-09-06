@@ -27,9 +27,3 @@ class Cache(object):
 
 	def exists(self, k):
 		return k in self.d
-
-	# TODO(obulpathi): remove me and my dependencies
-	def delete(self, k):
-		if k in self.d:
-			del self.d[k]
-			self.l.remove(k)

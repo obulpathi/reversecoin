@@ -250,7 +250,6 @@ class ChainDb(object):
             heightidx = HeightIdx()
             heightidx.deserialize(data)
             blkhash = heightidx.blocks[0]
-            self.blk_cache.delete(blkhash)
             block = self.getblock(blkhash)
 
             for tx in block.vtx:
