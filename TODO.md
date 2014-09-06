@@ -3,8 +3,6 @@ TODO
 
 BUGS
 ----
-* Cache Coherency: Undo deleting cache items
-* Balance active on vaults and pending transfers at the same time
 * Remove hardcoded fees
 * Remove hardcoded timeout for vault
 * Migrate minimum fee check to client side
