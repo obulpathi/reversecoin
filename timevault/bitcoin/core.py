@@ -203,8 +203,6 @@ class CTransaction(object):
                 return False
         return True
     def is_coinbase(self):
-        #print(len(self.vin))
-        #print(self.vin[0].prevout.is_null())
         return len(self.vin) == 1 and self.vin[0].prevout.is_null()
 
     def copy(self, old_tx):

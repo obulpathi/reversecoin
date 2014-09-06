@@ -1,9 +1,8 @@
-# ChainDb.py - bitcoin blockchain database
+# chaindb.py - bitcoin blockchain database
 #
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-import copy
 import string
 import cStringIO
 import leveldb
@@ -198,25 +197,6 @@ class ChainDb(object):
             balance = balance + txout['value']
         return balance
 
-    def getpendingtransactions(self):
-        pending_txs = {}
-        txhashs = self.vaultdb.getpendingvaulttxs()
-        for i, txhash in enumerate(txhashs):
-            pending_tx = {}
-            tx = self.gettx(txhash)
-            inputs = []
-            for txin in tx.vin:
-                inputs.append(utils.scriptSig_to_vault_address(txin.scriptSig))
-            pending_tx['inputs'] = inputs
-            outputs = []
-            for n, txout in enumerate(tx.vout):
-                output = {'toaddress': utils.output_script_to_address(txout.scriptPubKey),
-                          'amount': txout.nValue}
-                outputs.append(output)
-            pending_tx['outputs'] = outputs
-            pending_txs[str(n)] = pending_tx
-        return pending_txs
-
     def sendtoaddress(self, toaddress, amount):
         tx = self.wallet.sendtoaddress(toaddress, amount)
         self.mempool.add(tx)
@@ -245,7 +225,7 @@ class ChainDb(object):
         txouts = {}
         end_height = self.getheight()
         public_key_hash = utils.address_to_public_key_hash(address)
-        for height in xrange(end_height):
+        for height in xrange(end_height+1):
             data = self.db.Get('height:' + str(height))
             heightidx = HeightIdx()
             heightidx.deserialize(data)
@@ -283,7 +263,7 @@ class ChainDb(object):
         txouts = {}
         end_height = self.getheight()
 
-        for height in xrange(end_height):
+        for height in xrange(end_height+1):
             data = self.db.Get('height:' + str(height))
             heightidx = HeightIdx()
             heightidx.deserialize(data)
@@ -329,7 +309,7 @@ class ChainDb(object):
         txouts = {}
         end_height = self.getheight()
 
-        for height in xrange(end_height):
+        for height in xrange(end_height+1):
             data = self.db.Get('height:' + str(height))
             heightidx = HeightIdx()
             heightidx.deserialize(data)
@@ -367,6 +347,65 @@ class ChainDb(object):
                                              'value': txout.nValue, \
                                              'scriptPubKey': txout.scriptPubKey}
         return txouts
+
+
+    def listpendingtxhashes(self):
+        txhashes = []
+        end_height = self.getheight()
+
+        for height in xrange(end_height+1):
+            data = self.db.Get('height:' + str(height))
+            heightidx = HeightIdx()
+            heightidx.deserialize(data)
+            blkhash = heightidx.blocks[0]
+            block = self.getblock(blkhash)
+
+            for tx in block.vtx:
+                # if its a coinbase transaction, skip
+                if tx.is_coinbase():
+                    continue
+                for txin in tx.vin:
+                    # if not a input from vault, skip
+                    if ord(txin.scriptSig[0]) not in [OP_VAULT_WITHDRAW,
+                        OP_VAULT_CONFIRM, OP_VAULT_FAST_WITHDRAW]:
+                        continue
+                    # add a transaction is received through withdraw
+                    if txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
+                        tx.calc_sha256()
+                        self.logger.debug("Vault withdraw initiated: %d %064x" \
+                                       % (height, tx.sha256))
+                        txhashes.append(tx.sha256)
+                    # remove if a transaction is spent through vault confirm or override
+                    elif ord(txin.scriptSig[0]) in [OP_VAULT_CONFIRM,
+                        OP_VAULT_FAST_WITHDRAW]:
+                        self.logger.debug("Vault confirmed %064x" % txin.prevout.hash)
+                        print 'current list'
+                        for txhash in txhashes:
+                            print 'txhash: %064x', txhash
+                        import pdb; pdb.set_trace()
+                        txhashes.remove(txin.prevout.hash)
+        return txhashes
+
+
+    def getpendingtransactions(self):
+        pending_txs = {}
+        #txhashs = self.vaultdb.getpendingvaulttxs()
+        txhashs = self.listpendingtxhashes()
+        for i, txhash in enumerate(txhashs):
+            pending_tx = {}
+            tx = self.gettx(txhash)
+            inputs = []
+            for txin in tx.vin:
+                inputs.append(utils.scriptSig_to_vault_address(txin.scriptSig))
+            pending_tx['inputs'] = inputs
+            outputs = []
+            for n, txout in enumerate(tx.vout):
+                output = {'toaddress': utils.output_script_to_address(txout.scriptPubKey),
+                          'amount': txout.nValue}
+                outputs.append(output)
+            pending_tx['outputs'] = outputs
+            pending_txs[str(n)] = pending_tx
+        return pending_txs
 
 
     def haveblock(self, blkhash, checkorphans):
@@ -850,8 +889,7 @@ class ChainDb(object):
         # get unconfirmed vault transactions
         txhashes = self.vaultdb.getconfirmedvaulttxs()
 
-        # check to confirm that these transactions are not overwritten
-        # FIXME: TODO
+        # TODO: check to confirm that these transactions are not overwritten
 
         # confirm vault transactions
         for txhash in txhashes:
@@ -859,7 +897,9 @@ class ChainDb(object):
             for txin in tx.vin:
                 if txin.scriptSig and (txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW)):
                     txin.scriptSig = chr(OP_VAULT_CONFIRM) + txin.scriptSig[1:]
-                    self.mempool.add(tx)
+                    if not self.mempool.add(tx):
+                        print "error: tx is already in mempool"
+                        import pdb; pdb.set_trace()
         return
 
     def compute_difficulty(self, current_nbits, time_delta):
@@ -1056,7 +1096,7 @@ class ChainDb(object):
 
     def dumpblockchain(self, start_height = 0, end_height = -1):
         end_height = self.getheight()
-        for height in xrange(start_height, end_height):
+        for height in xrange(start_height, end_height+1):
             data = self.db.Get('height:' + str(height))
             heightidx = HeightIdx()
             heightidx.deserialize(data)

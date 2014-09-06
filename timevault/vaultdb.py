@@ -7,11 +7,11 @@ from datetime import datetime
 from datetime import timedelta
 import logging
 import sqlite3 as sqlite
-import copy
 import os
 import binascii
 
 from bitcoin import script
+from bitcoin import core
 import utils
 
 
@@ -59,11 +59,14 @@ class VaultDB(object):
             if tx.is_coinbase():
                 continue
             for txin in tx.vin:
-                # if this is confirmed vault transaction, add it to confirmed txs
                 if txin.scriptSig[0] == chr(script.OP_VAULT_CONFIRM):
-                    txin.scriptSig = chr(script.OP_VAULT_WITHDRAW) + txin.scriptSig[1:]
-                    tx.calc_sha256()
-                    values = (str(tx.sha256),)
+                    newtx = core.CTransaction()
+                    newtx.copy(tx)
+                    # TODO: assuming only one input
+                    newtx.vin[0].scriptSig = chr(script.OP_VAULT_WITHDRAW) + \
+                        txin.scriptSig[1:]
+                    newtx.calc_sha256()
+                    values = (str(newtx.sha256),)
                     cursor.execute(cmd_confirmed, values)
                 elif txin.scriptSig[0] == chr(script.OP_VAULT_OVERRIDE):
                     fromaddress = str(utils.scriptSig_to_vault_address(txin.scriptSig))
@@ -79,14 +82,17 @@ class VaultDB(object):
         confirmed_txs = []
         for tx in block.vtx:
             for txin in tx.vin:
+                # if coinbase, skip
+                if not txin.scriptSig:
+                    continue
                 # if this is a vault initiate transaction, add it to new txs
-                if txin.scriptSig and txin.scriptSig[0] == chr(script.OP_VAULT_WITHDRAW):
+                if txin.scriptSig[0] == chr(script.OP_VAULT_WITHDRAW):
                     new_txs.append(tx)
                 # if this is confirmed vault transaction, add it to confirmed txs
-                if txin.scriptSig and txin.scriptSig[0] == chr(script.OP_VAULT_CONFIRM):
+                if txin.scriptSig[0] == chr(script.OP_VAULT_CONFIRM):
                     confirmed_txs.append(tx)
                 # if this is override vault transaction, add it to confirmed txs
-                if txin.scriptSig and txin.scriptSig[0] == chr(script.OP_VAULT_OVERRIDE):
+                if txin.scriptSig[0] == chr(script.OP_VAULT_OVERRIDE):
                     confirmed_txs.append(tx)
         self.removeconfirmedvaulttxs(confirmed_txs)
         self.listpendingtxs()

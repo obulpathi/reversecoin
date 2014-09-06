@@ -4,8 +4,6 @@ TODO
 BUGS
 ----
 * Cache Coherency: Undo deleting cache items
-* Immediate update of blockchain upon block generation
-* One source for all kind of wallet questions
 * Balance active on vaults and pending transfers at the same time
 * Remove hardcoded fees
 * Remove hardcoded timeout for vault
@@ -16,7 +14,6 @@ BUGS
   overwritten in chaindb:listreceivedbyaddress
 * Check for vault override and vault confirm in same block: Enforce vault override and vault confirm does not happen together (new block creation)
 * Enforce that a vault override will not happen, if there is no balance / vault confirm happened
-* Run server only on localhost
 * Fix FIXMEs
 
 FEATURES

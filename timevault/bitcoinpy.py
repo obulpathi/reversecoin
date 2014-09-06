@@ -18,7 +18,6 @@ import sys
 import re
 import random
 import cStringIO
-import copy
 import shutil
 import logging
 
