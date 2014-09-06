@@ -208,13 +208,6 @@ class WalletDB(object):
             walletdb['vaults'] = dumps([])
             walletdb.sync()
             walletdb.close()
-        # create sqlitedb
-        connection = sqlite3.connect('vault.db')
-        cursor = connection.cursor()
-        # FIXME: should be executed only once
-        # cursor.execute('''CREATE TABLE vaults (txhash varchar(50), date text)''')
-        connection.commit()
-        connection.close()
 
 
     # return an account
@@ -415,14 +408,6 @@ class WalletDB(object):
         master_private_key = vault['master_private_key']
         # scriptSig = chr(len(public_key)) + public_key
         masterScriptSig = chr(len(vault['master_public_key'])) + vault['master_public_key']
-        """
-        self.logger.debug("########### Adding signature: ", binascii.hexlify(masterScriptSig))
-        public_key = vault['public_key']
-        private_key = vault['private_key'])
-        # scriptSig = chr(len(public_key)) + public_key
-        masterScriptSig = chr(len(vault['master_public_key'])) + vault['master_public_key']
-        self.logger.debug("Adding signature: ", binascii.hexlify(scriptSig))
-        """
         return [masterScriptSig]
 
 

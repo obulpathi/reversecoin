@@ -10,6 +10,9 @@ class Wallet(object):
         self.connection = bitcoinrpc.connect_to_remote(
             rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
 
+    def dumpblockchain(self):
+        self.connection.dumpblockchain()
+
     def getaccount(self, account = "account"):
         account = self.connection.getaccount(account)
         return account

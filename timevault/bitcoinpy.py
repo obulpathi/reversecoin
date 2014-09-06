@@ -35,8 +35,13 @@ from bitcoin.coredefs import NETWORKS
 def initialize(datadir):
     os.mkdir(datadir)
     os.mkdir(datadir + '/leveldb')
+
+    filepath = os.path.realpath(__file__)
+    dirpath = os.path.dirname(filepath)
+    configdir = dirpath + '/../etc'
     # create blocks.dat file
-    shutil.copy('../etc/genesis.dat', os.path.join(datadir + '/blocks.dat'))
+    shutil.copy(configdir + '/genesis.dat', os.path.join(datadir + '/blocks.dat'))
+
     # create lock file for db
     with open(datadir + '/__db.001', 'a'):
         pass
@@ -58,7 +63,6 @@ def run(config_file = '~/.bitcoinpy.cfg'):
 
     if 'host' not in settings:
         settings['host'] = '127.0.0.1'
-        settings['host'] = '0.0.0.0'
     if 'port' not in settings:
         settings['port'] = 8333
     if 'rpcport' not in settings:
@@ -68,7 +72,6 @@ def run(config_file = '~/.bitcoinpy.cfg'):
     if 'chain' not in settings:
         settings['chain'] = 'mainnet'
     chain = settings['chain']
-    # FIXME: CLEANUP
     if 'log' not in settings or (settings['log'] == '-'):
         settings['log'] = None
 
