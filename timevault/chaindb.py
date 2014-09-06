@@ -21,6 +21,7 @@ from cache import Cache
 from common import *
 from bitcoin.serialize import *
 from bitcoin.core import *
+from bitcoin import core
 from bitcoin.messages import msg_block, message_to_str, message_read
 from bitcoin.coredefs import COIN
 from bitcoin.scripteval import VerifySignature
@@ -376,13 +377,16 @@ class ChainDb(object):
                                        % (height, tx.sha256))
                         txhashes.append(tx.sha256)
                     # remove if a transaction is spent through vault confirm or override
-                    elif ord(txin.scriptSig[0]) in [OP_VAULT_CONFIRM,
-                        OP_VAULT_FAST_WITHDRAW]:
+                    elif txin.scriptSig[0] == chr(OP_VAULT_CONFIRM):
+                        newtx = core.CTransaction()
+                        newtx.copy(tx)
+                        # TODO: assuming only one input
+                        newtx.vin[0].scriptSig = chr(OP_VAULT_WITHDRAW) + \
+                            txin.scriptSig[1:]
+                        newtx.calc_sha256()
+                        txhashes.remove(newtx.sha256)
+                    elif txin.scriptSig[0] == chr(OP_VAULT_FAST_WITHDRAW):
                         self.logger.debug("Vault confirmed %064x" % txin.prevout.hash)
-                        print 'current list'
-                        for txhash in txhashes:
-                            print 'txhash: %064x', txhash
-                        import pdb; pdb.set_trace()
                         txhashes.remove(txin.prevout.hash)
         return txhashes
 
@@ -896,8 +900,14 @@ class ChainDb(object):
             tx = self.gettx(txhash)
             for txin in tx.vin:
                 if txin.scriptSig and (txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW)):
-                    txin.scriptSig = chr(OP_VAULT_CONFIRM) + txin.scriptSig[1:]
-                    if not self.mempool.add(tx):
+                    newtx = core.CTransaction()
+                    newtx.copy(tx)
+                    # TODO: assuming only one input
+                    newtx.vin[0].scriptSig = chr(OP_VAULT_CONFIRM) + \
+                        txin.scriptSig[1:]
+                    newtx.calc_sha256()
+
+                    if not self.mempool.add(newtx):
                         print "error: tx is already in mempool"
                         import pdb; pdb.set_trace()
         return

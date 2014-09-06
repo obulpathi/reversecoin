@@ -170,7 +170,7 @@ class Miner:
         solution = original_data[:152] + nonce + original_data[160:256]
         param_arr = [ solution ]
         result = rpc.getwork(param_arr)
-        self.logger.debug("--> Upstream RPC result:".format(result))
+        self.logger.debug("Upstream RPC result: {0}".format(result))
 
     def iterate(self, rpc):
         work = rpc.getwork()
