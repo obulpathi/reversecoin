@@ -202,9 +202,10 @@ class ChainDb(object):
         tx = self.wallet.sendtoaddress(toaddress, amount)
         self.mempool.add(tx)
 
-    def sendtovault(self, toaddress, tomaster_address, timeout, amount):
+    # toaddress, tomaster_address, amount, timeout, maxfees
+    def sendtovault(self, toaddress, tomaster_address, amount, timeout, maxfees):
         vault_address, tx = self.wallet.sendtovault(toaddress, tomaster_address,
-            timeout, amount)
+            amount, timeout, maxfees)
         tx.calc_sha256()
         self.mempool.add(tx)
         self.logger.debug("Adding to vault: %064x" % tx.sha256)
@@ -908,8 +909,7 @@ class ChainDb(object):
                     newtx.calc_sha256()
 
                     if not self.mempool.add(newtx):
-                        print "error: tx is already in mempool"
-                        import pdb; pdb.set_trace()
+                        self.logger.error("tx is already in mempool{0}".format(tx))
         return
 
     def compute_difficulty(self, current_nbits, time_delta):

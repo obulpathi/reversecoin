@@ -361,7 +361,7 @@ class WalletDB(object):
 
     # vault functions
     # create a new vault
-    def newvault(self, vault_name, address, master_address, amount, fees = 100):
+    def newvault(self, vault_name, address, master_address, timeout, maxfees):
         account = self.getaccount()
         for subaccount in account:
             if subaccount == address:
@@ -375,7 +375,8 @@ class WalletDB(object):
         vault = {'name' : vault_name,
                  'address': address, 'public_key': public_key, 'private_key': private_key,
                  'master_address': master_address, 'master_public_key': master_public_key,
-                 'master_private_key': master_private_key, 'amount': amount, 'fees': fees}
+                 'master_private_key': master_private_key,
+                 'timeout': timeout, 'maxfees': maxfees}
         walletdb[vault_name] = dumps(vault)
         vaults = loads(walletdb['vaults'])
         vaults.append(vault_name)
@@ -384,11 +385,9 @@ class WalletDB(object):
         walletdb.close()
 
     # return a vault
-    def getvault(self, vaultname = None):
-        self.logger.debug("Vaultname: %r %r" % (type(vaultname), vaultname))
+    def getvault(self, vaultname):
+        self.logger.debug("Vaultname: {0}".format(vaultname))
         walletdb = self.open()
-        if not vaultname:
-            vaultname = loads(walletdb['vaults'])[0]
         vault = loads(walletdb[str(vaultname)])
         walletdb.close()
         return vault
@@ -494,7 +493,7 @@ class WalletDB(object):
 
 
     # send to a vault
-    def sendtovault(self, toaddress, tomaster_address, timeout, amount):
+    def sendtovault(self, toaddress, tomaster_address, amount, timeout, maxfees):
         # select the input addresses
         funds = 0
         subaccounts = []
@@ -520,12 +519,13 @@ class WalletDB(object):
         # to the receiver
         txout = CTxOut()
         txout.nValue = amount
-        vault_address = utils.addresses_to_vault_address(toaddress, tomaster_address, timeout)
+        vault_address = utils.addresses_to_vault_address(toaddress,
+            tomaster_address, timeout, maxfees)
         txout.scriptPubKey = utils.vault_address_to_pay_to_vault_script(vault_address)
         tx.vout.append(txout)
 
-        # create vault
-        self.newvault(vault_address, toaddress, tomaster_address, amount)
+        # create vault: What is this?
+        self.newvault(vault_address, toaddress, tomaster_address, timeout, maxfees)
 
         # from the sender
         nValueIn = 0
@@ -580,6 +580,8 @@ class WalletDB(object):
         # push data to vault
         tx.calc_sha256()
         self.set("vault:" + vault_address, {'txhash': tx.sha256})
+        #import pdb; pdb.set_trace()
+        #utils.is_vault_tx(tx)
         return (vault_address, tx)
 
 
@@ -636,11 +638,10 @@ class WalletDB(object):
         key.set_pubkey(vault['public_key'])
         key.set_privkey(vault['private_key'])
         signature = key.sign(txhash)
-        # get the script
-        timeout = 100
-        script = utils.addresses_to_vault_script(vault['address'], \
-            vault['master_address'], timeout)
-        scriptSig = chr(OP_VAULT_WITHDRAW) + chr(len(signature)) + signature + script
+        vaultscript = utils.create_vault_script(vault['address'], \
+            vault['master_address'], vault['timeout'], vault['maxfees'])
+        scriptSig = chr(OP_VAULT_WITHDRAW) + chr(len(signature)) + signature + \
+                chr(len(vaultscript)) + vaultscript
         self.logger.debug("Adding signature: %s" % binascii.hexlify(scriptSig))
         txin.scriptSig = scriptSig
         return tx
@@ -691,11 +692,11 @@ class WalletDB(object):
         key.set_privkey(vault['private_key'])
         signature = key.sign(txhash)
         # get the script
-        timeout = 100
-        script = utils.addresses_to_vault_script(vault['address'], \
-            vault['master_address'], timeout)
+        vaultscript = utils.create_vault_script(vault['address'], \
+                vault['master_address'], vault['timeout'], vault['maxfees'])
         scriptSig = chr(OP_VAULT_OVERRIDE) + chr(len(vault['master_public_key'])) + \
-        vault['master_public_key'] + chr(len(signature)) + signature + script
+        vault['master_public_key'] + chr(len(signature)) + signature + \
+        chr(len(vaultscript)) + vaultscript
         self.logger.debug("Adding signature: %s" % binascii.hexlify(scriptSig))
         txin.scriptSig = scriptSig
         return tx
@@ -703,12 +704,13 @@ class WalletDB(object):
 
     # fast withdraw from vault
     def fastwithdrawfromvault(self, fromvaultaddress, toaddress, amount):
-        # select the input addresses
-        funds = 0
-        vault = self.getvault(fromvaultaddress)
-        if vault['amount'] + utils.calculate_fees(None) < amount:
+        funds = self.chaindb.getsavings(fromvaultaddress)
+        if funds < amount + utils.calculate_fees(None):
             self.logger.warning("In sufficient funds in vault, exiting, return")
             return
+
+        # get the vault keys
+        vault = self.getvault(fromvaultaddress)
 
         # create transaction
         tx = CTransaction()
@@ -758,11 +760,11 @@ class WalletDB(object):
         mkey.set_privkey(vault['master_private_key'])
         signature = mkey.sign(txhash)
         # get the script
-        timeout = 100
-        script = utils.addresses_to_vault_script(vault['address'], \
-            vault['master_address'], timeout)
+        vaultscript = utils.create_vault_script(vault['address'], \
+                vault['master_address'], vault['timeout'], vault['maxfees'])
         scriptSig = chr(OP_VAULT_FAST_WITHDRAW)+chr(len(vault['master_public_key'])) \
-        + vault['master_public_key'] + chr(len(signature)) + signature + script
+        + vault['master_public_key'] + chr(len(signature)) + signature + \
+        chr(len(vaultscript)) + vaultscript
         self.logger.debug("Adding signature: %s" % binascii.hexlify(scriptSig))
         txin.scriptSig = scriptSig
         return tx

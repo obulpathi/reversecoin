@@ -77,19 +77,24 @@ def public_key_hex_to_address(public_key_hex):
     address = encode(binary_address)
     return address
 
-
-def addresses_to_vault_address(address, master_address, timeout):
-    timeout = 100 # FIXME: remove hardcoding
-    fees = 10000 # FIXME: remove hardcoding
+def create_vault_script(address, master_address, timeout, maxfees):
+    # FIXME: configurable constants and lengths etc ...
     if timeout > 100:
         timeout = 100
-    if fees > 10000:
-        fees = 10000
+    if maxfees > 10000:
+        maxfees = 10000
+    timeout_hex = hex(timeout)[2:].zfill(2)
+    maxfees_hex = hex(maxfees)[2:].zfill(4)
     pubkey_hash_hex = address_to_public_key_hash_hex(address)
     master_pubkey_hash_hex = address_to_public_key_hash_hex(master_address)
-    vault_script_hex = pubkey_hash_hex + master_pubkey_hash_hex + hex(timeout)[2:4] + hex(fees)[2:6]
-    vault_script_hex_ba = bytearray.fromhex(vault_script_hex)
-    hash160_address = myhash160(vault_script_hex_ba)
+    vault_script_hex = pubkey_hash_hex + master_pubkey_hash_hex + \
+         timeout_hex + maxfees_hex
+    vault_script = binascii.unhexlify(vault_script_hex)
+    return vault_script
+
+def addresses_to_vault_address(address, master_address, timeout, maxfees):
+    vault_script = create_vault_script(address, master_address, timeout, maxfees)
+    hash160_address = myhash160(vault_script)
     # add version byte: 0x08 for vault address
     extended_address = '\x08' + hash160_address
     # generate double SHA-256 hash of extended address
@@ -104,17 +109,8 @@ def addresses_to_vault_address(address, master_address, timeout):
     return str(vault_address)
 
 
-def addresses_to_vault_script(address, master_address, timeout):
-    timeout = 100
-    fees = 10000
-    if timeout > 100:
-        timeout = 100
-    if fees > 10000:
-        fees = 10000
-    pubkey_hash_hex = address_to_public_key_hash_hex(address)
-    master_pubkey_hash_hex = address_to_public_key_hash_hex(master_address)
-    vault_script_hex = pubkey_hash_hex + master_pubkey_hash_hex + hex(timeout)[2:4] + hex(fees)[2:6]
-    vault_script = binascii.unhexlify(vault_script_hex)
+def addresses_to_vault_script(address, master_address, timeout, maxfees):
+    vault_script = create_vault_script(address, master_address, timeout, maxfees)
     return chr(len(vault_script)) + vault_script
 
 

@@ -28,8 +28,9 @@ class Wallet(object):
     def getpendingtransactions(self):
         return self.connection.getpendingtransactions()
 
-    def sendtovault(self, toaddress, tomaster_address, timeout, amount):
-        return self.connection.sendtovault(toaddress, tomaster_address, timeout, amount)
+    def sendtovault(self, toaddress, tomaster_address, amount, timeout, maxfees):
+        return self.connection.sendtovault(toaddress, tomaster_address, amount, \
+            timeout, maxfees)
 
     def withdrawfromvault(self, fromaddress, toaddress, amount):
         return self.connection.withdrawfromvault(fromaddress, toaddress, amount)

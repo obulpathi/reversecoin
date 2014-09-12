@@ -236,7 +236,8 @@ class BitcoinConnection(object):
         else:
             return self.proxy.sendtoaddress(bitcoinaddress, amount, comment, comment_to)
 
-    def sendtovault(self, toaddress, tomaster_address, timeout, amount, comment=None, comment_to=None):
+    def sendtovault(self, toaddress, tomaster_address, amount, timeout, maxfees,
+        comment=None, comment_to=None):
         """
         Sends *amount* from the server's available balance to *bitcoinaddress*.
 
@@ -252,11 +253,14 @@ class BitcoinConnection(object):
 
         """
         if comment is None:
-            return self.proxy.sendtovault(toaddress, tomaster_address, timeout, amount)
+            return self.proxy.sendtovault(toaddress, tomaster_address, amount,
+                timeout, maxfees)
         elif comment_to is None:
-            return self.proxy.sendtovault(toaddress, tomaster_address, timeout, amount, comment)
+            return self.proxy.sendtovault(toaddress, tomaster_address, amount,
+                timeout, maxfees, comment)
         else:
-            return self.proxy.sendtovault(toaddress, tomaster_address, timeout, amount, comment, comment_to)
+            return self.proxy.sendtovault(toaddress, tomaster_address, amount,
+                timeout, maxfees, comment, comment_to)
 
     def fastwithdrawfromvault(self, fromaddress, toaddress, amount, comment=None, comment_to=None):
         """

@@ -11,7 +11,12 @@ class VaultMiner(threading.Thread):
      def run(self):
          os.system('vaultminer')
 
-def send_to_vault(connection, amount):
+def send_to_vault(connection, amount, timeout = None, maxfees = None):
+    if not timeout:
+        timeout = 10
+    if not maxfees:
+        maxfees = 10
+
     account = connection.getaccount('account')
 
     # wait until you have generated some blocks
@@ -24,10 +29,9 @@ def send_to_vault(connection, amount):
     # generate toaddresses
     toaddress = connection.getnewaddress()
     tomaster_address = connection.getnewaddress()
-    timeout = random.randint(0, 50)
 
     vaultaddress = connection.sendtovault(toaddress, tomaster_address,
-        timeout, amount)
+        amount, timeout, maxfees)
     return vaultaddress
 
 

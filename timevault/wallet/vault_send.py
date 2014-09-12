@@ -15,7 +15,8 @@ toaddress = wallet.getnewaddress()
 tomaster_address = wallet.getnewaddress()
 timeout = 20
 amount = 20
+maxfees = 10
 
 print("Transfering: %d toaddress: %s tomaster_address: %s" % \
      (amount, toaddress, tomaster_address))
-print wallet.sendtovault(toaddress, tomaster_address, timeout, amount)
+wallet.sendtovault(toaddress, tomaster_address, amount, timeout, maxfees)
