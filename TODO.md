@@ -3,15 +3,15 @@ TODO
 
 BUGS
 ----
-* Remove hardcoded fees
-* Remove hardcoded timeout for vault
 * Migrate minimum fee check to client side
-* Vault Address format: scriptSig to vault address
 * Enforce single vault per address
+* Check for vault override and vault confirm in same block:
+  Enforce vault override and vault confirm does not happen together (new block creation)
+* Enforce that a vault override will not happen, if there is no balance / vault
+  confirm happened
+* Vault Address format: scriptSig to vault address
 * If same address appears in output tx twice, one txout is getting
   overwritten in chaindb:listreceivedbyaddress
-* Check for vault override and vault confirm in same block: Enforce vault override and vault confirm does not happen together (new block creation)
-* Enforce that a vault override will not happen, if there is no balance / vault confirm happened
 * Fix FIXMEs
 
 FEATURES

@@ -1,4 +1,6 @@
+import os
 import sys
+import subprocess
 import random
 import time
 import unittest
@@ -8,21 +10,6 @@ from tests.api import utils
 from timevault import bitcoinrpc
 
 class TestWallet(base.TestBase):
-    @classmethod
-    def setUpClass(cls):
-        vaultd = utils.TimeVaultDaemon()
-        miner = utils.VaultMiner()
-        vaultd.start()
-        miner.start()
-        time.sleep(2)
-
-    def setUp(self):
-        rpcuser = "user"
-        rpcpass = "passwd"
-        self.account = "account"
-        self.connection = bitcoinrpc.connect_to_remote(
-            rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
-
     def test_account(self):
         account = self.connection.getaccount(self.account)
         self.assertIsInstance(account, dict)
@@ -48,7 +35,7 @@ class TestWallet(base.TestBase):
 
         # generate a new toaddress
         toaddress = self.connection.getnewaddress()
-        amount = random.randint(0, 50)
+        amount = random.randint(20, 30)
         self.connection.sendtoaddress(toaddress, amount)
 
         account = self.connection.getaccount(self.account)
@@ -87,7 +74,7 @@ class TestWallet(base.TestBase):
         # initiate vault withdraw
         fromaddress = vaultaddress
         toaddress = self.connection.getnewaddress()
-        amount = random.randint(0, amount)
+        amount = random.randint(1, amount-2)
         self.connection.withdrawfromvault(fromaddress, toaddress, amount)
 
         # wait for account to get updated
@@ -110,7 +97,7 @@ class TestWallet(base.TestBase):
         # initiate vault withdraw
         fromaddress = vaultaddress
         toaddress = self.connection.getnewaddress()
-        withdrawamount = random.randint(0, amount/2)
+        withdrawamount = random.randint(1, amount/2)
         self.connection.withdrawfromvault(fromaddress, toaddress, withdrawamount)
 
         # wait for account to get updated
@@ -124,7 +111,7 @@ class TestWallet(base.TestBase):
         # initiate another vault withdraw
         fromaddress = vaultaddress
         toaddress = self.connection.getnewaddress()
-        withdrawamount = random.randint(0, amount/2)
+        withdrawamount = random.randint(1, amount-2)
         self.connection.withdrawfromvault(fromaddress, toaddress, withdrawamount)
 
         # wait for account to get updated
@@ -149,7 +136,7 @@ class TestWallet(base.TestBase):
         # initiate vault withdraw
         fromaddress = vaultaddress
         toaddress = self.connection.getnewaddress()
-        amount = random.randint(0, vaultamount-1)
+        amount = random.randint(1, vaultamount-2)
         self.connection.withdrawfromvault(fromaddress, toaddress, amount)
 
         # wait until withdraw begins
@@ -182,16 +169,9 @@ class TestWallet(base.TestBase):
         # initiate fast withdraw
         fromaddress = vaultaddress
         toaddress = self.connection.getnewaddress()
-        amount = random.randint(0, amount)
+        amount = random.randint(1, amount-1)
         self.connection.fastwithdrawfromvault(fromaddress, toaddress, amount)
 
         # wait for account to get updated
         subaccount = utils.wait_until_account_has_balance(self.connection, toaddress)
         self.assertEqual(int(subaccount['balance']), amount)
-
-    def tearDown(self):
-        pass
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
