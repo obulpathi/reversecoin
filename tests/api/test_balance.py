@@ -9,7 +9,7 @@ from timevault import bitcoinrpc
 
 class TestBalance(base.TestBase):
 
-    def test_big_vault_send(self):
+    def test_spend_more_than_balance(self):
         info = utils.wait_until_blocks_are_generated(self.connection)
         self.assertTrue(info.blocks >= -1)
         amount = 500000000000
@@ -19,5 +19,3 @@ class TestBalance(base.TestBase):
         # wait for vault to get updated
         vault = utils.wait_until_vault_has_balance(self.connection, vaultaddress)
         self.assertEqual(int(vault['balance']), amount)
-
-  
