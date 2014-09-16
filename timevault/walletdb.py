@@ -20,6 +20,8 @@ import sys
 import utils
 #import base58
 
+from timevault import exceptions
+
 
 """
 walletdb: wallet data structure
@@ -511,7 +513,7 @@ class WalletDB(object):
         # incase of insufficient funds, return
         if funds < amount + utils.calculate_fees(None):
             self.logger.warning("In sufficient funds, exiting, return")
-            return
+            raise exceptions.InsufficientBalanceException
 
         # create transaction
         tx = CTransaction()

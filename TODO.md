@@ -26,6 +26,7 @@ FEATURES
 * Add documentation and notes
 * PEP8 and flake check
 * Monitoring System
+* Steal my coins challenge
 * Hardware Wallet
 * Mining Pool
 * Exchange

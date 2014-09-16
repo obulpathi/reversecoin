@@ -28,6 +28,7 @@ from bitcoin.scripteval import VerifySignature
 from bitcoin import serialize
 from bitcoin.script import OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM
 
+from timevault import exceptions
 
 def tx_blk_cmp(a, b):
     if a.dFeePerKB != b.dFeePerKB:
@@ -204,8 +205,12 @@ class ChainDb(object):
 
     # toaddress, tomaster_address, amount, timeout, maxfees
     def sendtovault(self, toaddress, tomaster_address, amount, timeout, maxfees):
-        vault_address, tx = self.wallet.sendtovault(toaddress, tomaster_address,
-            amount, timeout, maxfees)
+        try:
+            vault_address, tx = self.wallet.sendtovault(toaddress, tomaster_address,
+                amount, timeout, maxfees)
+        except exceptions.InsufficientBalanceException as e:
+            return None
+            
         tx.calc_sha256()
         self.mempool.add(tx)
         self.logger.debug("Adding to vault: %064x" % tx.sha256)

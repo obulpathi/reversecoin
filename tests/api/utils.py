@@ -69,3 +69,10 @@ def wait_until_blocks_are_generated(connection):
         if info.blocks > 1:
             return info
         time.sleep(1)
+
+def get_total_balance(connection):
+    account = connection.getaccount('account')
+    total_balance = 0
+    for subaccount in account.itervalues():
+        total_balance = total_balance + subaccount['balance']
+    return int(total_balance)
