@@ -9,17 +9,17 @@ import unittest
 
 from binascii import unhexlify
 
-from bitcoin.base58 import *
+from timevault.bitcoin.base58 import *
 
 
-def load_test_vector(name):
+def load_sample_vector(name):
     with open(os.path.dirname(__file__) + '/data/' + name, 'r') as fd:
         for testcase in json.load(fd):
             yield testcase
 
 class Test_base58(unittest.TestCase):
     def test_encode_decode(self):
-        for exp_bin, exp_base58 in load_test_vector('base58_encode_decode.json'):
+        for exp_bin, exp_base58 in load_sample_vector('base58_encode_decode.json'):
             exp_bin = unhexlify(exp_bin.encode('utf8'))
 
             act_base58 = encode(exp_bin)

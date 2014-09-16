@@ -6,9 +6,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import struct
-from bitcoin.serialize import *
-from bitcoin.coredefs import *
-from bitcoin.script import CScript
+from timevault.bitcoin.serialize import *
+from timevault.bitcoin.coredefs import *
+from timevault.bitcoin.script import CScript
 
 def ROTL32(x, r):
     assert x <= 0xFFFFFFFF
