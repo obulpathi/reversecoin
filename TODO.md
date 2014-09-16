@@ -10,28 +10,30 @@ BUGS
 * Enforce that a vault override will not happen, if there is no balance / vault
   confirm happened
 * Vault Address format: scriptSig to vault address
-* If same address appears in output tx twice, one txout is getting
-  overwritten in chaindb:listreceivedbyaddress
+* Installation using python wheels
+* Documentation for installation
 * Fix FIXMEs
 
 FEATURES
 --------
-* Add test cases
 * Transaction and Block Propagation
 * Validate transactions
-* Installation using python wheels
-* Documentation for installation
-* PEP8 and flake check
-* Add documentation and notes
-* Support for pay to script hash
-* Support for multisig transactions
-* Vault rate control
 * Wallet compatibility
+* Support for pay to script hash (P2SH)
+* Support for multisig transactions
 * Support for stratum miner
-* Mining Pool
-* Exchange
+* Add test cases
+* Add documentation and notes
+* PEP8 and flake check
 * Monitoring System
 * Hardware Wallet
+* Mining Pool
+* Exchange
+
+OTHERS
+------
+* If same address appears in output tx twice, one txout is getting
+  overwritten in chaindb:listreceivedbyaddress
 
 NAME and ICON
 -------------
