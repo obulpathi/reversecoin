@@ -210,6 +210,8 @@ class ChainDb(object):
                 amount, timeout, maxfees)
         except exceptions.InsufficientBalanceException as e:
             return None
+        except exceptions.VaultAlreadyExistsException as e:
+            return None
 
         tx.calc_sha256()
         self.mempool.add(tx)

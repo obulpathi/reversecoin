@@ -11,3 +11,7 @@ class InsufficientBalanceException(BitcoinException):
 class AmountTooLargeException(BitcoinException):
    """Raised when the input value is too large"""
    pass
+
+class VaultAlreadyExistsException(BitcoinException):
+    """Raised when an existing vault is recreated"""
+    pass

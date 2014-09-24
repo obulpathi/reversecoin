@@ -374,13 +374,18 @@ class WalletDB(object):
                 master_private_key = account[subaccount]['private_key']
         # open wallet
         walletdb = self.open(writable = True)
+        # check if vault exists
+        vaults = loads(walletdb['vaults'])
+        if vault_name in vaults:
+            walletdb.close()
+            raise exceptions.VaultAlreadyExistsException
+
         vault = {'name' : vault_name,
                  'address': address, 'public_key': public_key, 'private_key': private_key,
                  'master_address': master_address, 'master_public_key': master_public_key,
                  'master_private_key': master_private_key,
                  'timeout': timeout, 'maxfees': maxfees}
         walletdb[vault_name] = dumps(vault)
-        vaults = loads(walletdb['vaults'])
         vaults.append(vault_name)
         walletdb['vaults'] = dumps(vaults)
         walletdb.sync()
@@ -515,19 +520,19 @@ class WalletDB(object):
             self.logger.warning("In sufficient funds, exiting, return")
             raise exceptions.InsufficientBalanceException
 
+        # create vault
+        vault_address = utils.addresses_to_vault_address(toaddress,
+            tomaster_address, timeout, maxfees)
+        self.newvault(vault_address, toaddress, tomaster_address, timeout, maxfees)
+
         # create transaction
         tx = CTransaction()
 
         # to the receiver
         txout = CTxOut()
         txout.nValue = amount
-        vault_address = utils.addresses_to_vault_address(toaddress,
-            tomaster_address, timeout, maxfees)
         txout.scriptPubKey = utils.vault_address_to_pay_to_vault_script(vault_address)
         tx.vout.append(txout)
-
-        # create vault: What is this?
-        self.newvault(vault_address, toaddress, tomaster_address, timeout, maxfees)
 
         # from the sender
         nValueIn = 0
