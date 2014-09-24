@@ -204,3 +204,23 @@ class TestWallet(base.TestBase):
         # wait for account to get updated
         subaccount = utils.wait_until_account_has_balance(self.connection, toaddress)
         self.assertEqual(int(subaccount['balance']), amount)
+
+    def test_vault_uniqueness(self):
+        # wait until blocks are generated
+        info = utils.wait_until_blocks_are_generated(self.connection)
+        self.assertTrue(info.blocks >= -1)
+
+        amount = 45
+        timeout = 10
+        maxfees = 10
+        toaddress = self.connection.getnewaddress()
+        tomaster_address = self.connection.getnewaddress()
+
+        vaultaddress = self.connection.sendtovault(toaddress, tomaster_address,
+            amount, timeout, maxfees)
+        self.assertIsNotNone(vaultaddress)
+
+        # try recreating vault
+        vaultaddress = self.connection.sendtovault(toaddress, tomaster_address,
+            amount, timeout, maxfees)
+        self.assertIsNone(vaultaddress)

@@ -3,7 +3,6 @@ TODO
 
 BUGS
 ----
-* Migrate minimum fee check to client side
 * Enforce single vault per address
 * Check for vault override and vault confirm in same block:
   Enforce vault override and vault confirm does not happen together (new block creation)
