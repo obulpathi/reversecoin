@@ -210,7 +210,7 @@ class ChainDb(object):
                 amount, timeout, maxfees)
         except exceptions.InsufficientBalanceException as e:
             return None
-            
+
         tx.calc_sha256()
         self.mempool.add(tx)
         self.logger.debug("Adding to vault: %064x" % tx.sha256)
@@ -218,7 +218,10 @@ class ChainDb(object):
 
     def withdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.withdrawfromvault(fromaddress, toaddress, amount)
+        if not tx:
+            return 0
         self.mempool.add(tx)
+        return amount
 
     def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)

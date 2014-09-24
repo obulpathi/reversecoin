@@ -11,6 +11,23 @@ class VaultMiner(threading.Thread):
      def run(self):
          os.system('vaultminer')
 
+def wait_until_blocks_are_generated(connection):
+    # wait until you have generated some blocks
+    while True:
+        info = connection.getinfo()
+        if info.blocks > 1:
+            return info
+        time.sleep(1)
+
+def wait_until_n_blocks_are_generated(connection, n):
+    info = connection.getinfo()
+    old_num_of_blocks = info.blocks
+    while True:
+        info = connection.getinfo()
+        if info.blocks >= old_num_of_blocks + n:
+            break
+        time.sleep(1)
+
 def send_to_vault(connection, amount, timeout = None, maxfees = None):
     if not timeout:
         timeout = 10
@@ -60,14 +77,6 @@ def wait_until_account_has_balance(connection, address):
         subaccount = account[address]
         if subaccount['balance'] > 0:
             return subaccount
-        time.sleep(1)
-
-def wait_until_blocks_are_generated(connection):
-    # wait until you have generated some blocks
-    while True:
-        info = connection.getinfo()
-        if info.blocks > 1:
-            return info
         time.sleep(1)
 
 def get_total_balance(connection):

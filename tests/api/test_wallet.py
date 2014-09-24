@@ -81,6 +81,35 @@ class TestWallet(base.TestBase):
         subaccount = utils.wait_until_account_has_balance(self.connection, toaddress)
         self.assertEqual(int(subaccount['balance']), amount)
 
+    def test_vault_withdraw_more_than_balance(self):
+        # wait until blocks are generated
+        info = utils.wait_until_blocks_are_generated(self.connection)
+        self.assertTrue(info.blocks >= -1)
+
+        amount = 45
+        vaultaddress = utils.send_to_vault(self.connection, amount)
+        self.assertIsNotNone(vaultaddress)
+
+        # wait for vault to get updated
+        vault = utils.wait_until_vault_has_balance(self.connection, vaultaddress)
+        self.assertEqual(int(vault['balance']), amount)
+
+        # initiate vault withdraw
+        fromaddress = vaultaddress
+        toaddress = self.connection.getnewaddress()
+        transfered = self.connection.withdrawfromvault(fromaddress, toaddress, amount)
+
+        # assert that no balance has been transfered
+        self.assertEqual(0, transfered)
+
+        # wait until few more blocks are generated
+        utils.wait_until_n_blocks_are_generated(self.connection, 2)
+
+        # assert that the balances are still the same
+        vaults = self.connection.getvaults()
+        vault = vaults[vaultaddress]
+        self.assertEqual(int(vault['balance']), amount)
+
     def test_multiple_vault_withdraws(self):
         # wait until blocks are generated
         info = utils.wait_until_blocks_are_generated(self.connection)
