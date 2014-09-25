@@ -229,9 +229,12 @@ class ChainDb(object):
         tx = self.wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
         self.mempool.add(tx)
 
-    def overridevaulttx(self, fromvault, toaddress, amount):
-        tx = self.wallet.overridevaulttx(fromvault, toaddress, amount)
+    def overridevaulttx(self, fromvault, toaddress):
+        amount, tx = self.wallet.overridevaulttx(fromvault, toaddress)
+        if not tx:
+            return 0
         self.mempool.add(tx)
+        return amount
 
     def listreceivedbyaddress(self, address):
         txouts = {}

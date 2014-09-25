@@ -3,11 +3,8 @@ TODO
 
 BUGS
 ----
-* Enforce single vault per address
 * Check for vault override and vault confirm in same block:
   Enforce vault override and vault confirm does not happen together (new block creation)
-* Enforce that a vault override will not happen, if there is no balance / vault
-  confirm happened
 * Vault Address format: scriptSig to vault address
 * Installation using python wheels
 * Documentation for installation

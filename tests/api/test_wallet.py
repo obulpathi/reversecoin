@@ -175,12 +175,43 @@ class TestWallet(base.TestBase):
         # initiate vault override
         fromaddress = vaultaddress
         toaddress = self.connection.getnewaddress()
-        amount = vaultamount - 2
-        self.connection.overridevaulttx(fromaddress, toaddress, amount)
+        amount = self.connection.overridevaulttx(fromaddress, toaddress)
+        self.assertEqual(amount, vaultamount-2)
 
         # check for updated balance
         account = utils.wait_until_account_has_balance(self.connection, toaddress)
         self.assertEqual(int(account['balance']), amount)
+
+    def test_empty_vault_override(self):
+        # wait until blocks are generated
+        info = utils.wait_until_blocks_are_generated(self.connection)
+        self.assertTrue(info.blocks >= -1)
+
+        vaultamount = 45
+        vaultaddress = utils.send_to_vault(self.connection, vaultamount)
+        self.assertIsNotNone(vaultaddress)
+
+        # wait for vault to get updated
+        vault = utils.wait_until_vault_has_balance(self.connection, vaultaddress)
+        self.assertEqual(int(vault['balance']), vaultamount)
+
+        # initiate vault withdraw
+        fromaddress = vaultaddress
+        toaddress = self.connection.getnewaddress()
+        withdrawamount = vaultamount - 2
+        self.connection.withdrawfromvault(fromaddress, toaddress, withdrawamount)
+
+        # wait for account to get updated
+        subaccount = utils.wait_until_account_has_balance(self.connection, toaddress)
+        self.assertEqual(int(subaccount['balance']), withdrawamount)
+        vault = self.connection.getvaults()[vaultaddress]
+        self.assertEqual(0, int(vault['balance']))
+
+        # initiate empty vault override
+        fromaddress = vaultaddress
+        toaddress = self.connection.getnewaddress()
+        amount = self.connection.overridevaulttx(fromaddress, toaddress)
+        self.assertEqual(0, amount)
 
     def test_vault_fast_withdraw(self):
         # wait until blocks are generated

@@ -304,7 +304,7 @@ class BitcoinConnection(object):
         else:
             return self.proxy.withdrawfromvault(fromaddress, toaddress, amount. comment, comment_to)
 
-    def overridevaulttx(self, fromvault, toaddress, amount, comment=None, comment_to=None):
+    def overridevaulttx(self, fromvault, toaddress, comment=None, comment_to=None):
         """
         Withdraws *amount* from the vault *fromaddress* to the specified *toaddress*.
 
@@ -312,18 +312,17 @@ class BitcoinConnection(object):
 
         - *fromvault* -- Bitcoin vault address to send from.
         - *toaddress* -- Bitcoin address to send to.
-        - *amount* -- Amount to send (float, rounded to the nearest 0.00000001).
         - *minconf* -- Minimum number of confirmations required for transferred balance.
         - *comment* -- Comment for transaction.
         - *comment_to* -- Comment for to-address.
 
         """
         if comment is None:
-            return self.proxy.overridevaulttx(fromvault, toaddress, amount)
+            return self.proxy.overridevaulttx(fromvault, toaddress)
         elif comment_to is None:
-            return self.proxy.overridevaulttx(fromvault, toaddress, amount, comment)
+            return self.proxy.overridevaulttx(fromvault, toaddress, comment)
         else:
-            return self.proxy.overridevaulttx(fromvault, toaddress, amount. comment, comment_to)
+            return self.proxy.overridevaulttx(fromvault, toaddress, comment, comment_to)
 
     def getreceivedbyaddress(self, bitcoinaddress, minconf=1):
         """

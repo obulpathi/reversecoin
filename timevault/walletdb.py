@@ -653,16 +653,17 @@ class WalletDB(object):
         txin.scriptSig = scriptSig
         return tx
 
-    # TODO: enforce double use of vaults
-    # TODO: remove amount
-    def overridevaulttx(self, fromvaultaddress, toaddress, amount):
+    def overridevaulttx(self, fromvaultaddress, toaddress):
         vault = self.getvault(fromvaultaddress)
         # select the input addresses
         received = self.chaindb.listallreceivedbyvault(fromvaultaddress)
+        if not received:
+            self.logger.warning("Empty vault, exiting, return")
+            return None, None
         received = received.values()[0]
         if received['value'] < 2 * utils.calculate_fees(None):
             self.logger.warning("In sufficient funds in vault, exiting, return")
-            return
+            return None, None
         # calculate remaining amount
         amount = received['value'] - 2 * utils.calculate_fees(None)
         # create transaction
@@ -706,7 +707,7 @@ class WalletDB(object):
         chr(len(vaultscript)) + vaultscript
         self.logger.debug("Adding signature: %s" % binascii.hexlify(scriptSig))
         txin.scriptSig = scriptSig
-        return tx
+        return amount, tx
 
 
     # fast withdraw from vault
