@@ -436,7 +436,7 @@ class WalletDB(object):
         # incase of insufficient funds, return
         if funds < amount + utils.calculate_fees(None):
             self.logger.warning("In sufficient funds, exiting, return")
-            return
+            return None, None
 
         # create transaction
         tx = CTransaction()
@@ -496,7 +496,7 @@ class WalletDB(object):
             # scriptSig = chr(len(signature)) + hash_type + signature + chr(len(public_key)) + public_key
             scriptSig = chr(len(signature)) + signature + chr(len(public_key)) + public_key
             txin.scriptSig = scriptSig
-        return tx
+        return amount, tx
 
 
     # send to a vault

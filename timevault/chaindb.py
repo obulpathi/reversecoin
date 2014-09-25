@@ -200,8 +200,10 @@ class ChainDb(object):
         return balance
 
     def sendtoaddress(self, toaddress, amount):
-        tx = self.wallet.sendtoaddress(toaddress, amount)
-        self.mempool.add(tx)
+        amount, tx = self.wallet.sendtoaddress(toaddress, amount)
+        if tx:
+            self.mempool.add(tx)
+        return amount
 
     # toaddress, tomaster_address, amount, timeout, maxfees
     def sendtovault(self, toaddress, tomaster_address, amount, timeout, maxfees):
