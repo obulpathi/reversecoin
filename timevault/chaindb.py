@@ -201,9 +201,9 @@ class ChainDb(object):
 
     def sendtoaddress(self, toaddress, amount):
         amount, tx = self.wallet.sendtoaddress(toaddress, amount)
-        if tx:
-            self.mempool.add(tx)
-        return amount
+        if tx and self.mempool.add(tx):
+            return amount
+        return 0
 
     # toaddress, tomaster_address, amount, timeout, maxfees
     def sendtovault(self, toaddress, tomaster_address, amount, timeout, maxfees):
@@ -216,27 +216,28 @@ class ChainDb(object):
             return None
 
         tx.calc_sha256()
-        self.mempool.add(tx)
-        self.logger.debug("Adding to vault: %064x" % tx.sha256)
-        return vault_address
+        if self.mempool.add(tx):
+            self.logger.debug("Adding to vault: %064x" % tx.sha256)
+            return vault_address
+        return None
 
     def withdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.withdrawfromvault(fromaddress, toaddress, amount)
-        if not tx:
-            return 0
-        self.mempool.add(tx)
-        return amount
+        if tx and self.mempool.add(tx):
+            return amount
+        return 0
 
     def fastwithdrawfromvault(self, fromaddress, toaddress, amount):
         tx = self.wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
-        self.mempool.add(tx)
+        if tx and self.mempool.add(tx):
+            return amount
+        return 0
 
     def overridevaulttx(self, fromvault, toaddress):
         amount, tx = self.wallet.overridevaulttx(fromvault, toaddress)
-        if not tx:
-            return 0
-        self.mempool.add(tx)
-        return amount
+        if tx and self.mempool.add(tx):
+            return amount
+        return 0
 
     def listreceivedbyaddress(self, address):
         txouts = {}

@@ -10,6 +10,7 @@ from bitcoin.serialize import uint256_to_shortstr
 class MemPool(object):
 	def __init__(self):
 		self.pool = {}
+		self.prevouts = set()
 		# setup logging
 		logging.basicConfig(level=logging.DEBUG)
 		self.logger = logging.getLogger(__name__)
@@ -24,6 +25,12 @@ class MemPool(object):
 		if not tx.is_valid():
 			self.logger.error("MemPool.add(%s): invalid TX" % (hashstr, ))
 			return False
+		for txin in tx.vin:
+			if txin.prevout.hash in self.prevouts:
+				self.logger.error(
+					"MemPool.add{0}: tx already spent".format(txin.prevout.hash))
+				return False
+			self.prevouts.add(txin.prevout.hash)
 		self.pool[hash] = tx
 		self.logger.debug("MemPool.add(%s), poolsz %d" % (hashstr, len(self.pool)))
 		return True
@@ -31,6 +38,9 @@ class MemPool(object):
 	def remove(self, hash):
 		if hash not in self.pool:
 			return False
+		tx = self.pool[hash]
+		for txin in tx.vin:
+			self.prevouts.remove(txin.prevout.hash)
 		del self.pool[hash]
 		return True
 

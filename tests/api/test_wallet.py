@@ -57,16 +57,14 @@ class TestWallet(base.TestBase):
         transfered1 = self.connection.sendtoaddress(toaddress1, amount)
         transfered2 = self.connection.sendtoaddress(toaddress2, amount)
         self.assertEqual(transfered1, amount)
-        self.assertEqual(transfered2, amount)
+        self.assertEqual(0, transfered2)
 
         # wait for account to get updated
         subaccount1 = utils.wait_until_account_has_balance(self.connection, toaddress1)
         self.assertEqual(transfered1, int(subaccount1['balance']))
-        print 'account 1 balance confirmed'
         account = self.connection.getaccount(self.account)
         subaccount2 = account[toaddress2]
         self.assertEqual(0, int(subaccount2['balance']))
-        print 'account 2 balance confirmed'
 
     def test_vault_send(self):
         # wait until blocks are generated
@@ -154,11 +152,12 @@ class TestWallet(base.TestBase):
         transfered1 = self.connection.withdrawfromvault(fromaddress, toaddress1, amount)
         transfered2 = self.connection.withdrawfromvault(fromaddress, toaddress2, amount)
         self.assertEqual(transfered1, amount)
-        self.assertEqual(transfered2, 0)
+        self.assertEqual(0, transfered2)
 
         # wait for account to get updated
         subaccount1 = utils.wait_until_account_has_balance(self.connection, toaddress1)
-        subaccount2 = utils.wait_until_account_has_balance(self.connection, toaddress2)
+        account = self.connection.getaccount(self.account)
+        subaccount2 = account[toaddress2]
         self.assertEqual(int(subaccount1['balance']), amount)
         self.assertEqual(int(subaccount2['balance']), 0)
 
