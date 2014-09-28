@@ -3,10 +3,6 @@ TODO
 
 BUGS
 ----
-* Fix mempool inconstency.
-* Fix double withdraws from same address / vault in same block: New block txs.
-* Check for vault override and vault confirm in same block:
-  Enforce vault override and vault confirm does not happen together (new block creation)
 * Update wallet examples
 * Vault Address format: scriptSig to vault address
 * Installation using python wheels
