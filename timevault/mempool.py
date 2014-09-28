@@ -25,12 +25,15 @@ class MemPool(object):
 		if not tx.is_valid():
 			self.logger.error("MemPool.add(%s): invalid TX" % (hashstr, ))
 			return False
+		prevouts = set()
 		for txin in tx.vin:
 			if txin.prevout.hash in self.prevouts:
 				self.logger.error(
 					"MemPool.add{0}: tx already spent".format(txin.prevout.hash))
 				return False
-			self.prevouts.add(txin.prevout.hash)
+			prevouts.add(txin.prevout.hash)
+		for txhash in prevouts:
+			self.prevouts.add(txhash)
 		self.pool[hash] = tx
 		self.logger.debug("MemPool.add(%s), poolsz %d" % (hashstr, len(self.pool)))
 		return True

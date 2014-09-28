@@ -56,7 +56,7 @@ class TestWallet(base.TestBase):
         amount = utils.get_total_balance(self.connection) - 1
         transfered1 = self.connection.sendtoaddress(toaddress1, amount)
         transfered2 = self.connection.sendtoaddress(toaddress2, amount)
-        self.assertEqual(transfered1, amount)
+        self.assertEqual(amount, transfered1)
         self.assertEqual(0, transfered2)
 
         # wait for account to get updated
@@ -160,7 +160,6 @@ class TestWallet(base.TestBase):
         subaccount2 = account[toaddress2]
         self.assertEqual(int(subaccount1['balance']), amount)
         self.assertEqual(int(subaccount2['balance']), 0)
-
 
     def test_multiple_vault_withdraws(self):
         # wait until blocks are generated
