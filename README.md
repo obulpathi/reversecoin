@@ -10,9 +10,10 @@ In order to keep the code lightweight we reused the libraries including the Bitc
 
 How to install on Ubuntu
 ------------------------
+* Clone this repository: "git clone https://github.com/obulpathi/vaultcoin.git ~/vaultcoin"
 * Install dependencies: sudo apt-get install python-dev libleveldb1 python-gevent python-leveldb python-bsddb3 python-sqlite
-* After installing dependencies, install bitcoinpy usinf "python setup.py install"
+* After installing dependencies, cd into vaultcoin folder and install vaultcoin using the command "python setup.py install"
 
 How to run tests
 ----------------
-Bitcoinpy uses tox and nose for testing. To run tests, simply cd into bitcoinpy folder and enter the command "tox". Selective tests can be run using the command "$ tox -- tests.api.test_wallet:TestWallet.test_info". If you want to start timevaultd and vaultminer for manual testing, enter into virtualenv by using "source bitcoinpy/.tox/py26/bin/activate", then run the commands timevaultd for running the timevault daemon and vaultminer for mining coins.
+Bitcoinpy uses tox and nose for testing. To run tests, simply cd into bitcoinpy folder and enter the command "tox". Selective tests can be run using the command "$ tox -- tests.api.test_wallet:TestWallet.test_info". If you want to start timevaultd and vaultminer for manual testing, enter into virtualenv by using "source ~/vaultcoin/.tox/py27/bin/activate", then run the commands "timevaultd" for running the timevault daemon and "vaultminer" for mining coins.
