@@ -739,6 +739,13 @@ class BitcoinConnection(object):
         """
         return self.proxy.dumpblockchain(start_height, end_height)
 
+    def dumpmempool(self):
+        """
+        Dumps the mempool.
+
+        """
+        return self.proxy.dumpmempool()
+
     def signmessage(self, address, message):
         """
         Sign messages, returns the signature

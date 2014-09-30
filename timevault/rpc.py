@@ -22,6 +22,7 @@ from bitcoin.serialize import uint256_from_compact
 
 VALID_RPCS = {
     "dumpblockchain",
+    "dumpmempool",
     "getaccount",
     "getvault",
     "getvaults",
@@ -140,6 +141,9 @@ class RPCExec(object):
 
     def dumpblockchain(self, params):
         return (self.chaindb.dumpblockchain(params[0], params[1]), None)
+
+    def dumpmempool(self, params):
+        return (self.mempool.dumpmempool(), None)
 
     def getaccount(self, params):
         account = self.wallet.getaccount(params[0])

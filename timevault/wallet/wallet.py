@@ -13,6 +13,9 @@ class Wallet(object):
     def dumpblockchain(self):
         self.connection.dumpblockchain()
 
+    def dumpmempool(self):
+        self.connection.dumpmempool()
+
     def getaccount(self, account = "account"):
         account = self.connection.getaccount(account)
         return account

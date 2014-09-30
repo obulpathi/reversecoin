@@ -49,3 +49,11 @@ class MemPool(object):
 
 	def size(self):
 		return len(self.pool)
+
+	def dumpmempool(self):
+		print "mempool"
+		for txhash in self.pool:
+			print "txhash: {0}".format(txhash)
+		print "prevouts"
+		for txhash in self.prevouts:
+			print "txhash: {0}".format(txhash)

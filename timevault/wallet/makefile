@@ -13,6 +13,9 @@ vaults:
 blockchain:
 	python blockchain.py
 
+mempool:
+	python mempool.py
+
 received:
 	python received.py
 
