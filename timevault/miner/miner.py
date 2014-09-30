@@ -30,6 +30,7 @@ from time import sleep
 from multiprocessing import Process
 
 ERR_SLEEP = 15
+GET_WORK_SLEEP = 10
 MAX_NONCE = 1000000000000L
 
 settings = {}
@@ -77,7 +78,7 @@ class BitcoinRPC:
         return self.rpc('getblockcount')
     def getwork(self, data=None):
         self.logger.debug("Sleeping before going for get work")
-        sleep(1)
+        sleep(GET_WORK_SLEEP)
         return self.rpc('getwork', data)
 
 def uint32(x):

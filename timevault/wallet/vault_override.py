@@ -2,7 +2,6 @@ from wallet import Wallet
 
 wallet = Wallet()
 account = wallet.getaccount()
-
 toaddress = wallet.getnewaddress()
 
 print ('\nPending Transfers')
@@ -20,13 +19,5 @@ for n, transaction in transactions.iteritems():
 index = raw_input("Enter the id of the vault transaction you want to override: ")
 fromaddress = transactions[index]['inputs'][0]
 print "Fromaddress: ", fromaddress
-amount = int(input("Enter the balance to transfer from: {}: ".format(fromaddress)))
-available_amount = 0
-for output in transactions[index]['outputs']:
-    available_amount = available_amount + int(output['amount'])
-if available_amount < amount:
-    print("In sufficient balance in vault, quitting")
-    exit(1)
-
-print("Transfering: " + str(amount) + "\tfrom address: " + fromaddress + "\tto address: " + toaddress)
-wallet.overridevault(fromaddress, toaddress, amount)
+print("Overriding the transaction")
+wallet.overridevault(fromaddress, toaddress)

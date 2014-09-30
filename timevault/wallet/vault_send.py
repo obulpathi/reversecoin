@@ -7,14 +7,15 @@ balance = 0
 for subaccount in account.itervalues():
     balance = balance + subaccount['balance']
 
-if balance < 20:
+amount = int(input("Enter the balance to transfer to vault: "))
+
+if balance < amount:
     print("Not enough balance")
     exit(1)
 
 toaddress = wallet.getnewaddress()
 tomaster_address = wallet.getnewaddress()
 timeout = 20
-amount = 20
 maxfees = 10
 
 print("Transfering: %d toaddress: %s tomaster_address: %s" % \
