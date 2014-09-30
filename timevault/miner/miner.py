@@ -30,7 +30,7 @@ from time import sleep
 from multiprocessing import Process
 
 ERR_SLEEP = 15
-GET_WORK_SLEEP = 10
+GET_WORK_SLEEP = 20
 MAX_NONCE = 1000000000000L
 
 settings = {}

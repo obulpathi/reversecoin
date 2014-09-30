@@ -26,7 +26,7 @@ from bitcoin.messages import msg_block, message_to_str, message_read
 from bitcoin.coredefs import COIN
 from bitcoin.scripteval import VerifySignature
 from bitcoin import serialize
-from bitcoin.script import OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM
+from bitcoin.script import OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM, OP_VAULT_OVERRIDE
 
 from timevault import exceptions
 
@@ -382,29 +382,38 @@ class ChainDb(object):
                 # if its a coinbase transaction, skip
                 if tx.is_coinbase():
                     continue
-                for txin in tx.vin:
-                    # if not a input from vault, skip
-                    if ord(txin.scriptSig[0]) not in [OP_VAULT_WITHDRAW,
-                        OP_VAULT_CONFIRM, OP_VAULT_FAST_WITHDRAW]:
-                        continue
-                    # add a transaction is received through withdraw
-                    if txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
-                        tx.calc_sha256()
-                        self.logger.debug("Vault withdraw initiated: %d %064x" \
-                                       % (height, tx.sha256))
-                        txhashes.append(tx.sha256)
-                    # remove if a transaction is spent through vault confirm or override
-                    elif txin.scriptSig[0] == chr(OP_VAULT_CONFIRM):
-                        newtx = core.CTransaction()
-                        newtx.copy(tx)
-                        # TODO: assuming only one input
-                        newtx.vin[0].scriptSig = chr(OP_VAULT_WITHDRAW) + \
-                            txin.scriptSig[1:]
-                        newtx.calc_sha256()
-                        txhashes.remove(newtx.sha256)
-                    elif txin.scriptSig[0] == chr(OP_VAULT_FAST_WITHDRAW):
-                        self.logger.debug("Vault confirmed %064x" % txin.prevout.hash)
-                        txhashes.remove(txin.prevout.hash)
+                if not utils.is_vault_tx(tx):
+                    continue
+                txin = tx.vin[0]
+
+                """
+                # if not a input from vault, skip
+                if ord(txin.scriptSig[0]) not in [OP_VAULT_WITHDRAW,
+                    OP_VAULT_CONFIRM, OP_VAULT_OVERRIDE]:
+                    continue
+                """
+                # add a transaction is received through withdraw
+                if txin.scriptSig[0] == chr(OP_VAULT_WITHDRAW):
+                    tx.calc_sha256()
+                    self.logger.debug("Vault withdraw initiated: %d %064x" \
+                                   % (height, tx.sha256))
+                    txhashes.append(tx.sha256)
+                # remove if a transaction is spent through vault confirm or override
+                elif txin.scriptSig[0] == chr(OP_VAULT_CONFIRM):
+                    newtx = core.CTransaction()
+                    newtx.copy(tx)
+                    newtx.vin[0].scriptSig = chr(OP_VAULT_WITHDRAW) + \
+                        txin.scriptSig[1:]
+                    newtx.calc_sha256()
+                    txhashes.remove(newtx.sha256)
+                elif txin.scriptSig[0] == chr(OP_VAULT_OVERRIDE):
+                    self.logger.debug("Vault confirmed %064x" % txin.prevout.hash)
+                    #TODO(obulpathi): optimize
+                    for txhash in txhashes:
+                        tmp_tx = self.gettx(txhash)
+                        if tmp_tx.vin[0].prevout.hash == txin.prevout.hash:
+                            tmp_tx.calc_sha256()
+                            txhashes.remove(tmp_tx.sha256)
         return txhashes
 
 
