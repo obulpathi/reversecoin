@@ -6,7 +6,7 @@ toaddress = wallet.getnewaddress()
 
 print ('\nPending Transfers')
 transactions = wallet.getpendingtransactions()
-print transactions
+
 for n, transaction in transactions.iteritems():
     print "\tId: ", n
     print "\tInputs: "
@@ -19,5 +19,6 @@ for n, transaction in transactions.iteritems():
 index = raw_input("Enter the id of the vault transaction you want to override: ")
 fromaddress = transactions[index]['inputs'][0]
 print "Fromaddress: ", fromaddress
+print "Toaddress: ", toaddress
 print("Overriding the transaction")
 wallet.overridevault(fromaddress, toaddress)

@@ -5,6 +5,7 @@ toaddress = wallet.getnewaddress()
 
 print("Available vaults")
 vaults = wallet.getvaults()
+vaults = list(vaults.itervalues())
 for n, vault in enumerate(vaults):
     print "Id: ", n, vault['address']  + ": ", vault['balance']
 index = int(input("Enter the id of the vault you want to transfer balance from: "))
