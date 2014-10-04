@@ -10,6 +10,7 @@ from tests.api import utils
 from timevault import bitcoinrpc
 
 class TestWallet(base.TestBase):
+
     def test_account(self):
         account = self.connection.getaccount(self.account)
         self.assertIsInstance(account, dict)
@@ -301,6 +302,9 @@ class TestWallet(base.TestBase):
         vaultaddress = self.connection.sendtovault(toaddress, tomaster_address,
             amount, timeout, maxfees)
         self.assertIsNotNone(vaultaddress)
+
+        vault = utils.wait_until_vault_has_balance(self.connection, vaultaddress)
+        self.assertEqual(int(vault['balance']), amount)
 
         # try recreating vault
         vaultaddress = self.connection.sendtovault(toaddress, tomaster_address,

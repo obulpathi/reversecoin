@@ -13,7 +13,7 @@ class TestBase(unittest.TestCase):
         miner = utils.VaultMiner()
         vaultd.start()
         miner.start()
-        time.sleep(1)
+        time.sleep(3)
 
     def setUp(self):
         rpcuser = "user"
@@ -23,7 +23,8 @@ class TestBase(unittest.TestCase):
             rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
 
     def tearDown(self):
-        pass
+        self.connection.dumpblockchain()
+        self.connection.dumpmempool()
 
     @classmethod
     def tearDownClass(cls):

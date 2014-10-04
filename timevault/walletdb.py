@@ -587,8 +587,6 @@ class WalletDB(object):
         # push data to vault
         tx.calc_sha256()
         self.set("vault:" + vault_address, {'txhash': tx.sha256})
-        #import pdb; pdb.set_trace()
-        #utils.is_vault_tx(tx)
         return (vault_address, tx)
 
 
