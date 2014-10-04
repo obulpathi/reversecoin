@@ -1013,14 +1013,40 @@ class ChainDb(object):
 
     def newblock_txs(self):
         txlist = []
+        spenttxs = set()
+        invalidtxs = set()
         # get the current transactions
         for tx in self.mempool.pool.itervalues():
             # query finalized, non-coinbase mempool tx's
             if tx.is_coinbase() or not tx.is_final():
                 self.logger.debug("Coinbase or FINAL ... not adding")
                 continue
-            # iterate through inputs, calculate total input value
+
+            # check validity of transaction
             valid = True
+
+            # filter out duplicate transactions
+            txprevouts = set()
+            for txin in tx.vin:
+                if txin.prevout.hash in spenttxs:
+                    # TODO(obulpathi): if this is a vault override, allow it
+                    # and remove the normal tx
+                    self.logger.error(
+                        "New block txs{0}: tx already spent".format(txin.prevout.hash))
+                    valid = False
+                    continue
+            txprevouts.add(txin.prevout.hash)
+
+            if not valid:
+                self.logger.error("Transaction not valid")
+                tx.calc_sha256()
+                invalidtxs.add(tx.sha256)
+                continue
+
+            for txhash in txprevouts:
+                spenttxs.add(txhash)
+
+            # iterate through inputs, calculate total input value
             nValueIn = 0
             nValueOut = 0
             dPriority = Decimal(0)
@@ -1039,7 +1065,10 @@ class ChainDb(object):
 
             if not valid:
                 self.logger.error("Transaction not valid")
+                tx.calc_sha256()
+                invalidtxs.add(tx.sha256)
                 continue
+
             # iterate through outputs, calculate total output value
             for txout in tx.vout:
                 nValueOut += txout.nValue
@@ -1049,7 +1078,9 @@ class ChainDb(object):
             if utils.is_vault_tx(tx):
                 tx.nFeesPaid = tx.nFeesPaid / 2
             if tx.nFeesPaid < 0:
-                self.logger.warning("Fees < 0 skipping transaction")
+                self.logger.error("Fees < 0 skipping transaction")
+                tx.calc_sha256()
+                invalidtxs.add(tx.sha256)
                 continue
 
             # calculate fee-per-KB and priority
@@ -1064,6 +1095,10 @@ class ChainDb(object):
             tx.dPriority = dPriority
 
             txlist.append(tx)
+
+        # remove invalid transactions
+        for txhash in invalidtxs:
+            self.mempool.remove(txhash)
 
         # sort list by fee-per-kb, then priority
         sorted_txlist = sorted(txlist, cmp=tx_blk_cmp, reverse=True)

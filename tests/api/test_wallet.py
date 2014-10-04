@@ -58,14 +58,20 @@ class TestWallet(base.TestBase):
         transfered1 = self.connection.sendtoaddress(toaddress1, amount)
         transfered2 = self.connection.sendtoaddress(toaddress2, amount)
         self.assertEqual(amount, transfered1)
-        self.assertEqual(0, transfered2)
+        self.assertEqual(amount, transfered2)
 
-        # wait for account to get updated
-        subaccount1 = utils.wait_until_account_has_balance(self.connection, toaddress1)
-        self.assertEqual(transfered1, int(subaccount1['balance']))
-        account = self.connection.getaccount(self.account)
-        subaccount2 = account[toaddress2]
-        self.assertEqual(0, int(subaccount2['balance']))
+        # wait for one of the accounts to get updated
+        while True:
+            utils.wait_until_n_more_blocks_are_generated(self.connection, 1)
+            account = self.connection.getaccount(self.account)
+            subaccount1 = account[toaddress1]
+            subaccount2 = account[toaddress2]
+            if subaccount1['balance'] or subaccount2['balance']:
+                balance_max = max(subaccount1['balance'], subaccount2['balance'])
+                balance_min = min(subaccount1['balance'], subaccount2['balance'])
+                self.assertEqual(int(balance_max), amount)
+                self.assertEqual(int(balance_min), 0)
+                break
 
     def test_vault_send(self):
         # wait until blocks are generated
@@ -153,14 +159,20 @@ class TestWallet(base.TestBase):
         transfered1 = self.connection.withdrawfromvault(fromaddress, toaddress1, amount)
         transfered2 = self.connection.withdrawfromvault(fromaddress, toaddress2, amount)
         self.assertEqual(transfered1, amount)
-        self.assertEqual(0, transfered2)
+        self.assertEqual(transfered2, amount)
 
-        # wait for account to get updated
-        subaccount1 = utils.wait_until_account_has_balance(self.connection, toaddress1)
-        account = self.connection.getaccount(self.account)
-        subaccount2 = account[toaddress2]
-        self.assertEqual(int(subaccount1['balance']), amount)
-        self.assertEqual(int(subaccount2['balance']), 0)
+        # wait for one of the accounts to get updated
+        while True:
+            utils.wait_until_n_more_blocks_are_generated(self.connection, 1)
+            account = self.connection.getaccount(self.account)
+            subaccount1 = account[toaddress1]
+            subaccount2 = account[toaddress2]
+            if subaccount1['balance'] or subaccount2['balance']:
+                balance_max = max(subaccount1['balance'], subaccount2['balance'])
+                balance_min = min(subaccount1['balance'], subaccount2['balance'])
+                self.assertEqual(int(balance_max), amount)
+                self.assertEqual(int(balance_min), 0)
+                break
 
     def test_multiple_vault_withdraws(self):
         # wait until blocks are generated
