@@ -15,8 +15,18 @@ shutil.copy('etc/config.cfg', os.path.expanduser('~/.bitcoinpy.cfg'))
 shutil.copy('etc/miner.cfg', os.path.expanduser('~/.vaultminer.cfg'))
 
 setuptools.setup(
+    name = "timevault",
     install_requires=reqs,
+    packages = ["timevault",
+                "timevault.bitcoin",
+                "timevault.bitcoinrpc",
+                "timevault.miner",
+                "timevault.others",
+                "timevault.tools",
+                "timevault.wallet"],
     entry_points = {
         'console_scripts': ['timevaultd=timevault.bitcoinpy:run',
-                            'vaultminer=timevault.miner.miner:run'],}
+                            'vaultminer=timevault.miner.miner:run'],},
+    version = "1.0.0", # TODO: Fix this
+    description = "A secure revertible crypto currency",
 )
