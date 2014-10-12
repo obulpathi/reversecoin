@@ -14,19 +14,19 @@ reqs = [str(ir.req) for ir in install_reqs]
 shutil.copy('etc/config.cfg', os.path.expanduser('~/.bitcoinpy.cfg'))
 shutil.copy('etc/miner.cfg', os.path.expanduser('~/.vaultminer.cfg'))
 
+_PKG_ROOT = 'timevault'
+
 setuptools.setup(
-    name = "timevault",
+    name = _PKG_ROOT,
     install_requires=reqs,
-    packages = ["timevault",
-                "timevault.bitcoin",
-                "timevault.bitcoinrpc",
-                "timevault.miner",
-                "timevault.others",
-                "timevault.tools",
-                "timevault.wallet"],
+    packages = [_PKG_ROOT] + [_PKG_ROOT+'.'+p for p in setuptools.find_packages(_PKG_ROOT)],
     entry_points = {
         'console_scripts': ['timevaultd=timevault.bitcoinpy:run',
                             'vaultminer=timevault.miner.miner:run'],},
     version = "1.0.0", # TODO: Fix this
     description = "A secure revertible crypto currency",
+    url = "https://vaultcoin.org",
+    author = "Obulpathi N Challa",
+    author_email = "obulpathi@gmail.com",
+    zip_safe = False,
 )
