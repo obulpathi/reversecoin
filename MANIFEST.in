@@ -1,1 +1,6 @@
-recursive-include public *
+include *.py LICENSE *.md *.txt *.cfg *.rst
+recursive-include timevault *.py
+recursive-include tests *.py
+recursive-include etc *.*
+recursive-include docs *.*
+recursive-include notes *.*

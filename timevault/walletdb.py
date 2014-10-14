@@ -199,7 +199,7 @@ class WalletDB(object):
     def initialize(self):
         if not os.path.isfile(self.walletfile):
             walletdb = self.open(writable = True)
-            # if wallet is not initialized, return
+            # if wallet is initialized, return
             if 'accounts' in walletdb:
                 walletdb.close()
                 self.logger.warning("Wallet is already initialized!")
