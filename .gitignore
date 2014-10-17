@@ -33,7 +33,7 @@ tests/cover
 *.git
 
 # virtualenv
-venv
+venv*
 
 # custom
 others/

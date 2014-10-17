@@ -22,6 +22,7 @@ setuptools.setup(
     packages = [_PKG_ROOT] + [_PKG_ROOT+'.'+p for p in setuptools.find_packages(_PKG_ROOT)],
     entry_points = {
         'console_scripts': ['timevaultd=timevault.bitcoinpy:run',
+			    'timevaultclient=timevault.wallet.timevaultclient:main',
                             'vaultminer=timevault.miner.miner:run'],},
     version = "1.0.0", # TODO: Fix this
     description = "A secure revertible crypto currency",
