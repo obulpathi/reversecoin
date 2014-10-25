@@ -1,6 +1,7 @@
 import os
 import shutil
 import setuptools
+import subprocess
 from pip.req import parse_requirements
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
@@ -22,9 +23,9 @@ setuptools.setup(
     packages = [_PKG_ROOT] + [_PKG_ROOT+'.'+p for p in setuptools.find_packages(_PKG_ROOT)],
     entry_points = {
         'console_scripts': ['timevaultd=timevault.bitcoinpy:run',
-			    'timevaultclient=timevault.wallet.timevaultclient:main',
-                            'vaultminer=timevault.miner.miner:run'],},
-    version = "1.0.0", # TODO: Fix this
+                            'vaultminer=timevault.miner.miner:run',
+                            'rwallet=timevault.wallet.rwallet:main',],},
+    version = subprocess.Popen(['python', 'timevault/version.py', '-v'], stdout=subprocess.PIPE).communicate()[0].replace('\n', ''),
     description = "A secure revertible crypto currency",
     url = "https://vaultcoin.org",
     author = "Obulpathi N Challa",

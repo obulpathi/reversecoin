@@ -3,6 +3,7 @@ import argparse
 
 from timevault.wallet.wallet import Wallet
 from timevault import bitcoinrpc
+from timevault.version import VERSION, COPYRIGHT_YEAR
 
 def address():
     wallet = Wallet()
@@ -58,7 +59,7 @@ def received():
     rpcuser="user"
     rpcpass="passwd"
     
-    address = sys.argv[1]
+    address = input("Enter the address to check received transactions:")
     
     connection = bitcoinrpc.connect_to_remote(rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
     txoutlist = connection.getreceivedbyaddress(address)
@@ -219,58 +220,43 @@ def vault_pending():
             print txouts['toaddress'] + ": ", txouts['amount']
 
 def run(args):
+    globals()[args.command]()
 
-    if args.address:
-        address()
-    elif args.account:
-        account()
-    elif args.balance:
-        balance()
-    elif args.getvaults:
-        getvaults()
-    elif args.blockchain:
-        blockchain()
-    elif args.mempool:
-        mempool()
-    elif args.received:
-        received()
-    elif args.send:
-        send()
-    elif args.getvault:
-        getvault()
-    elif args.savings:
-        savings()
-    elif args.vault_send:
-        vault_send()
-    elif args.vault_withdraw:
-        vault_withdraw()
-    elif args.vault_override:
-        vault_override()
-    elif args.vault_fast_withdraw:
-        vault_fast_withdraw()
-    elif args.vault_pending:
-        vault_pending()
+# any function added above should be registered here
+_SUPPORTED_COMMANDS = [
+    ("address", "Generate a new address.",),
+    ("account", "Look at the account summary.",),
+    ("balance", "Current wallet balance.",),
+    ("getvaults", "Highlevel information about the vaults.",),
+    ("blockchain", "Dump the current block chain.",),
+    ("mempool", "Dump the mempool.",),
+    ("received", "Received transactions.",),
+    ("send", "Send coins.",),
+    ("getvault", "A little detailed view of vaults.",),
+    ("savings", "Balance in each account.",),
+    ("vault_send", "Send to a vault.",),
+    ("vault_withdraw", "Withdraw from a vault.",),
+    ("vault_override", "Override a vault transaction.",),
+    ("vault_fast_withdraw", "Withdraw from a vault immediately. No timeout associated.",),
+    ("vault_pending", "List of pending vault transactions.",),
+    ]
 
+_EPILOG = "Commands Desription:\n====================\n"
+for cmd, hlp in _SUPPORTED_COMMANDS:
+    _EPILOG += "{:<30} {}\n".format(cmd, hlp)
+
+_WALLET_NAME = """
+Timevault Wallet - v%s
+
+Copyright: %s
+""" % (VERSION, COPYRIGHT_YEAR)
+    
 def parse_arguments():
 
-    parser = argparse.ArgumentParser(description="Timevault client version 1.0.0",
-                                     argument_default=True)
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("address", help="Generate a new address.", nargs='?')
-    group.add_argument("account", help="Look at the account summary.", nargs='?')
-    group.add_argument("balance", help="Current wallet balance.", nargs='?')
-    group.add_argument("getvaults", help="Information about the vaults.", nargs='?')
-    group.add_argument("blockchain", help="Dump the current block chain.", nargs='?')
-    group.add_argument("mempool", help="Dump the mempool.", nargs='?')
-    group.add_argument("received", help="Received transactions.", nargs='?')
-    group.add_argument("send", help="Send coins.", nargs='?')
-    group.add_argument("getvault", help="", nargs='?')
-    group.add_argument("savings", help="", nargs='?')
-    group.add_argument("vault_send", help="", nargs='?')
-    group.add_argument("vault_withdraw", help="", nargs='?')
-    group.add_argument("vault-override", help="", nargs='?')
-    group.add_argument("vault_fast_withdraw", help="", nargs='?')
-    group.add_argument("vault_pending", help="", nargs='?')
+    parser = argparse.ArgumentParser(description=_WALLET_NAME,
+                                     epilog=_EPILOG,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("command", choices=[c for c,_ in _SUPPORTED_COMMANDS])
 
     if len(sys.argv) == 1:
         parser.print_help()
