@@ -26,11 +26,6 @@ FEATURES
 * Mining Pool
 * Exchange
 
-OTHERS
-------
-* If same address appears in output tx twice, one txout is getting
-  overwritten in chaindb:listreceivedbyaddress
-
 NAME and ICON
 -------------
 * Vaultcoin: Already taken, but we have www.vaultcoin.net
