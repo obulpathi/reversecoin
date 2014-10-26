@@ -37,7 +37,7 @@ def initialize(datadir):
 
     filepath = os.path.realpath(__file__)
     dirpath = os.path.dirname(filepath)
-    configdir = dirpath + '/../etc'
+    configdir = dirpath + '/data'
     # create blocks.dat file
     shutil.copy(configdir + '/genesis.dat', os.path.join(datadir + '/blocks.dat'))
 

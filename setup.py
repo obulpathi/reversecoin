@@ -31,4 +31,7 @@ setuptools.setup(
     author = "Obulpathi N Challa",
     author_email = "obulpathi@gmail.com",
     zip_safe = False,
+    package_data = {
+        _PKG_ROOT: ['data/genesis.dat'],
+        },
 )

@@ -4,5 +4,13 @@ timevaultd:
 vaultminer:
 	python timevault/miner/miner.py etc/miner.cfg
 
-clean:
+cleanconfig:
+	rm ~/.bitcoinpy.cfg
+	rm ~/.vaultminer.cfg
+
+cleandata:
 	rm -rf ~/.bitcoinpy
+
+clean:
+	make cleanconfig
+	make cleandata
