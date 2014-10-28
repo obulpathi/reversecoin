@@ -419,7 +419,6 @@ class ChainDb(object):
 
     def getpendingtransactions(self):
         pending_txs = {}
-        #txhashs = self.vaultdb.getpendingvaulttxs()
         txhashs = self.listpendingtxhashes()
         for i, txhash in enumerate(txhashs):
             pending_tx = {}
@@ -430,8 +429,10 @@ class ChainDb(object):
             pending_tx['inputs'] = inputs
             outputs = []
             for n, txout in enumerate(tx.vout):
-                output = {'toaddress': utils.output_script_to_address(txout.scriptPubKey),
-                          'amount': txout.nValue}
+                output = {
+                    'toaddress': utils.pending_tx_output_script_to_address(
+                                    txout.scriptPubKey),
+                    'amount': txout.nValue}
                 outputs.append(output)
             pending_tx['outputs'] = outputs
             pending_txs[str(n)] = pending_tx

@@ -366,6 +366,30 @@ def scriptSig_to_vault_address(scriptSig):
     return vault_address
 
 
+def pending_tx_output_script_to_address(script):
+    version = binascii.unhexlify('00')
+    if script[-2:] == binascii.unhexlify("88AC"):
+        version = binascii.unhexlify('00')
+    elif script[:1] == binascii.unhexlify("76"):
+        version = binascii.unhexlify('08')
+    else:
+        raise Exception("Error unknown scritpt: ", binascii.hexlify(script))
+
+    # fix this into a single complete module
+    hash160_address = binascii.unhexlify(output_script_to_public_key_hash(script))
+    # add version byte: 0x00 for Main Network
+    extended_address = version + hash160_address
+    # generate double SHA-256 hash of extended address
+    hash_address = myhash(extended_address)
+    # Take the first 4 bytes of the second SHA-256 hash. This is the address checksum
+    checksum = hash_address[:4]
+    # Add the 4 checksum bytes from point 7 at the end of extended RIPEMD-160 hash from point 4. This is the 25-byte binary Bitcoin Address
+    binary_address = extended_address + checksum
+    # encode in base 58 format
+    address = encode(binary_address)
+    return address
+
+
 """
 # Output script to address representation
 def script_to_address(script,vbyte=0):
