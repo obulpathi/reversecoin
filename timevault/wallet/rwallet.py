@@ -5,7 +5,7 @@ from timevault.wallet.wallet import Wallet
 from timevault import bitcoinrpc
 from timevault.version import VERSION, COPYRIGHT_YEAR
 
-def address():
+def newaddress():
     wallet = Wallet()
     address = wallet.getnewaddress()
     print address
@@ -121,6 +121,24 @@ def savings():
     for subaccount in account.itervalues():
         print subaccount['address']  + ": ", subaccount['balance']
 
+def vault_new():
+    wallet = Wallet()
+    account = wallet.getaccount()
+
+    toaddress = wallet.getnewaddress()
+    tomaster_address = wallet.getnewaddress()
+    timeout = 20
+    maxfees = 10
+
+    print("Creating new vault: address: %s master_address: %s" % \
+         (toaddress, tomaster_address))
+    vault_address = wallet.newvault(toaddress, tomaster_address, timeout, maxfees)
+
+    if vault_address:
+        print("Created: {0}".format(vault_address))
+    else:
+        print("An error occured while creating vault")
+
 def vault_send():
     wallet = Wallet()
     account = wallet.getaccount()
@@ -129,20 +147,34 @@ def vault_send():
     for subaccount in account.itervalues():
         balance = balance + subaccount['balance']
 
+    vaults = wallet.getvaults()
+    emptyvaults = {}
+    for vault in vaults:
+        if not vaults[vault]['balance']:
+            emptyvaults[vault] = vaults[vault]
+
+    vaults = emptyvaults
+    vault_names = [vault for vault in vaults]
+    for count, vault in enumerate(vault_names):
+        print count, ":", vault + " ", vaults[vault]['balance']
+
+    choice = int(input("Select the vault to transfer money to: "))
+    if choice < 0 or choice > len(vaults)-1:
+        print("Invalid choice")
+        exit(1)
+
+    vault_address = vault_names[choice]
+
     amount = int(input("Enter the balance to transfer to vault: "))
 
     if balance < amount:
         print("Not enough balance")
         exit(1)
 
-    toaddress = wallet.getnewaddress()
-    tomaster_address = wallet.getnewaddress()
-    timeout = 20
-    maxfees = 10
-
-    print("Transfering: %d toaddress: %s tomaster_address: %s" % \
-          (amount, toaddress, tomaster_address))
-    wallet.sendtovault(toaddress, tomaster_address, amount, timeout, maxfees)
+    print("Transfering %d to vault %s" % (amount, vault_address))
+    ret_value = wallet.sendtovault(vault_address, amount)
+    if not ret_value:
+        print("An error occured while trasfering")
 
 def vault_withdraw():
     wallet = Wallet()
@@ -228,16 +260,17 @@ def run(args):
 
 # any function added above should be registered here
 _SUPPORTED_COMMANDS = [
-    ("address", "Generate a new address.",),
     ("account", "Look at the account summary.",),
     ("balance", "Current wallet balance.",),
     ("getvaults", "Highlevel information about the vaults.",),
     ("blockchain", "Dump the current block chain.",),
     ("mempool", "Dump the mempool.",),
+    ("newaddress", "Generate a new address.",),
     ("received", "Received transactions.",),
     ("send", "Send coins.",),
     ("getvault", "A little detailed view of vaults.",),
     ("savings", "Balance in each account.",),
+    ("vault_new", "Create a new vault account"),
     ("vault_send", "Send to a vault.",),
     ("vault_withdraw", "Withdraw from a vault.",),
     ("vault_override", "Override a vault transaction.",),
