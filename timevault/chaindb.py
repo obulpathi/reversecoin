@@ -211,14 +211,17 @@ class ChainDb(object):
         except exceptions.VaultAlreadyExistsException as e:
             return None
 
-    # toaddress, tomaster_address, amount, timeout, maxfees
-    def sendtovault(self, toaddress, tomaster_address, amount, timeout, maxfees):
-        try:
-            vault_address, tx = self.wallet.sendtovault(toaddress, tomaster_address,
-                amount, timeout, maxfees)
-        except exceptions.InsufficientBalanceException as e:
+    # vault_address, amount
+    def sendtovault(self, vault_address, amount):
+        txouts = self.listallreceivedbyvault(vault_address)
+        if txouts:
             return None
-        except exceptions.VaultAlreadyExistsException as e:
+        if self.mempool.hasvault(vault_address):
+            return None
+
+        try:
+            vault_address, tx = self.wallet.sendtovault(vault_address, amount)
+        except exceptions.InsufficientBalanceException as e:
             return None
 
         tx.calc_sha256()

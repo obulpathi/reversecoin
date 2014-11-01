@@ -5,7 +5,7 @@
 import logging
 
 from bitcoin.serialize import uint256_to_shortstr
-
+import utils
 
 class MemPool(object):
 	def __init__(self):
@@ -36,6 +36,13 @@ class MemPool(object):
 
 	def size(self):
 		return len(self.pool)
+
+	def hasvault(self, vault_address):
+		script = utils.vault_address_to_pay_to_vault_script(vault_address)
+		for txhash in self.pool:
+			if self.pool[txhash].vout[0].scriptPubKey == script:
+				return True
+		return False
 
 	def dumpmempool(self):
 		print "mempool"

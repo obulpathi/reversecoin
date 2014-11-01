@@ -507,7 +507,7 @@ class WalletDB(object):
         return vault_address
 
     # send to a vault
-    def sendtovault(self, toaddress, tomaster_address, amount, timeout, maxfees):
+    def sendtovault(self, vault_address, amount):
         # select the input addresses
         funds = 0
         subaccounts = []
@@ -526,11 +526,6 @@ class WalletDB(object):
         if funds < amount + utils.calculate_fees(None):
             self.logger.warning("In sufficient funds, exiting, return")
             raise exceptions.InsufficientBalanceException
-
-        # create vault
-        vault_address = utils.addresses_to_vault_address(toaddress,
-            tomaster_address, timeout, maxfees)
-        self.newvault(vault_address, toaddress, tomaster_address, timeout, maxfees)
 
         # create transaction
         tx = CTransaction()
@@ -593,7 +588,7 @@ class WalletDB(object):
             self.logger.debug("Tx Validity: %064x" % tx.is_valid())
         # push data to vault
         tx.calc_sha256()
-        self.set("vault:" + vault_address, {'txhash': tx.sha256})
+        self.set(str("vault:" + vault_address), {'txhash': tx.sha256})
         return (vault_address, tx)
 
 

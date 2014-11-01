@@ -324,8 +324,7 @@ class RPCExec(object):
         return (self.chaindb.sendtoaddress(params[0], params[1]), None)
 
     def sendtovault(self, params):
-        return (self.chaindb.sendtovault(params[0], params[1], params[2],
-            params[3], params[4]), None)
+        return (self.chaindb.sendtovault(params[0], params[1]), None)
 
     def withdrawfromvault(self, params):
         return (self.chaindb.withdrawfromvault(params[0], params[1], params[2]), None)
