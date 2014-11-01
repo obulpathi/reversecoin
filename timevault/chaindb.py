@@ -205,6 +205,12 @@ class ChainDb(object):
             return amount
         return 0
 
+    def createvault(self, toaddress, tomaster_address, timeout, maxfees):
+        try:
+            return self.wallet.createvault(toaddress, tomaster_address, timeout, maxfees)
+        except exceptions.VaultAlreadyExistsException as e:
+            return None
+
     # toaddress, tomaster_address, amount, timeout, maxfees
     def sendtovault(self, toaddress, tomaster_address, amount, timeout, maxfees):
         try:

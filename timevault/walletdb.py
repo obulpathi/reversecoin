@@ -499,6 +499,13 @@ class WalletDB(object):
         return amount, tx
 
 
+    # create vault
+    def createvault(self, toaddress, tomaster_address, timeout, maxfees):
+        vault_address = utils.addresses_to_vault_address(toaddress,
+            tomaster_address, timeout, maxfees)
+        self.newvault(vault_address, toaddress, tomaster_address, timeout, maxfees)
+        return vault_address
+
     # send to a vault
     def sendtovault(self, toaddress, tomaster_address, amount, timeout, maxfees):
         # select the input addresses

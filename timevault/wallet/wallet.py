@@ -31,6 +31,9 @@ class Wallet(object):
     def getpendingtransactions(self):
         return self.connection.getpendingtransactions()
 
+    def newvault(self, toaddress, tomaster_address, timeout, maxfees):
+        return self.connection.newvault(toaddress, tomaster_address, timeout, maxfees)
+
     def send(self, toaddress, amount):
         self.connection.sendtoaddress(toaddress, amount)
 

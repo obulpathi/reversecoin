@@ -216,6 +216,19 @@ class BitcoinConnection(object):
         """
         return self.proxy.getaddressesbyaccount(account)
 
+    def newvault(self, toaddress, tomaster_address, timeout, maxfees):
+        """
+        Creates and returns new vault.
+
+        Arguments:
+
+        - *toaddress* -- Bitcoin address to send to.
+        - *tomaster_address* -- Bitcoin master address to send to.
+        - *timeout* -- Timeout for vault (Positive integeer, less than or equal to 100).
+        - *maxfees* -- Max fees (float, rounded to the nearest 0.00000001).
+        """
+        return self.proxy.newvault(toaddress, tomaster_address, timeout, maxfees)
+
     def sendtoaddress(self, bitcoinaddress, amount, comment=None, comment_to=None):
         """
         Sends *amount* from the server's available balance to *bitcoinaddress*.

@@ -39,6 +39,7 @@ VALID_RPCS = {
     "getreceivedbyaddress",
     "getwork",
     "listreceivedbyaddress",
+    "newvault",
     "sendtoaddress",
     "sendtovault",
     "submitblock",
@@ -315,6 +316,9 @@ class RPCExec(object):
 
     def listreceivedbyaddress(self, params):
         return (self.chaindb.listreceivedbyaddress(params[0]), None)
+
+    def newvault(self, params):
+        return (self.chaindb.createvault(params[0], params[1], params[2], params[3]), None)
 
     def sendtoaddress(self, params):
         return (self.chaindb.sendtoaddress(params[0], params[1]), None)
