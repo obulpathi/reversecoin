@@ -45,7 +45,7 @@ def initialize(datadir):
     with open(datadir + '/__db.001', 'a'):
         pass
 
-def run(config_file = '~/.bitcoinpy.cfg'):
+def run(config_file = '~/.reversecoin.cfg'):
     # check if configuration file exists
     if not os.path.isfile(os.path.expanduser(config_file)):
         print('No configuration file: {0}'.format(config_file))
@@ -169,7 +169,7 @@ def run(config_file = '~/.bitcoinpy.cfg'):
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        logger.error("Usage: bitcoinpy.py CONFIG-FILE")
+        logger.error("Usage: reversecoin.py CONFIG-FILE")
         sys.exit(1)
 
     run(sys.argv[1])

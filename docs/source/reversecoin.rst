@@ -1,7 +1,7 @@
 ``reversecoin`` package
 =====================
 
-.. automodule:: reversecoin.bitcoinpy
+.. automodule:: reversecoin.reversecoin
     :members:
     :undoc-members:
     :show-inheritance:

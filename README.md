@@ -27,6 +27,6 @@ FOR DEVELOPERS:
 
 How to run tests
 -----------------
-Bitcoinpy uses tox and nose for testing. To run tests, simply cd into bitcoinpy folder and enter the command "tox". Selective tests can be run using the command "$ tox -- tests.api.test_wallet:TestWallet.test_info". If you want to start reversecoind and reversecoinminer for manual testing, enter into virtualenv by using "source ~/reversecoin/.tox/py27/bin/activate", then run the commands "reversecoind" for running the reversecoin daemon and "reversecoinminer" for mining coins.
+Reversecoin uses tox and nose for testing. To run tests, simply cd into reversecoin folder and enter the command "tox". Selective tests can be run using the command "$ tox -- tests.api.test_wallet:TestWallet.test_info". If you want to start reversecoind and reversecoinminer for manual testing, enter into virtualenv by using "source ~/reversecoin/.tox/py27/bin/activate", then run the commands "reversecoind" for running the reversecoin daemon and "reversecoinminer" for mining coins.
 
 Note: You don't need root access to run the above commands as all the setup takes place in virtualenv.

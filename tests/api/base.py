@@ -9,7 +9,7 @@ from reversecoin import bitcoinrpc
 class TestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        vaultd = utils.ReverseCoinTimeVaultDaemon()
+        vaultd = utils.ReverseCoinDaemon()
         miner = utils.ReverseCoinMiner()
         vaultd.start()
         miner.start()
