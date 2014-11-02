@@ -9,7 +9,7 @@ import unittest
 
 from binascii import unhexlify
 
-from timevault.bitcoin.base58 import *
+from reversecoin.bitcoin.base58 import *
 
 
 def load_sample_vector(name):

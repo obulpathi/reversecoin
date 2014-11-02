@@ -4,7 +4,6 @@ TODO
 BUGS
 ----
 * Update wallet examples
-* Vault Address format: scriptSig to vault address
 * Installation using python wheels
 * Documentation for installation
 * Fix FIXMEs
@@ -25,11 +24,6 @@ FEATURES
 * Hardware Wallet
 * Mining Pool
 * Exchange
-
-NAME and ICON
--------------
-* Vaultcoin: Already taken, but we have www.vaultcoin.net
-* Time Travel Coin: No one had used .. but will it signify Security?
 
 LATER
 -----

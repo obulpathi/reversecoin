@@ -1,15 +1,15 @@
-timevaultd:
-	python timevault/bitcoinpy.py etc/config.cfg
+reversecoind:
+	python reversecoin/bitcoinpy.py etc/config.cfg
 
-vaultminer:
-	python timevault/miner/miner.py etc/miner.cfg
+reversecoinminer:
+	python reversecoin/miner/miner.py etc/miner.cfg
 
 cleanconfig:
-	rm ~/.bitcoinpy.cfg
-	rm ~/.vaultminer.cfg
+	rm ~/.reversecoin.cfg
+	rm ~/.reversecoin.cfg
 
 cleandata:
-	rm -rf ~/.bitcoinpy
+	rm -rf ~/.reversecoin
 
 clean:
 	make cleanconfig

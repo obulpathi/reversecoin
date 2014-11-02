@@ -1,9 +1,9 @@
 import sys
 import argparse
 
-from timevault.wallet.wallet import Wallet
-from timevault import bitcoinrpc
-from timevault.version import VERSION, COPYRIGHT_YEAR
+from reversecoin.wallet.wallet import Wallet
+from reversecoin import bitcoinrpc
+from reversecoin.version import VERSION, COPYRIGHT_YEAR
 
 def newaddress():
     wallet = Wallet()
@@ -283,7 +283,7 @@ for cmd, hlp in _SUPPORTED_COMMANDS:
     _EPILOG += "{:<30} {}\n".format(cmd, hlp)
 
 _WALLET_NAME = """
-Timevault Wallet - v%s
+ReverseCoin Wallet - v%s
 
 Copyright: %s
 """ % (VERSION, COPYRIGHT_YEAR)

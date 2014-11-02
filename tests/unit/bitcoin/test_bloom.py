@@ -9,7 +9,7 @@ import unittest
 
 from binascii import unhexlify
 
-from timevault.bitcoin.bloom import *
+from reversecoin.bitcoin.bloom import *
 
 class Test_CBloomFilter(unittest.TestCase):
     def test_create_insert_serialize(self):

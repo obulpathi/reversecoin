@@ -28,7 +28,7 @@ from bitcoin.scripteval import VerifySignature
 from bitcoin import serialize
 from bitcoin.script import OP_VAULT_WITHDRAW, OP_VAULT_FAST_WITHDRAW, OP_VAULT_CONFIRM, OP_VAULT_OVERRIDE
 
-from timevault import exceptions
+from reversecoin import exceptions
 
 def tx_blk_cmp(a, b):
     if a.dFeePerKB != b.dFeePerKB:

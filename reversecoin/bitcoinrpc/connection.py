@@ -20,11 +20,11 @@
 """
 Connect to Bitcoin server via JSON-RPC.
 """
-from timevault.bitcoinrpc.proxy import AuthServiceProxy
-from timevault.bitcoinrpc.exceptions import (wrap_exception, BitcoinException,
+from reversecoin.bitcoinrpc.proxy import AuthServiceProxy
+from reversecoin.bitcoinrpc.exceptions import (wrap_exception, BitcoinException,
                                    WalletPassphraseIncorrect,
                                    WalletAlreadyUnlocked)
-from timevault.bitcoinrpc.data import (ServerInfo, AccountInfo, AddressInfo, TransactionInfo, AddressValidation, WorkItem, MiningInfo)
+from reversecoin.bitcoinrpc.data import (ServerInfo, AccountInfo, AddressInfo, TransactionInfo, AddressValidation, WorkItem, MiningInfo)
 
 
 class BitcoinConnection(object):

@@ -3,13 +3,13 @@ import random
 import threading
 import time
 
-class TimeVaultDaemon(threading.Thread):
+class ReverseCoinDaemon(threading.Thread):
      def run(self):
-         os.system('timevaultd')
+         os.system('reversecoind')
 
-class VaultMiner(threading.Thread):
+class ReverseCoinMiner(threading.Thread):
      def run(self):
-         os.system('vaultminer')
+         os.system('reversecoin')
 
 def wait_until_blocks_are_generated(connection):
     # wait until you have generated some blocks

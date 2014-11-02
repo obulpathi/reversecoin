@@ -9,8 +9,8 @@ import struct
 import time
 import random
 import cStringIO
-from timevault.bitcoin.coredefs import *
-from timevault.bitcoin.core import *
+from reversecoin.bitcoin.coredefs import *
+from reversecoin.bitcoin.core import *
 
 MSG_TX = 1
 MSG_BLOCK = 2

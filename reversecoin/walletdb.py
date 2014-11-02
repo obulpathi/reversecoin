@@ -20,7 +20,7 @@ import sys
 import utils
 #import base58
 
-from timevault import exceptions
+from reversecoin import exceptions
 
 
 """

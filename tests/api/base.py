@@ -3,14 +3,14 @@ import time
 import unittest
 
 from tests.api import utils
-from timevault import bitcoinrpc
+from reversecoin import bitcoinrpc
 
 
 class TestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        vaultd = utils.TimeVaultDaemon()
-        miner = utils.VaultMiner()
+        vaultd = utils.ReverseCoinTimeVaultDaemon()
+        miner = utils.ReverseCoinMiner()
         vaultd.start()
         miner.start()
         time.sleep(3)
@@ -27,6 +27,6 @@ class TestBase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        os.system("killall -9 vaultminer > /dev/null 2>&1");
-        os.system("killall -9 timevaultd > /dev/null 2>&1");
+        os.system("killall -9 reversecoinminer > /dev/null 2>&1");
+        os.system("killall -9 reversecoind > /dev/null 2>&1");
         time.sleep(1)

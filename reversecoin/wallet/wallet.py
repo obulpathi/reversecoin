@@ -1,4 +1,4 @@
-from timevault import bitcoinrpc
+from reversecoin import bitcoinrpc
 
 class Wallet(object):
     def __init__(self):

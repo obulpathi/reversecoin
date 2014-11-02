@@ -1,6 +1,6 @@
 import unittest
 
-from timevault.bitcoin import utils
+from reversecoin.bitcoin import utils
 
 class TestUtils(unittest.TestCase):
     def setUp(self):

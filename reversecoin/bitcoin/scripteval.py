@@ -10,11 +10,11 @@ if sys.version > '3':
     long = int
 
 import hashlib
-from timevault.bitcoin.serialize import Hash, Hash160, ser_uint256, ser_uint160
-from timevault.bitcoin.script import *
-from timevault.bitcoin.core import CTxOut, CTransaction
-from timevault.bitcoin.key import CKey
-from timevault.bitcoin.bignum import bn2vch, vch2bn
+from reversecoin.bitcoin.serialize import Hash, Hash160, ser_uint256, ser_uint160
+from reversecoin.bitcoin.script import *
+from reversecoin.bitcoin.core import CTxOut, CTransaction
+from reversecoin.bitcoin.key import CKey
+from reversecoin.bitcoin.bignum import bn2vch, vch2bn
 
 def SignatureHash(script, txTo, inIdx, hashtype):
     if inIdx >= len(txTo.vin):

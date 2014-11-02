@@ -2,8 +2,8 @@
 
 import binascii
 import hashlib
-from timevault.bitcoin.key import CKey as Key
-from timevault.bitcoin.base58 import encode, decode
+from reversecoin.bitcoin.key import CKey as Key
+from reversecoin.bitcoin.base58 import encode, decode
 
 def myhash(s):
     return hashlib.sha256(hashlib.sha256(s).digest()).digest()

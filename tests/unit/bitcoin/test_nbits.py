@@ -1,5 +1,5 @@
 import binascii
-from timevault.bitcoin.serialize import *
+from reversecoin.bitcoin.serialize import *
 
 compact = 0x1b00ffff
 #print "seed compact: ", hex(compact)

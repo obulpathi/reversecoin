@@ -7,7 +7,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from timevault.bitcoin.serialize import Hash, ser_uint256
+from reversecoin.bitcoin.serialize import Hash, ser_uint256
 
 b58_digits = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 

@@ -1,7 +1,7 @@
-``timevault`` package
+``reversecoin`` package
 =====================
 
-.. automodule:: timevault.bitcoinpy
+.. automodule:: reversecoin.bitcoinpy
     :members:
     :undoc-members:
     :show-inheritance:

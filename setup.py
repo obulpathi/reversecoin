@@ -12,22 +12,22 @@ install_reqs = parse_requirements("requirements.txt")
 reqs = [str(ir.req) for ir in install_reqs]
 
 # copy configuration files
-shutil.copy('etc/config.cfg', os.path.expanduser('~/.bitcoinpy.cfg'))
-shutil.copy('etc/miner.cfg', os.path.expanduser('~/.vaultminer.cfg'))
+shutil.copy('etc/config.cfg', os.path.expanduser('~/.reversecoin.cfg'))
+shutil.copy('etc/miner.cfg', os.path.expanduser('~/.reversecoinminer.cfg'))
 
-_PKG_ROOT = 'timevault'
+_PKG_ROOT = 'reversecoin'
 
 setuptools.setup(
     name = _PKG_ROOT,
     install_requires=reqs,
     packages = [_PKG_ROOT] + [_PKG_ROOT+'.'+p for p in setuptools.find_packages(_PKG_ROOT)],
     entry_points = {
-        'console_scripts': ['timevaultd=timevault.bitcoinpy:run',
-                            'vaultminer=timevault.miner.miner:run',
-                            'rwallet=timevault.wallet.rwallet:main',],},
-    version = subprocess.Popen(['python', 'timevault/version.py', '-v'], stdout=subprocess.PIPE).communicate()[0].replace('\n', ''),
-    description = "A secure revertible crypto currency",
-    url = "https://vaultcoin.org",
+        'console_scripts': ['reversecoind=reversecoin.bitcoinpy:run',
+                            'reversecoinminer=reversecoin.miner.miner:run',
+                            'rwallet=reversecoin.wallet.rwallet:main',],},
+    version = subprocess.Popen(['python', 'reversecoin/version.py', '-v'], stdout=subprocess.PIPE).communicate()[0].replace('\n', ''),
+    description = "A secure reversable crypto currency",
+    url = "https://www.reversecoin.org",
     author = "Obulpathi N Challa",
     author_email = "obulpathi@gmail.com",
     zip_safe = False,

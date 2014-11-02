@@ -1,4 +1,4 @@
-from timevault import bitcoinrpc
+from reversecoin import bitcoinrpc
 
 # JSON-RPC server user, password.  Uses HTTP Basic authentication.
 rpcuser = "user"

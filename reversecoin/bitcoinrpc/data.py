@@ -20,7 +20,7 @@
 """
 Bitcoin RPC service, data objects.
 """
-from timevault.bitcoinrpc.util import DStruct
+from reversecoin.bitcoinrpc.util import DStruct
 
 
 class ServerInfo(DStruct):

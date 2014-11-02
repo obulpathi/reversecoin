@@ -52,6 +52,6 @@ def connect_to_remote(user, password, host='localhost', port=8332,
 
     Returns a :class:`~bitcoinrpc.connection.BitcoinConnection` object.
     """
-    from timevault.bitcoinrpc.connection import BitcoinConnection
+    from reversecoin.bitcoinrpc.connection import BitcoinConnection
 
     return BitcoinConnection(user, password, host, port, use_https)

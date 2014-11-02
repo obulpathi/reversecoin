@@ -5,7 +5,7 @@ import unittest
 
 from tests.api import base
 from tests.api import utils
-from timevault import bitcoinrpc
+from reversecoin import bitcoinrpc
 
 class TestBalance(base.TestBase):
 

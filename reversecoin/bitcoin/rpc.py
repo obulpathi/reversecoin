@@ -45,8 +45,8 @@ try:
 except ImportError:
     import urlparse
 
-from timevault.bitcoin.coredefs import COIN
-from timevault.bitcoin.base58 import CBitcoinAddress
+from reversecoin.bitcoin.coredefs import COIN
+from reversecoin.bitcoin.base58 import CBitcoinAddress
 
 USER_AGENT = "AuthServiceProxy/0.1"
 
