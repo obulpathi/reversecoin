@@ -8,9 +8,9 @@ cleanconfig:
 	rm ~/.reversecoin.cfg
 	rm ~/.reversecoin.cfg
 
-cleandata:
+clean:
 	rm -rf ~/.reversecoin
 
-clean:
+cleanall:
+	make clean
 	make cleanconfig
-	make cleandata

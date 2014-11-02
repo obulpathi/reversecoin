@@ -437,7 +437,7 @@ class WalletDB(object):
 
         # incase of insufficient funds, return
         if funds < amount + utils.calculate_fees(None):
-            self.logger.warning("In sufficient funds, exiting, return")
+            self.logger.warning("Insufficient funds, exiting, return")
             return None, None
 
         # create transaction
@@ -526,7 +526,7 @@ class WalletDB(object):
 
         # incase of insufficient funds, return
         if funds < amount + utils.calculate_fees(None):
-            self.logger.warning("In sufficient funds, exiting, return")
+            self.logger.warning("Insufficient funds, exiting, return")
             raise exceptions.InsufficientBalanceException
 
         # create transaction
@@ -600,7 +600,7 @@ class WalletDB(object):
         received = self.chaindb.listreceivedbyvault(fromvaultaddress)
         received = received.values()[0]
         if received['value'] < amount + 2 * utils.calculate_fees(None):
-            self.logger.warning("In sufficient funds in vault, exiting, return")
+            self.logger.warning("Insufficient funds in vault, exiting, return")
             return
 
         # create transaction
@@ -664,7 +664,7 @@ class WalletDB(object):
             return None, None
         received = received.values()[0]
         if received['value'] < 2 * utils.calculate_fees(None):
-            self.logger.warning("In sufficient funds in vault, exiting, return")
+            self.logger.warning("Insufficient funds in vault, exiting, return")
             return None, None
         # calculate remaining amount
         amount = received['value'] - 2 * utils.calculate_fees(None)
