@@ -169,7 +169,7 @@ def run(config_file = '~/.reversecoin.cfg'):
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        logger.error("Usage: reversecoin.py CONFIG-FILE")
+        logger.error("Usage: reversecoinpy.py CONFIG-FILE")
         sys.exit(1)
 
     run(sys.argv[1])

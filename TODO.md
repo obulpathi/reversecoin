@@ -3,7 +3,7 @@ TODO
 
 BUGS
 ----
-* Update wallet examples
+* Update wallet and rwallet examples
 * Installation using python wheels
 * Documentation for installation
 * Fix FIXMEs

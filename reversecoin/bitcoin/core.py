@@ -10,6 +10,7 @@ import socket
 import binascii
 import time
 import hashlib
+
 from reversecoin.bitcoin.serialize import *
 from reversecoin.bitcoin.coredefs import *
 from reversecoin.bitcoin.script import CScript

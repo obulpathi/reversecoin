@@ -22,7 +22,7 @@ setuptools.setup(
     install_requires=reqs,
     packages = [_PKG_ROOT] + [_PKG_ROOT+'.'+p for p in setuptools.find_packages(_PKG_ROOT)],
     entry_points = {
-        'console_scripts': ['reversecoind=reversecoin.reversecoin:run',
+        'console_scripts': ['reversecoind=reversecoin.reversecoinpy:run',
                             'reversecoinminer=reversecoin.miner.miner:run',
                             'rwallet=reversecoin.wallet.rwallet:main',],},
     version = subprocess.Popen(['python', 'reversecoin/version.py', '-v'], stdout=subprocess.PIPE).communicate()[0].replace('\n', ''),
