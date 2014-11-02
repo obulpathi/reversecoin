@@ -32,7 +32,7 @@ def balance():
     print ('\nVaults')
     vaults = wallet.getvaults()
     for vault in vaults.itervalues():
-        print vault['address']  + ": ", vault['balance']
+        print vault['name']  + ": ", vault['balance']
 
     print ('\nPending Transfers')
     transactions = wallet.getpendingtransactions()
@@ -45,7 +45,17 @@ def getvaults():
     wallet = Wallet()
     vaults = wallet.getvaults()
     for vault in vaults:
-        print vault['address']  + ": ", vault['balance']
+        print "Vault Address:", vault
+        print "\tBalance: ", vaults[vault]['balance']
+        print "\tAddress:", vaults[vault]['address']
+        print "\tMaster Address:", vaults[vault]['master_address']
+        print "\ttimeout:", vaults[vault]['timeout']
+        print "\tReceived transactions:\n",
+        if vaults[vault]['received']:
+            print '\t\ttxhash:', vaults[vault]['received']['txhash'],
+            print 'n:', vaults[vault]['received']['n'], 'value:', vaults[vault]['received']['value']
+        else:
+                print "\t\tNone"
 
 def blockchain():
     wallet = Wallet()
@@ -56,28 +66,25 @@ def mempool():
     wallet.dumpmempool()
 
 def received():
-    # JSON-RPC server user, password.  Uses HTTP Basic authentication.
-    rpcuser="user"
-    rpcpass="passwd"
-
-    address = input("Enter the address to check received transactions:")
-
-    connection = bitcoinrpc.connect_to_remote(rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
-    txoutlist = connection.getreceivedbyaddress(address)
-
-    for txout in txoutlist:
-        print txout
+    wallet = Wallet()
+    address = raw_input("Enter the address to check received transactions: ")
+    txouts = wallet.received(address)
+    for count, txhash in enumerate(txouts):
+        print count
+        print "\ttxhash: ", txouts[txhash]['txhash']
+        print "\tn: ", txouts[txhash]['n']
+        print "\tvalue: ", txouts[txhash]['value']
 
 def send():
     wallet = Wallet()
     account = wallet.getaccount()
 
-    toaddress = wallet.getnewaddress()
+    toaddress = raw_input("Enter the address to send coins to: ")
+    amount = int(input("Enter the balance to transfer to address: "))
+
     balance = 0
     for subaccount in account.itervalues():
         balance = balance + subaccount['balance']
-
-    amount = int(input("Enter the balance to transfer to address: "))
 
     if balance < amount:
         print("Not enough balance")
@@ -86,40 +93,11 @@ def send():
     print "Transferring: ", amount, " \tto: ", toaddress
     wallet.connection.sendtoaddress(toaddress, amount)
 
-def getvault():
-    # JSON-RPC server user, password.  Uses HTTP Basic authentication.
-    rpcuser = "user"
-    rpcpass = "passwd"
-
-    print("Not implemented yet!")
-    exit(1)
-
-    connection = bitcoinrpc.connect_to_remote(
-        rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
-    vaults = connection.getvaults()
-    for vault in vaults.itervalues():
-        print("Name: %s" % vault['name'])
-        print("Address: %s" % vault['address'])
-        print("Master Address: %s" % vault['master_address'])
-        print("Balance: %d" % vault['amount'])
-        """
-        #print "Public key: ", vault['public_key']
-        #print "Private key: ", vault['private_key']
-        #print "Master Public key: ", vault['master_public_key']
-        #print "Master Private key: ", vault['master_private_key']
-        """
-        print "\n\n"
-
 def savings():
-    # JSON-RPC server user, password.  Uses HTTP Basic authentication.
-    rpcuser = "user"
-    rpcpass = "passwd"
-    account = "account"
-
-    connection = bitcoinrpc.connect_to_remote(rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
-    account = connection.getaccount(account)
-    for subaccount in account.itervalues():
-        print subaccount['address']  + ": ", subaccount['balance']
+    wallet = Wallet()
+    vaults = wallet.getvaults()
+    for vault in vaults:
+        print vault  + ": ", vaults[vault]['balance']
 
 def vault_new():
     wallet = Wallet()
@@ -184,12 +162,12 @@ def vault_withdraw():
     print("Available vaults")
     vaults = wallet.getvaults()
     for n, vault in enumerate(vaults.itervalues()):
-        print "Id: ", n, vault['address']  + ": ", vault['balance']
+        print "Id: ", n, vault['name']  + ": ", vault['balance']
     index = int(input("Enter the id of the vault you want to transfer balance from: "))
 
     for n, vault in enumerate(vaults.itervalues()):
         if index == n:
-            fromaddress = vault['address']
+            fromaddress = vault['name']
 
     amount = int(input("Enter the balance to transfer from: {}: ".format(fromaddress)))
     if vaults[fromaddress]['balance'] < amount + 2:
@@ -262,14 +240,13 @@ def run(args):
 _SUPPORTED_COMMANDS = [
     ("account", "Look at the account summary.",),
     ("balance", "Current wallet balance.",),
-    ("getvaults", "Highlevel information about the vaults.",),
+    ("getvaults", "Detailed information about the vaults.",),
     ("blockchain", "Dump the current block chain.",),
     ("mempool", "Dump the mempool.",),
     ("newaddress", "Generate a new address.",),
     ("received", "Received transactions.",),
-    ("send", "Send coins.",),
-    ("getvault", "A little detailed view of vaults.",),
-    ("savings", "Balance in each account.",),
+    ("send", "Send coins to normal address.",),
+    ("savings", "Balance in each vault account.",),
     ("vault_new", "Create a new vault account"),
     ("vault_send", "Send to a vault.",),
     ("vault_withdraw", "Withdraw from a vault.",),

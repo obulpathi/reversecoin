@@ -261,17 +261,16 @@ class WalletDB(object):
 
     # getvaults
     def getvaults(self):
-        vaultaccounts = []
         walletdb = self.open()
         # if wallet is not initialized, return
         if 'accounts' not in walletdb:
             self.logger.error("Wallet not initialized ... quitting!")
             return None
         # wallet is initialized
-        vaults = loads(walletdb['vaults'])
-        for vault in vaults:
-            vaultaccount = loads(walletdb[vault])
-            vaultaccounts.append(vaultaccount)
+        vault_names = loads(walletdb['vaults'])
+        vaults = []
+        for vault_name in vault_names:
+            vaults.append(loads(walletdb[vault_name]))
         walletdb.close()
 
         """
@@ -281,6 +280,7 @@ class WalletDB(object):
                  'master_private_key': master_private_key, 'amount': amount, 'fees': fees}
         """
 
+        """
         #FIXME: format vault accounts in same form as general accounts
         accounts = {}
         for vaultaccount in vaultaccounts:
@@ -295,7 +295,9 @@ class WalletDB(object):
             subaccount['received'] = self.chaindb.listreceivedbyvault(vault).values()
             accounts[vaultaccount['name']] = subaccount
         return accounts
+        """
 
+        return vaults
 
     # helper functions
     def getnewsubaccount(self):

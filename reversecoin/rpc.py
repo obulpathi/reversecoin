@@ -24,7 +24,6 @@ VALID_RPCS = {
     "dumpblockchain",
     "dumpmempool",
     "getaccount",
-    "getvault",
     "getvaults",
     "getbalance",
     "getblockcount",
@@ -78,15 +77,22 @@ def accountToJSON(account):
     return account
 
 def vaultsToJSON(vaults):
-    for vaultname, vault in vaults.iteritems():
-        vault['public_key'] = binascii.hexlify(vault['pubkey'])
-        vault['private_key'] = binascii.hexlify(vault['privkey'])
-        # FIXME: make both of them in same format and remove this
-        vault['pubkey'] = "none"
-        vault['privkey']  = "none"
-        for txins in vault['received']:
-            txins['scriptPubKey'] = binascii.hexlify(txins['scriptPubKey'])
-    return vaults
+    results = {}
+    for vault in vaults:
+        result = {}
+        result['name'] = vault['name']
+        result['address'] = vault['address']
+        result['public_key'] = binascii.hexlify(vault['public_key'])
+        result['private_key'] = binascii.hexlify(vault['private_key'])
+        result['master_address'] = vault['master_address']
+        result['master_public_key'] = binascii.hexlify(vault['master_public_key'])
+        result['master_private_key'] = binascii.hexlify(vault['master_private_key'])
+        result['maxfees'] = vault['maxfees']
+        result['timeout'] = vault['timeout']
+
+        results[vault['name']] = result
+
+    return results
 
 def blockToJSON(block, blkmeta, cur_height):
     block.calc_sha256()
@@ -153,8 +159,17 @@ class RPCExec(object):
 
     def getvaults(self, params):
         vaults = self.wallet.getvaults()
-        res = vaultsToJSON(vaults)
-        return (res, None)
+        vaults = vaultsToJSON(vaults)
+        for vault in vaults:
+            vaults[vault]['balance'] = self.chaindb.getsavings(vault)
+            txouts = self.chaindb.listreceivedbyvault(vault).values()
+            received = {}
+            for txout in txouts:
+                received['txhash'] = txout['txhash']
+                received['n'] = txout['n']
+                received['value'] = txout['value']
+            vaults[vault]['received'] = received
+        return (vaults, None)
 
     def getbalance(self, params):
         return (self.wallet.getbalance(params[0]), None)
@@ -246,7 +261,10 @@ class RPCExec(object):
         return (ser_tx.encode('hex'), None)
 
     def getreceivedbyaddress(self, params):
-        return (self.chaindb.listreceivedbyaddress(params[0]), None)
+        txouts = self.chaindb.listreceivedbyaddress(params[0])
+        for txhash in txouts:
+            del txouts[txhash]['scriptPubKey']
+        return (txouts, None)
 
     def getwork_new(self):
         err = { "code" : -6, "message" : "internal error" }

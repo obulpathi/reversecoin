@@ -34,6 +34,9 @@ class Wallet(object):
     def newvault(self, toaddress, tomaster_address, timeout, maxfees):
         return self.connection.newvault(toaddress, tomaster_address, timeout, maxfees)
 
+    def received(self, address):
+        return self.connection.getreceivedbyaddress(address)
+
     def send(self, toaddress, amount):
         self.connection.sendtoaddress(toaddress, amount)
 
