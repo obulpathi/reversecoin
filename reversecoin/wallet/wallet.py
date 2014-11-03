@@ -20,6 +20,10 @@ class Wallet(object):
         account = self.connection.getaccount(account)
         return account
 
+    def getinfo(self):
+        info = self.connection.getinfo()
+        return info
+
     def getnewaddress(self, account = "account"):
         address = self.connection.getnewaddress(account)
         return address

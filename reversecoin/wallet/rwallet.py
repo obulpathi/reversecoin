@@ -5,6 +5,11 @@ from reversecoin.wallet.wallet import Wallet
 from reversecoin import bitcoinrpc
 from reversecoin.version import VERSION, COPYRIGHT_YEAR
 
+def info():
+    wallet = Wallet()
+    info = wallet.getinfo()
+    print "Blocks:", info.blocks
+
 def newaddress():
     wallet = Wallet()
     address = wallet.getnewaddress()
@@ -242,6 +247,7 @@ _SUPPORTED_COMMANDS = [
     ("balance", "Current wallet balance.",),
     ("getvaults", "Detailed information about the vaults.",),
     ("blockchain", "Dump the current block chain.",),
+    ("info", "Get basic info",),
     ("mempool", "Dump the mempool.",),
     ("newaddress", "Generate a new address.",),
     ("received", "Received transactions.",),
