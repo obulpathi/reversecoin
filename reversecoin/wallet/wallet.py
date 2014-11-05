@@ -1,11 +1,32 @@
+import sys
+import os
+import re
+
 from reversecoin import bitcoinrpc
 
 class Wallet(object):
-    def __init__(self):
-        # JSON-RPC server user, password.
-        # Uses HTTP Basic authentication.
-        rpcuser = "user"
-        rpcpass = "passwd"
+    def __init__(self, config_file="~/.reversecoin.cfg"):
+        # check if configuration file exists
+        if not os.path.isfile(os.path.expanduser(config_file)):
+            print('No configuration file: {0}'.format(config_file))
+            sys.exit(1)
+            
+        settings = {}
+        f = open(os.path.expanduser(config_file))
+        for line in f:
+            m = re.search('^(\w+)\s*=\s*(\S.*)$', line)
+            if m is None:
+                continue
+            settings[m.group(1)] = m.group(2)
+        f.close()
+
+        if ('rpcuser' not in settings or
+            'rpcpass' not in settings):
+            print('rpcuser/rpcpass missing in the config file - {}'.format(config_file))
+            sys.exit(1)
+    
+        rpcuser = settings['rpcuser']
+        rpcpass = settings['rpcpass']
         account = "account"
         self.connection = bitcoinrpc.connect_to_remote(
             rpcuser, rpcpass, host='localhost', port=9333, use_https=False)
