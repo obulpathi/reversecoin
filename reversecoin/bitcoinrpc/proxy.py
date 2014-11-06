@@ -43,6 +43,10 @@ class JSONRPCException(Exception):
         Exception.__init__(self)
         self.error = rpc_error
 
+_HTTP_STATUS_TO_MSG = {
+    403: 'FORBIDDEN: Is your IP allowed?',
+    401: 'UNAUTHORIZED: Check user/password in config file.'
+    }
 
 class HTTPTransport(object):
     def __init__(self, service_url):
@@ -75,14 +79,15 @@ class HTTPTransport(object):
         if httpresp is None:
             self._raise_exception({
                 'code': -342, 'message': 'missing HTTP response from server'})
-        elif httpresp.status == httplib.FORBIDDEN:
-            msg = "bitcoind returns 403 Forbidden. Is your IP allowed?"
-            raise TransportException(msg, code=403,
-                                     protocol=self.parsed_url.scheme,
-                                     raw_detail=httpresp)
-
-        resp = httpresp.read()
-        return resp.decode('utf8')
+        elif httpresp.status == httplib.OK:
+            resp = httpresp.read()
+            return resp.decode('utf8')
+        else:
+            msg = "reversecoind returns {code}. {message} ".format(code=httpresp.status,
+                                                               message=_HTTP_STATUS_TO_MSG.get(httpresp.status, 'UNKNOWN'))
+            raise TransportException(msg, code=httpresp.status,
+                    protocol=self.parsed_url.scheme,
+                    raw_detail=httpresp)
 
 
 class FakeTransport(object):

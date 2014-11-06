@@ -9,7 +9,7 @@ class ReverseCoinDaemon(threading.Thread):
 
 class ReverseCoinMiner(threading.Thread):
      def run(self):
-         os.system('reversecoin')
+         os.system('reversecoinminer')
 
 def wait_until_blocks_are_generated(connection):
     # wait until you have generated some blocks

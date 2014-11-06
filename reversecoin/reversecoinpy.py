@@ -74,6 +74,13 @@ def run(config_file = '~/.reversecoin.cfg'):
     if 'log' not in settings or (settings['log'] == '-'):
         settings['log'] = None
 
+    # setup logging
+    if settings['log']:
+        logging.basicConfig(filename=settings['log'], level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+
     if ('rpcuser' not in settings or
         'rpcpass' not in settings):
         logger.error("You must set the following in config: rpcuser, rpcpass")
@@ -82,13 +89,6 @@ def run(config_file = '~/.reversecoin.cfg'):
     settings['port'] = int(settings['port'])
     settings['rpcport'] = int(settings['rpcport'])
     settings['db'] = os.path.expanduser(settings['db'])
-
-    # setup logging
-    if settings['log']:
-        logging.basicConfig(filename=settings['log'], level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger(__name__)
 
     if chain not in NETWORKS:
         logger.error("invalid network, exiting")

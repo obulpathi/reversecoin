@@ -3,20 +3,21 @@ import argparse
 
 from reversecoin.wallet.wallet import Wallet
 from reversecoin import bitcoinrpc
+from reversecoin.bitcoinrpc.exceptions import TransportException
 from reversecoin.version import VERSION, COPYRIGHT_YEAR
 
-def info():
-    wallet = Wallet()
+def info(wallet):
+
     info = wallet.getinfo()
     print "Blocks:", info.blocks
 
-def newaddress():
-    wallet = Wallet()
+def newaddress(wallet):
+
     address = wallet.getnewaddress()
     print address
 
-def account():
-    wallet = Wallet()
+def account(wallet):
+
     account = wallet.getaccount()
 
     for subaccount in account.itervalues():
@@ -26,8 +27,8 @@ def account():
         print "Balance: ", subaccount['balance']
         print "\n\n"
 
-def balance():
-    wallet = Wallet()
+def balance(wallet):
+
     account = wallet.getaccount()
 
     print ('\nAccounts')
@@ -46,8 +47,8 @@ def balance():
         for txouts in transaction['outputs']:
             print fromaddress, "->", txouts['toaddress'] + ": ", txouts['amount']
 
-def getvaults():
-    wallet = Wallet()
+def getvaults(wallet):
+
     vaults = wallet.getvaults()
     for vault in vaults:
         print "Vault Address:", vault
@@ -62,16 +63,16 @@ def getvaults():
         else:
                 print "\t\tNone"
 
-def blockchain():
-    wallet = Wallet()
+def blockchain(wallet):
+
     wallet.dumpblockchain()
 
-def mempool():
-    wallet = Wallet()
+def mempool(wallet):
+
     wallet.dumpmempool()
 
-def received():
-    wallet = Wallet()
+def received(wallet):
+
     address = raw_input("Enter the address to check received transactions: ")
     txouts = wallet.received(address)
     for count, txhash in enumerate(txouts):
@@ -80,8 +81,8 @@ def received():
         print "\tn: ", txouts[txhash]['n']
         print "\tvalue: ", txouts[txhash]['value']
 
-def send():
-    wallet = Wallet()
+def send(wallet):
+
     account = wallet.getaccount()
 
     toaddress = raw_input("Enter the address to send coins to: ")
@@ -98,14 +99,14 @@ def send():
     print "Transferring: ", amount, " \tto: ", toaddress
     wallet.connection.sendtoaddress(toaddress, amount)
 
-def savings():
-    wallet = Wallet()
+def savings(wallet):
+
     vaults = wallet.getvaults()
     for vault in vaults:
         print vault  + ": ", vaults[vault]['balance']
 
-def vault_new():
-    wallet = Wallet()
+def vault_new(wallet):
+
     account = wallet.getaccount()
 
     toaddress = wallet.getnewaddress()
@@ -122,8 +123,8 @@ def vault_new():
     else:
         print("An error occured while creating vault")
 
-def vault_send():
-    wallet = Wallet()
+def vault_send(wallet):
+
     account = wallet.getaccount()
 
     balance = 0
@@ -159,8 +160,8 @@ def vault_send():
     if not ret_value:
         print("An error occured while trasfering")
 
-def vault_withdraw():
-    wallet = Wallet()
+def vault_withdraw(wallet):
+
     account = wallet.getaccount()
     toaddress = wallet.getnewaddress()
 
@@ -182,8 +183,8 @@ def vault_withdraw():
     print("Transfering: " + str(amount) + "\tfrom address: " + fromaddress + "\tto address: " + toaddress)
     wallet.withdrawfromvault(fromaddress, toaddress, amount)
 
-def vault_override():
-    wallet = Wallet()
+def vault_override(wallet):
+
     account = wallet.getaccount()
     toaddress = wallet.getnewaddress()
 
@@ -204,8 +205,8 @@ def vault_override():
     print("Overriding the transaction")
     wallet.overridevault(fromaddress, toaddress)
 
-def vault_fast_withdraw():
-    wallet = Wallet()
+def vault_fast_withdraw(wallet):
+
     toaddress = wallet.getnewaddress()
 
     print("Available vaults")
@@ -223,8 +224,8 @@ def vault_fast_withdraw():
     print("Transfering: " + str(amount) + "\tfrom address: " + fromaddress + "\tto address: " + toaddress)
     wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
 
-def vault_pending():
-    wallet = Wallet()
+def vault_pending(wallet):
+
     account = wallet.getaccount()
 
     print ('\nPending Transfers')
@@ -239,7 +240,14 @@ def vault_pending():
 
 
 def run(args):
-    globals()[args.command]()
+    try:
+        wallet = Wallet(config_file=args.config_file)
+        globals()[args.command](wallet)
+    except TransportException as e:
+        print str(e)
+        sys.exit(1)
+
+    sys.exit(0)
 
 # any function added above should be registered here
 _SUPPORTED_COMMANDS = [
@@ -265,6 +273,11 @@ _EPILOG = "Commands Desription:\n====================\n"
 for cmd, hlp in _SUPPORTED_COMMANDS:
     _EPILOG += "{:<30} {}\n".format(cmd, hlp)
 
+_EPILOG += """
+In addition, you can pass in the config-file to be used.
+By default, it is ~/.reversecoin.cfg
+"""
+
 _WALLET_NAME = """
 ReverseCoin Wallet - v%s
 
@@ -277,6 +290,7 @@ def parse_arguments():
                                      epilog=_EPILOG,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("command", choices=[c for c,_ in _SUPPORTED_COMMANDS])
+    parser.add_argument("config_file", nargs='?', default='~/.reversecoin.cfg')
 
     if len(sys.argv) == 1:
         parser.print_help()
