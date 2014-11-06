@@ -27,6 +27,6 @@ class TestBase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        os.system("killall -9 reversecoinminer > /dev/null 2>&1");
+        os.system("killall -9 reversecoin-miner > /dev/null 2>&1");
         os.system("killall -9 reversecoind > /dev/null 2>&1");
         time.sleep(1)

@@ -9,7 +9,7 @@ class ReverseCoinDaemon(threading.Thread):
 
 class ReverseCoinMiner(threading.Thread):
      def run(self):
-         os.system('reversecoinminer')
+         os.system('reversecoin-miner')
 
 def wait_until_blocks_are_generated(connection):
     # wait until you have generated some blocks
@@ -56,8 +56,10 @@ def send_to_vault(connection, amount, timeout = None, maxfees = None):
     toaddress = connection.getnewaddress()
     tomaster_address = connection.getnewaddress()
 
-    vaultaddress = connection.sendtovault(toaddress, tomaster_address,
-        amount, timeout, maxfees)
+    vaultaddress = connection.newvault(toaddress, tomaster_address,
+                                       timeout, maxfees)
+
+    vaultaddress = connection.sendtovault(vaultaddress, amount)
     return vaultaddress
 
 

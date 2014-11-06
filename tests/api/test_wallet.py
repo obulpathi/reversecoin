@@ -311,14 +311,16 @@ class TestWallet(base.TestBase):
         toaddress = self.connection.getnewaddress()
         tomaster_address = self.connection.getnewaddress()
 
-        vaultaddress = self.connection.sendtovault(toaddress, tomaster_address,
-            amount, timeout, maxfees)
+        vaultaddress = self.connection.newvault(toaddress, tomaster_address,
+                                           timeout, maxfees)
+
+        self.assertIsNotNone(vaultaddress)
+        vaultaddress = self.connection.sendtovault(vaultaddress, amount)
         self.assertIsNotNone(vaultaddress)
 
         vault = utils.wait_until_vault_has_balance(self.connection, vaultaddress)
         self.assertEqual(int(vault['balance']), amount)
 
-        # try recreating vault
-        vaultaddress = self.connection.sendtovault(toaddress, tomaster_address,
-            amount, timeout, maxfees)
+        # try resending to vault
+        vaultaddress = self.connection.sendtovault(vaultaddress, amount)
         self.assertIsNone(vaultaddress)

@@ -1,7 +1,7 @@
 reversecoind:
 	python reversecoin/reversecoinpy.py etc/config.cfg
 
-reversecoinminer:
+reversecoin-miner:
 	python reversecoin/miner/miner.py etc/miner.cfg
 
 cleanconfig:

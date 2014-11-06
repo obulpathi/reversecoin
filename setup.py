@@ -13,7 +13,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 
 # copy configuration files
 shutil.copy('etc/config.cfg', os.path.expanduser('~/.reversecoin.cfg'))
-shutil.copy('etc/miner.cfg', os.path.expanduser('~/.reversecoinminer.cfg'))
+shutil.copy('etc/miner.cfg', os.path.expanduser('~/.reversecoin-miner.cfg'))
 
 _PKG_ROOT = 'reversecoin'
 
@@ -23,7 +23,7 @@ setuptools.setup(
     packages = [_PKG_ROOT] + [_PKG_ROOT+'.'+p for p in setuptools.find_packages(_PKG_ROOT)],
     entry_points = {
         'console_scripts': ['reversecoind=reversecoin.reversecoinpy:run',
-                            'reversecoinminer=reversecoin.miner.miner:run',
+                            'reversecoin-miner=reversecoin.miner.miner:run',
                             'rwallet=reversecoin.wallet.rwallet:main',],},
     version = subprocess.Popen(['python', 'reversecoin/version.py', '-v'], stdout=subprocess.PIPE).communicate()[0].replace('\n', ''),
     description = "A secure reversable crypto currency",
