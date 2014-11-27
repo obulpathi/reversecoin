@@ -6,6 +6,37 @@ from reversecoin import bitcoinrpc
 from reversecoin.bitcoinrpc.exceptions import TransportException
 from reversecoin.version import VERSION, COPYRIGHT_YEAR
 
+
+def getindex(msg, min_index = 0, max_index = None):
+    try:
+        index = int(input("{0}: ".format(msg)))
+    except Exception as e:
+        print("Please enter a valid id.")
+        exit(1)
+    if index < min_index:
+        print("Please enter a valid id.")
+        exit(2)
+    if max_index and id > max_index:
+        print("Please enter a valid id.")
+        exit(3)
+
+    return count
+
+def getamount(msg, min_amount = 1, max_amount = None):
+    try:
+        amount = int(input("{0}: ".format(msg)))
+    except Exception as e:
+        print("Please enter a valid amount.")
+        exit(1)
+    if amount < min_amount:
+        print("Please enter a valid amount.")
+        exit(2)
+    if max_amount and amount > max_amount:
+        print("Please enter a valid amount.")
+        exit(3)
+
+    return amount
+
 def info(wallet):
     info = wallet.getinfo()
     print("Blocks: {0}".format(info.blocks))
@@ -189,19 +220,22 @@ def vault_withdraw(wallet):
 
     if not vautls:
         print("No vaults")
+        exit(1)
 
     print("Available vaults")
     for n, vault in enumerate(vaults.itervalues()):
         print("Id: {0}, Address: {1}, Balance: {2}".format(
             n, vault["name"]  + ": ", vault["balance"]))
 
-    index = int(input("Enter the id of the vault you want to transfer coins from: "))
+    msg = "Enter the id of the vault you want to transfer coins from: "
+    index = getindex(msg, min=0, max=len(vaults)-1)
 
     for n, vault in enumerate(vaults.itervalues()):
         if index == n:
             fromaddress = vault['name']
 
-    amount = int(input("Enter the balance to transfer from: {}: ".format(fromaddress)))
+    msg = "Enter the balance to transfer from: {0}: ".format(fromaddress)
+    amount = getamount(msg, min=0)
     if vaults[fromaddress]['balance'] < amount + 2:
         print("In sufficient balance in vault, quitting")
         exit(2)
@@ -210,7 +244,6 @@ def vault_withdraw(wallet):
     wallet.withdrawfromvault(fromaddress, toaddress, amount)
 
 def vault_override(wallet):
-
     account = wallet.getaccount()
     toaddress = wallet.getnewaddress()
 
@@ -224,7 +257,8 @@ def vault_override(wallet):
         for txout in transaction['outputs']:
             print "\t\t\t", txout['amount'], "->", txout['toaddress']
 
-    index = raw_input("Enter the id of the vault transaction you want to override: ")
+    msg = "Enter the id of the vault transaction you want to override: "
+    index = getindex(msg, min=0, max=len(transactions)-1)
     fromaddress = transactions[index]['inputs'][0]
     print "Fromaddress: ", fromaddress
     print "Toaddress: ", toaddress
@@ -232,15 +266,21 @@ def vault_override(wallet):
     wallet.overridevault(fromaddress, toaddress)
 
 def vault_fast_withdraw(wallet):
-
     toaddress = wallet.getnewaddress()
 
-    print("Available vaults")
     vaults = wallet.getvaults()
     vaults = list(vaults.itervalues())
+    vaults = [vault for vault in vaults if vault['balance']]
+    if not vautls:
+        print("No vaults available with balance.")
+        exit(1)
+
+    print("Available vaults")
     for n, vault in enumerate(vaults):
         print "Id: ", n, vault['name']  + ": ", vault['balance']
-    index = int(input("Enter the id of the vault you want to transfer balance from: "))
+    msg = "Enter the id of the vault you want to transfer balance from: "
+    index = getindex(msg, min = 0, max = len(vaults)-1)
+
     fromaddress = vaults[index]['name']
     amount = int(input("Enter the balance to transfer from: {}: ".format(fromaddress)))
     if vaults[index]['balance'] < amount + 2:
@@ -251,12 +291,12 @@ def vault_fast_withdraw(wallet):
     wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
 
 def vault_pending(wallet):
-
-    account = wallet.getaccount()
-
-    print ('\nPending Transfers')
     transactions = wallet.getpendingtransactions()
+    if not transactions:
+        print("No pending transactions.")
+        exit(1)
 
+    print ('Pending Transfers')
     for n, transaction in transactions.iteritems():
         print "\tId: ", n
         print "\t\tInput:", transaction['inputs'][0]
