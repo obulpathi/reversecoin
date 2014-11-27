@@ -80,26 +80,6 @@ def balance(wallet):
         for txouts in transaction["outputs"]:
             print fromaddress, "->", txouts["toaddress"] + ": ", txouts["amount"]
 
-def vault_info(wallet):
-    vaults = wallet.getvaults()
-    print("Vaults")
-    if not vaults:
-        print("\tNo vaults created yet!")
-    for vault in vaults:
-        print("Vault Address: {0}".format(vault))
-        print("\tBalance: {0}".format(vaults[vault]['balance']))
-        print("\tAddress: {0}".format(vaults[vault]['address']))
-        print("\tMaster Address: {0}".format(vaults[vault]['master_address']))
-        print("\ttimeout: {0}".format(vaults[vault]['timeout']))
-        print("\tReceived transactions:")
-        if vaults[vault]['received']:
-            print("\t\ttxhash: {0}".format(vaults[vault]['received']['txhash']))
-            print("n: {0}, value: {1}".format(
-                vaults[vault]['received']['n'],
-                vaults[vault]['received']['value']))
-        else:
-                print("\t\tNone")
-
 def blockchain(wallet):
     wallet.dumpblockchain()
 
@@ -120,14 +100,8 @@ def received(wallet):
 def send(wallet):
     account = wallet.getaccount()
     toaddress = raw_input("Enter the address to send coins to: ")
-    try:
-        amount = int(input("Enter the balance to transfer to address: "))
-    except Exception as e:
-        print("Please enter a valid amount.")
-        exit(1)
-    if amount < 1:
-        print("Please enter a valid amount.")
-        exit(2)
+    smg = "Enter the balance to transfer to address: "
+    amount = getamount(msg, min=1)
     balance = 0
     for subaccount in account.itervalues():
         balance = balance + subaccount['balance']
@@ -136,6 +110,26 @@ def send(wallet):
         exit(3)
     print("Transferring: {0} to: {1}".format(amount, toaddress))
     wallet.connection.sendtoaddress(toaddress, amount)
+
+def vault_info(wallet):
+    vaults = wallet.getvaults()
+    print("Vaults")
+    if not vaults:
+        print("\tNo vaults created yet!")
+    for vault in vaults:
+        print("Vault Address: {0}".format(vault))
+        print("\tBalance: {0}".format(vaults[vault]['balance']))
+        print("\tAddress: {0}".format(vaults[vault]['address']))
+        print("\tMaster Address: {0}".format(vaults[vault]['master_address']))
+        print("\ttimeout: {0}".format(vaults[vault]['timeout']))
+        print("\tReceived transactions:")
+        if vaults[vault]['received']:
+            print("\t\ttxhash: {0}".format(vaults[vault]['received']['txhash']))
+            print("n: {0}, value: {1}".format(
+                vaults[vault]['received']['n'],
+                vaults[vault]['received']['value']))
+        else:
+                print("\t\tNone")
 
 def vault_balance(wallet):
     vaults = wallet.getvaults()
@@ -181,26 +175,11 @@ def vault_send(wallet):
     for count, vault in enumerate(vault_names):
         print("{0}: {1}".format(count, vault))
 
-    try:
-        choice = int(input("Select the vault to transfer money to: "))
-    except:
-        print("Please enter valid choice!")
-        exit(2)
-    if choice < 0 or choice > len(vaults)-1:
-        print("Invalid choice")
-        exit(3)
-
-    vault_address = vault_names[choice]
-
-    try:
-        amount = int(input("Enter the balance to transfer to vault: "))
-    except:
-        print("Please enter valid amount.")
-        exit(4)
-
-    if amount < 1:
-        print("Please enter valid amount.")
-        exit(5)
+    msg = "Please enter the index of the vault to transfer money to: "
+    index = getindex(msg, min=0, max=len(vaults)-1)
+    vault_address = vault_names[index]
+    msg = "Enter the balance to transfer to vault: "
+    amount = getamount(msg, min=1)
 
     if balance < amount:
         print("Not enough balance")
