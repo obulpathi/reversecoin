@@ -96,7 +96,7 @@ def balance(wallet):
     transactions = wallet.getpendingtransactions()
     print("\nPending Transfers")
     if not transactions:
-        print("\tNo pending trsactions!")
+        print("\tNo pending transactions!")
     for transaction in transactions.itervalues():
         fromaddress = transaction["inputs"][0]
         for txouts in transaction["outputs"]:
@@ -114,8 +114,10 @@ def received(wallet):
     txouts = wallet.received(address)
     if not txouts:
         print("This address did not receive any transactions!")
+        exit(0)
+    print("{0} received {1} transaction(s)".format(address, len(txouts)))
     for count, txhash in enumerate(txouts):
-        print(count)
+        print("Transaction {0}".format(count+1))
         print("\ttxhash: {0}".format(txouts[txhash]['txhash']))
         print("\tn: {0}".format(txouts[txhash]['n']))
         print("\tvalue: {0}".format(txouts[txhash]['value']))
@@ -167,12 +169,12 @@ def vault_new(wallet):
     timeout = 20
     maxfees = 10
 
-    print("Creating new vault: address: %s master_address: %s" % \
+    print("Creating new vault ... \nAddress: %s \nMaster address: %s" % \
          (toaddress, tomaster_address))
     vault_address = wallet.newvault(toaddress, tomaster_address, timeout, maxfees)
 
     if vault_address:
-        print("Created: {0}".format(vault_address))
+        print("Vault address: {0}".format(vault_address))
     else:
         print("An error occured while creating vault")
 
@@ -197,10 +199,10 @@ def vault_send(wallet):
     for count, vault in enumerate(vault_names):
         print("{0}: {1}".format(count, vault))
 
-    msg = "Please enter the index of the vault to transfer money to: "
+    msg = "Please enter the index of the vault to transfer money to"
     index = getindex(msg, min_index=0, max_index=len(vaults)-1)
     vault_address = vault_names[index]
-    msg = "Enter the balance to transfer to vault: "
+    msg = "Enter the balance to transfer to vault"
     amount = getamount(msg, min_amount=1)
 
     if balance < amount:
@@ -219,8 +221,8 @@ def vault_withdraw(wallet):
     vaults = wallet.getvaults()
     nonempty_vaults = [vault for vault in vaults if vaults[vault]['balance']]
 
-    if not vaults:
-        print("No vaults")
+    if not nonempty_vaults:
+        print("No vaults with available balance")
         exit(1)
 
     print("Available vaults")
@@ -228,10 +230,10 @@ def vault_withdraw(wallet):
         print("Id: {0}, Address: {1}, Balance: {2}".format(
             n, vaults[vault]["name"], vaults[vault]["balance"]))
 
-    msg = "Enter the id of the vault you want to transfer coins from: "
+    msg = "Enter the id of the vault you want to transfer coins from"
     index = getindex(msg, min_index=0, max_index=len(nonempty_vaults)-1)
     fromaddress = nonempty_vaults[index]
-    msg = "Enter the balance to transfer from: {0}: ".format(fromaddress)
+    msg = "Enter the balance to transfer from: {0}".format(fromaddress)
     amount = getamount(msg, min_amount=0)
     if vaults[fromaddress]['balance'] < amount + 2:
         print("In sufficient balance in vault, quitting")
