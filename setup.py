@@ -27,7 +27,7 @@ setuptools.setup(
                             'rwallet=reversecoin.wallet.rwallet:main',],},
     version = subprocess.Popen(['python', 'reversecoin/version.py', '-v'], stdout=subprocess.PIPE).communicate()[0].replace('\n', ''),
     description = "A secure reversable crypto currency",
-    url = "https://www.reversecoin.org",
+    url = "http://www.reversecoin.org",
     author = "Obulpathi N Challa",
     author_email = "obulpathi@gmail.com",
     zip_safe = False,

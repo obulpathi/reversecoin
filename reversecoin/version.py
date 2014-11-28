@@ -3,7 +3,7 @@ import getopt
 
 _MAJOR=0
 _MINOR=0
-_REVISION=1
+_REVISION=4
 
 COPYRIGHT_YEAR=2014
 
