@@ -45,6 +45,8 @@ class MemPool(object):
 		return False
 
 	def dumpmempool(self):
-		print "mempool"
+		print("Mempool")
+		if not self.pool:
+			print("Nothing in mempool!")
 		for txhash in self.pool:
 			print "txhash: {0}".format(txhash)
