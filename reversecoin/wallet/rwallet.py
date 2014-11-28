@@ -7,7 +7,7 @@ from reversecoin.bitcoinrpc.exceptions import TransportException
 from reversecoin.version import VERSION, COPYRIGHT_YEAR
 
 
-def getindex(msg, min_index = 0, max_index = None):
+def getindex(msg, min_index=0, max_index=None):
     try:
         index = int(raw_input("{0}: ".format(msg)))
     except Exception as e:
@@ -16,7 +16,7 @@ def getindex(msg, min_index = 0, max_index = None):
     if index < min_index:
         print("Please enter a valid id.")
         exit(2)
-    if max_index and index > max_index:
+    if (max_index is not None) and (index > max_index):
         print("Please enter a valid id.")
         exit(3)
     return index
@@ -30,7 +30,7 @@ def getamount(msg, min_amount = 1, max_amount = None):
     if amount < min_amount:
         print("Please enter a valid amount.")
         exit(2)
-    if max_amount and amount > max_amount:
+    if (max_amount is not None) and amount > max_amount:
         print("Please enter a valid amount.")
         exit(3)
     return amount
@@ -150,7 +150,7 @@ def vault_info(wallet):
         print("\ttimeout: {0}".format(vaults[vault]['timeout']))
         print("\tReceived transactions:")
         if vaults[vault]['received']:
-            print("\t\ttxhash: {0}\tn:{1}\tvalue{2}".format(
+            print("\t\ttxhash: {0}\tn: {1}\tvalue: {2}".format(
                 vaults[vault]['received']['txhash'], vaults[vault]['received']['n'], vaults[vault]['received']['value']))
         else:
                 print("\t\tNone")
@@ -185,23 +185,18 @@ def vault_send(wallet):
         balance = balance + subaccount['balance']
 
     vaults = wallet.getvaults()
-    emptyvaults = {}
-    for vault in vaults:
-        if not vaults[vault]['balance']:
-            emptyvaults[vault] = vaults[vault]
+    emptyvaults = [vault for vault in vaults if not vaults[vault]['balance']]
 
-    vaults = emptyvaults
-    if not vaults:
+    if not emptyvaults:
         print("No empty vaults, please create one!")
         exit(1)
 
-    vault_names = [vault for vault in vaults]
-    for count, vault in enumerate(vault_names):
+    for count, vault in enumerate(emptyvaults):
         print("{0}: {1}".format(count, vault))
 
     msg = "Please enter the index of the vault to transfer money to"
-    index = getindex(msg, min_index=0, max_index=len(vaults)-1)
-    vault_address = vault_names[index]
+    index = getindex(msg, min_index=0, max_index=len(emptyvaults)-1)
+    vault_address = emptyvaults[index]
     msg = "Enter the balance to transfer to vault"
     amount = getamount(msg, min_amount=1)
 
@@ -228,11 +223,11 @@ def vault_withdraw(wallet):
     print("Available vaults")
     for n, vault in enumerate(nonempty_vaults):
         print("Id: {0}, Address: {1}, Balance: {2}".format(
-            n, vaults[vault]["name"], vaults[vault]["balance"]))
+            n+1, vaults[vault]["name"], vaults[vault]["balance"]))
 
     msg = "Enter the id of the vault you want to transfer coins from"
-    index = getindex(msg, min_index=0, max_index=len(nonempty_vaults)-1)
-    fromaddress = nonempty_vaults[index]
+    index = getindex(msg, min_index=1, max_index=len(nonempty_vaults))
+    fromaddress = nonempty_vaults[index-1]
     msg = "Enter the balance to transfer from: {0}".format(fromaddress)
     amount = getamount(msg, min_amount=0)
     if vaults[fromaddress]['balance'] < amount + 2:
@@ -260,7 +255,7 @@ def vault_override(wallet):
         for txout in transaction['outputs']:
             print "\t\t\t", txout['amount'], "->", txout['toaddress']
 
-    msg = "Enter the id of the vault transaction you want to override: "
+    msg = "Enter the id of the vault transaction you want to override"
     index = getindex(msg, min_index=1, max_index=len(transactions))
     fromaddress = transactions[str(index)]['inputs'][0]
     print "Fromaddress: ", fromaddress
@@ -280,11 +275,11 @@ def vault_fast_withdraw(wallet):
 
     print("Available vaults")
     for n, vault in enumerate(vaults):
-        print "Id: ", n, vault['name']  + ": ", vault['balance']
+        print "Id: ", n+1, vault['name']  + ": ", vault['balance']
     msg = "Enter the id of the vault you want to transfer balance from: "
-    index = getindex(msg, min_index = 0, max_index = len(vaults)-1)
+    index = getindex(msg, min_index = 1, max_index = len(vaults))
 
-    fromaddress = vaults[index]['name']
+    fromaddress = vaults[index-1]['name']
     amount = int(input("Enter the balance to transfer from: {}: ".format(fromaddress)))
     if vaults[index]['balance'] < amount + 2:
         print("In sufficient balance in vault, quitting")
