@@ -48,8 +48,13 @@ def initialize(datadir):
 def run(config_file = '~/.reversecoin.cfg'):
     # check if configuration file exists
     if not os.path.isfile(os.path.expanduser(config_file)):
-        print('No configuration file: {0}'.format(config_file))
-        sys.exit(1)
+        filepath = os.path.realpath(__file__)
+        dirpath = os.path.dirname(filepath)
+        config_file = dirpath + '/../etc/config.cfg'
+        if not os.path.isfile(os.path.expanduser(config_file)):
+            print('No configuration file: {0}'.format('~/.reversecoin.cfg'))
+            sys.exit(1)
+        shutil.copy(config_file, os.path.expanduser('~/.reversecoin.cfg'))
 
     settings = {}
     f = open(os.path.expanduser(config_file))

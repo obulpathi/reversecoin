@@ -20,6 +20,7 @@ import json
 import pprint
 import hashlib
 import struct
+import shutil
 import re
 import base64
 import httplib
@@ -214,6 +215,16 @@ def miner_thread(id, logger):
     miner.loop()
 
 def run(config_file = "~/.reversecoin-miner.cfg"):
+    # check if configuration file exists
+    if not os.path.isfile(os.path.expanduser(config_file)):
+        filepath = os.path.realpath(__file__)
+        dirpath = os.path.dirname(filepath)
+        config_file = dirpath + '/../../etc/miner.cfg'
+        if not os.path.isfile(os.path.expanduser(config_file)):
+            print('No configuration file: {0}'.format("~/.reversecoin-miner.cfg"))
+            sys.exit(1)
+        shutil.copy(config_file, os.path.expanduser("~/.reversecoin-miner.cfg"))
+
     f = open(os.path.expanduser(config_file))
     for line in f:
         # skip comment lines
