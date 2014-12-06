@@ -147,7 +147,7 @@ def vault_info(wallet):
         print("\tBalance: {0}".format(vaults[vault]['balance']))
         print("\tAddress: {0}".format(vaults[vault]['address']))
         print("\tMaster Address: {0}".format(vaults[vault]['master_address']))
-        print("\ttimeout: {0}".format(vaults[vault]['timeout']))
+        print("\ttimeout: {0} seconds".format(vaults[vault]['timeout']))
         print("\tReceived transactions:")
         if vaults[vault]['received']:
             print("\t\ttxhash: {0}\tn: {1}\tvalue: {2}".format(
@@ -166,7 +166,7 @@ def vault_new(wallet):
     account = wallet.getaccount()
     toaddress = wallet.getnewaddress()
     tomaster_address = wallet.getnewaddress()
-    timeout = 20
+    timeout = 300
     maxfees = 10
 
     print("Creating new vault ... \nAddress: %s \nMaster address: %s" % \
