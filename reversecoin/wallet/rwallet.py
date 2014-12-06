@@ -42,9 +42,9 @@ def getaddress(msg, wallet):
         exit(1)
     addresses = [address for address in account]
     for count, address in enumerate(addresses):
-        print("Id: {0}\t{1}".format(count, address))
-    index = getindex(msg, 0, len(addresses)-1)
-    return addresses[index]
+        print("Id: {0}\t{1}".format(count+1, address))
+    index = getindex(msg, 1, len(addresses))
+    return addresses[index-1]
 
 def getemptyvault(msg, wallet):
     vaults = wallet.getvaults()
@@ -192,11 +192,11 @@ def vault_send(wallet):
         exit(1)
 
     for count, vault in enumerate(emptyvaults):
-        print("{0}: {1}".format(count, vault))
+        print("{0}: {1}".format(count+1, vault))
 
     msg = "Please enter the index of the vault to transfer money to"
-    index = getindex(msg, min_index=0, max_index=len(emptyvaults)-1)
-    vault_address = emptyvaults[index]
+    index = getindex(msg, min_index=1, max_index=len(emptyvaults))
+    vault_address = emptyvaults[index-1]
     msg = "Enter the balance to transfer to vault"
     amount = getamount(msg, min_amount=1)
 
@@ -211,7 +211,6 @@ def vault_send(wallet):
 
 def vault_withdraw(wallet):
     account = wallet.getaccount()
-    toaddress = wallet.getnewaddress()
 
     vaults = wallet.getvaults()
     nonempty_vaults = [vault for vault in vaults if vaults[vault]['balance']]
@@ -225,16 +224,22 @@ def vault_withdraw(wallet):
         print("Id: {0}, Address: {1}, Balance: {2}".format(
             n+1, vaults[vault]["name"], vaults[vault]["balance"]))
 
+    # get from vault
     msg = "Enter the id of the vault you want to transfer coins from"
     index = getindex(msg, min_index=1, max_index=len(nonempty_vaults))
     fromaddress = nonempty_vaults[index-1]
-    msg = "Enter the balance to transfer from: {0}".format(fromaddress)
+
+    # get to address
+    msg = "Enter the id of the address to send coins to"
+    toaddress = getaddress(msg, wallet)
+
+    msg = "Enter the balance to transfer from {0} to {1}".format(fromaddress, toaddress)
     amount = getamount(msg, min_amount=0)
     if vaults[fromaddress]['balance'] < amount + 2:
         print("In sufficient balance in vault, quitting")
         exit(2)
 
-    print("Transfering: " + str(amount) + "\tfrom address: " + fromaddress + "\tto address: " + toaddress)
+    print("Transfering " + str(amount) + "\tfrom " + fromaddress + "\tto " + toaddress)
     wallet.withdrawfromvault(fromaddress, toaddress, amount)
 
 def vault_override(wallet):
@@ -264,8 +269,6 @@ def vault_override(wallet):
     wallet.overridevault(fromaddress, toaddress)
 
 def vault_fast_withdraw(wallet):
-    toaddress = wallet.getnewaddress()
-
     vaults = wallet.getvaults()
     vaults = list(vaults.itervalues())
     vaults = [vault for vault in vaults if vault['balance']]
@@ -273,19 +276,26 @@ def vault_fast_withdraw(wallet):
         print("No vaults available with balance.")
         exit(1)
 
+    # get from vault
     print("Available vaults")
     for n, vault in enumerate(vaults):
         print "Id: ", n+1, vault['name']  + ": ", vault['balance']
-    msg = "Enter the id of the vault you want to transfer balance from: "
+    msg = "Enter the id of the vault you want to transfer balance from"
     index = getindex(msg, min_index = 1, max_index = len(vaults))
-
     fromaddress = vaults[index-1]['name']
-    amount = int(input("Enter the balance to transfer from: {}: ".format(fromaddress)))
-    if vaults[index]['balance'] < amount + 2:
+
+    # get to address
+    msg = "Enter the id of the address to send coins to"
+    toaddress = getaddress(msg, wallet)
+
+    # get amount
+    msg = "Enter the balance to transfer from {0} to {1}".format(fromaddress, toaddress)
+    amount = getamount(msg, min_amount=0)
+    if vaults[index-1]['balance'] < amount + 2:
         print("In sufficient balance in vault, quitting")
         exit(2)
 
-    print("Transfering: " + str(amount) + "\tfrom address: " + fromaddress + "\tto address: " + toaddress)
+    print("Transfering " + str(amount) + "\tfrom " + fromaddress + "\tto " + toaddress)
     wallet.fastwithdrawfromvault(fromaddress, toaddress, amount)
 
 def vault_pending(wallet):
