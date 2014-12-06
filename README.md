@@ -1,7 +1,7 @@
 Reversecoin
 ===========
 
-Reversecoin is the worlds first crypto-currency with "Reversible Transactions". This is only a proof-of-concept for Reversecoin built using Bitcoinpy. Final version of Reversecoin will be built  on Bitcoin and will use Proof-of-Stake (PoS) for mining.
+Reversecoin is the worlds first crypto-currency with "Reversible Transactions". Reversecoin proof-of-concept is based on Bitcoinpy. Final version of Reversecoin will be based on Bitcoin code, using Proof-of-Stake (PoS) for mining.
 
 With Reversecoin, you can create two different kinds of accounts: Standard Accounts and Vault Accounts. Standard accounts behave very much like your Bitcoin accounts and allow you to send and receive money for daily purposes. Vault accounts behave much like you bank savings account, where you can deposit large amount of coins and keep them safe from hackers. Each vault account has a configurable timeout and is backed by two key pairs, one online and one offline. You only need online keypair to transfer coins from vault. When you transfer your coins using online keypair, your transactions get confirmed after they live in blockchain for the timeout period.
 
