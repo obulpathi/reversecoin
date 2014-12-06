@@ -1,32 +1,12 @@
-Bitcoinpy
-=========
+Reversecoin
+===========
 
-Bitcoinpy is a Python implementation of Bitcoin to help understand the internals of Bitcoin easy.
+Reversecoin is the worlds first crypto-currency with "Reversible Transactions". This is only a proof-of-concept for Reversecoin built using Bitcoinpy. Final version of Reversecoin will be built  on Bitcoin and will use Proof-of-Stake (PoS) for mining.
 
+With Reversecoin, you can create two different kinds of accounts: Standard Accounts and Vault Accounts. Standard accounts behave very much like your Bitcoin accounts and allow you to send and receive money for daily purposes. Vault accounts behave much like you bank savings account, where you can deposit large amount of coins and keep them safe from hackers. Each vault account has a configurable timeout and is backed by two key pairs, one online and one offline. You only need online keypair to transfer coins from vault. When you transfer your coins using online keypair, your transactions get confirmed after they live in blockchain for the timeout period.
 
-Bitcoinpy project is aimed at developers who want to learn about the internal workings of Bitcoin. We created this project so it it is easy to read, understand and modify Bitcoin. Bitcoinpy was developed in Python, so that someone with a little bit of programming ability can read and understand the inner workings of Bitcoin. Lots of helpful documentation is provided to help understand the higher level workings of system and its components. Project is implemented in a very modular fashion, so that if someone wants to change the functionality of a component, they can change or replace that particular component and reuse the rest of the code to test their change without lot of changes. Additional tools like the code for creating genesis block, creating and signing transactions, dumping information from blocks, analyzing the blockchain and other debugging tools have been provided to help developers easily bootstrap and debug new alt coins.
+If someone steals your online key pair and transfers coins to them, the transactions will have to wait in block chain for the timeout period. During which, you can use your offline key pair and reverse those transactions and restore your coins to your other address. You can also use your offline key pair for immediate transfer of coins in your Vault, instead of waiting for timeout period. In a sentence, Vault account has the ease of use of hot wallets (online account) and security of cold wallets (offline accounts). We are also working on a monitoring service, to send you real-time alerts, when your coins are transferred from your addresses. To know more about Reversecoin, read our white paper or even better play with the vaultcoin, to see for yourself how Reversecoin works. In order to make it easy, the code is sandboxed and difficulty is reduced so that blocks are produced one every minute. Below is a brief tutorial to show how vaultcoin works.
 
-In order to keep the code lightweight we reused the libraries including the Bitcoinlib by Jeff Garzik and others. Code contains all the components including the full bitcoin client, server, wallet and miner. However, some of the components like P2SH, alert messages and more are missing. We will add support for missing functionality, albeit slowly. if you would like to contribute, please feel free to fork the project, hack it and send a pull request. We will gladly accept your changes. Any contributions including documentation are welcome.
+In order to keep the code lightweight we built Reversecoin based on Bitcoinpy and reused the libraries including the Bitcoinlib by Jeff Garzik and others. Code contains all the components including the reversecoin server, client, wallet and miner. We will add support for missing functionality, albeit slowly. If you would like to contribute, please feel free to fork the project, hack it and send a pull request. We will gladly accept your changes. Any contributions including documentation are welcome.
 
-How to install on Ubuntu
-------------------------
-
-From source repo:
-------------------
-* Clone this repository: "git clone https://github.com/obulpathi/reversecoin.git ~/reversecoin"
-* Install dependencies: sudo apt-get install python-dev libleveldb1 python-gevent python-leveldb python-bsddb3 python-sqlite
-* After installing dependencies, cd into reversecoin folder and install reversecoin using the command "sudo python setup.py install"
-
-From PyPI:
------------
-* Install dependencies: sudo apt-get install python-dev libleveldb1 python-gevent python-leveldb python-bsddb3 python-sqlite
-* Run sudo pip install reversecoin
-
-FOR DEVELOPERS:
-===============
-
-How to run tests
------------------
-Reversecoin uses tox and nose for testing. To run tests, simply cd into reversecoin folder and enter the command "tox". Selective tests can be run using the command "$ tox -- tests.api.test_wallet:TestWallet.test_info". If you want to start reversecoind and reversecoin-miner for manual testing, enter into virtualenv by using "source ~/reversecoin/.tox/py27/bin/activate", then run the commands "reversecoind" for running the reversecoin daemon and "reversecoin-miner" for mining coins.
-
-Note: You don't need root access to run the above commands as all the setup takes place in virtualenv.
+To try out Reversecoin checkout out tutorial at: http://www.reversecoin.org/howitworks.html
